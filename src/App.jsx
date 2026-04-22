@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // ── Supabase client ──────────────────────────────────────────────────────────
@@ -9,10 +9,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ── Auth Styles (injected once) ───────────────────────────────────────────────
 const AUTH_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
-  body { font-family: 'DM Sans', sans-serif; background: #060608; color: #f0f0f0; overflow: hidden; }
   @keyframes authFadeIn  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes authGlow    { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
   @keyframes authSpin    { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -1675,6 +1671,65 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
 
 // ─── Gig Calendar ─────────────────────────────────────────────────────────────
 
+
+// ── DB ↔ App data converters ──────────────────────────────────────────────────
+function dbToLead(r) {
+  return {
+    id:            r.id,
+    name:          r.name || "",
+    contact:       r.contact || "",
+    instagram:     r.instagram || "",
+    tier:          r.tier || "A2",
+    tag:           r.tag || "Tech-House",
+    stage:         r.stage || "target",
+    notes:         r.notes || "",
+    followUpDate:  r.follow_up_date || null,
+    lastContact:   r.last_contact || null,
+    archived:      r.archived || false,
+  };
+}
+function leadToDb(lead, userId) {
+  return {
+    id:             typeof lead.id === "number" ? undefined : lead.id, // let DB generate uuid for new
+    user_id:        userId,
+    name:           lead.name,
+    contact:        lead.contact || "",
+    instagram:      lead.instagram || "",
+    tier:           lead.tier || "A2",
+    tag:            lead.tag || "Tech-House",
+    stage:          lead.stage || "target",
+    notes:          lead.notes || "",
+    follow_up_date: lead.followUpDate || null,
+    last_contact:   lead.lastContact || null,
+    archived:       lead.archived || false,
+  };
+}
+function dbToGig(r) {
+  return {
+    id:     r.id,
+    venue:  r.venue || "",
+    city:   r.city || "",
+    date:   r.date || "",
+    status: r.status || "pending",
+    fee:    r.fee || "",
+    tag:    r.tag || "",
+    notes:  r.notes || "",
+  };
+}
+function gigToDb(gig, userId) {
+  return {
+    id:      typeof gig.id === "number" ? undefined : gig.id,
+    user_id: userId,
+    venue:   gig.venue,
+    city:    gig.city || "",
+    date:    gig.date || null,
+    status:  gig.status || "pending",
+    fee:     gig.fee || "",
+    tag:     gig.tag || "",
+    notes:   gig.notes || "",
+  };
+}
+
 function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClick, customTags, TAG_COLORS, supabase, userId }) {
   const today    = new Date();
   const [viewYear,  setViewYear]  = useState(today.getFullYear());
@@ -1923,7 +1978,12 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
               <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 16 }}>{selected.notes}</div>
             )}
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => { setGigs(prev => prev.map(g => g.id === selected.id ? { ...g, status: g.status === "confirmed" ? "pending" : "confirmed" } : g)); setSelected(prev => ({ ...prev, status: prev.status === "confirmed" ? "pending" : "confirmed" })); }}
+              <button onClick={async () => {
+                const newStatus = selected.status === "confirmed" ? "pending" : "confirmed";
+                setGigs(prev => prev.map(g => g.id === selected.id ? { ...g, status: newStatus } : g));
+                setSelected(prev => ({ ...prev, status: newStatus }));
+                try { await supabase.from("gigs").update({ status: newStatus }).eq("id", selected.id).eq("user_id", userId); } catch(e) { console.error(e); }
+              }}
                 style={{ flex: 1, padding: "8px", background: selected.status === "confirmed" ? COLORS.gold + "22" : COLORS.purpleBg, border: `1px solid ${selected.status === "confirmed" ? COLORS.gold + "44" : COLORS.purpleDim}`, borderRadius: 8, color: selected.status === "confirmed" ? COLORS.gold : COLORS.purpleLight, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                 {selected.status === "confirmed" ? "Mark Pending" : "Confirm ✓"}
               </button>
@@ -2127,65 +2187,6 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
       )}
     </div>
   );
-}
-
-
-// ── DB ↔ App data converters ──────────────────────────────────────────────────
-function dbToLead(r) {
-  return {
-    id:            r.id,
-    name:          r.name || "",
-    contact:       r.contact || "",
-    instagram:     r.instagram || "",
-    tier:          r.tier || "A2",
-    tag:           r.tag || "Tech-House",
-    stage:         r.stage || "target",
-    notes:         r.notes || "",
-    followUpDate:  r.follow_up_date || null,
-    lastContact:   r.last_contact || null,
-    archived:      r.archived || false,
-  };
-}
-function leadToDb(lead, userId) {
-  return {
-    id:             typeof lead.id === "number" ? undefined : lead.id, // let DB generate uuid for new
-    user_id:        userId,
-    name:           lead.name,
-    contact:        lead.contact || "",
-    instagram:      lead.instagram || "",
-    tier:           lead.tier || "A2",
-    tag:            lead.tag || "Tech-House",
-    stage:          lead.stage || "target",
-    notes:          lead.notes || "",
-    follow_up_date: lead.followUpDate || null,
-    last_contact:   lead.lastContact || null,
-    archived:       lead.archived || false,
-  };
-}
-function dbToGig(r) {
-  return {
-    id:     r.id,
-    venue:  r.venue || "",
-    city:   r.city || "",
-    date:   r.date || "",
-    status: r.status || "pending",
-    fee:    r.fee || "",
-    tag:    r.tag || "",
-    notes:  r.notes || "",
-  };
-}
-function gigToDb(gig, userId) {
-  return {
-    id:      typeof gig.id === "number" ? undefined : gig.id,
-    user_id: userId,
-    venue:   gig.venue,
-    city:    gig.city || "",
-    date:    gig.date || null,
-    status:  gig.status || "pending",
-    fee:     gig.fee || "",
-    tag:     gig.tag || "",
-    notes:   gig.notes || "",
-  };
 }
 
 function NoxReachApp({ user, session, supabase }) {
