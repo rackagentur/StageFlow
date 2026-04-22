@@ -1992,7 +1992,7 @@ export default function NoxReach() {
             <Logo size={28} />
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.02em", color: COLORS.text }}>NoxReach</div>
-              <div style={{ fontSize: 10, color: COLORS.textSecondary, letterSpacing: "0.06em" }}>NIGHTLIFE OS</div>
+              <div style={{ fontSize: 10, color: "#00D4FF", letterSpacing: "0.12em", opacity: 0.75 }}>NIGHTLIFE OS</div>
             </div>
           </div>
         </div>
@@ -2005,7 +2005,7 @@ export default function NoxReach() {
             </button>
           ))}
           <div style={{ height: 1, background: COLORS.border, margin: "10px 4px 12px" }} />
-          <div style={{ fontSize: 9, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", padding: "0 8px", marginBottom: 6 }}>Resources</div>
+          <div style={{ fontSize: 9, color: "#00D4FF", letterSpacing: "0.12em", textTransform: "uppercase", padding: "0 8px", marginBottom: 6, opacity: 0.6 }}>Resources</div>
           {TABS.filter(t => t.group === "ref").map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: activeTab === tab.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeTab === tab.id ? COLORS.purpleDim : "transparent"}`, color: activeTab === tab.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeTab === tab.id ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
               <span style={{ fontSize: 14 }}>{tab.icon}</span>
