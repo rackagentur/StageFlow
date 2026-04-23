@@ -529,7 +529,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
   };
 
   return (
-    <div onClick={(e) => { if (e.target === e.currentTarget || !e.target.closest('button')) { onSelect(selectedLead?.id === lead.id ? null : lead); } }} style={{
+        <div onClick={(e) => { if (e.target === e.currentTarget || !e.target.closest('button')) { onSelect(isSelected ? null : lead); } }} style={{
 
       background: isSelected ? COLORS.purpleBg : COLORS.surface,
       border: `1px solid ${isSelected ? COLORS.purple : isOverdue && !lead.archived ? COLORS.gold + "66" : COLORS.border}`,
