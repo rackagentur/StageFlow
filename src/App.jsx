@@ -2336,7 +2336,7 @@ function NoxReachApp({ user, session, supabase }) {
     setLeads(prev => prev.filter(l => l.id !== leadId));
     showToast(`${lead?.name || "Lead"} deleted`, "info");
     try {
-      await supabase.from("leads").delete().eq("id", leadId).eq("user_id", user.id);
+      await supabase.from("leads").delete().eq("id" leadId).eq("user_id", user.id);
     } catch (err) { console.error("deleteLead sync failed:", err); }
   };
 
@@ -2351,7 +2351,16 @@ function NoxReachApp({ user, session, supabase }) {
       ]);
     } catch (err) { console.error("resetData sync failed:", err); }
   };
-
+const dueCount     = leads.filter(l => !l.archived && l.followUpDate && new Date(l.followUpDate) <= new Date()).length;
+  const repliedCount = leads.filter(l => !l.archived && (l.stage === "replied" || l.stage === "booked")).length;
+  const unreadCount  = useMemo(() => {
+    try {
+      const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]"));
+      return leads.filter(l => !l.archived && (l.stage === "replied" || l.stage === "booked") && !read.has(l.id)).length;
+    } catch { return 0; }
+  }, [leads]);
+const activeLeads = leads.filter(l => !l.archived);
+  const hasFilter   = search || filters.tier || filters.tag || filters.stage;
   // ── Loading screen while fetching user data ────────────────────────────────
   if (dataLoading) {
     return (
@@ -2363,15 +2372,7 @@ function NoxReachApp({ user, session, supabase }) {
     );
   }
 
-  const dueCount     = leads.filter(l => !l.archived && l.followUpDate && new Date(l.followUpDate) <= new Date()).length;
-  const repliedCount = leads.filter(l => !l.archived && (l.stage === "replied" || l.stage === "booked")).length;
-  const unreadCount  = useMemo(() => {
-    try {
-      const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]"));
-      return leads.filter(l => !l.archived && (l.stage === "replied" || l.stage === "booked") && !read.has(l.id)).length;
-    } catch { return 0; }
-  }, [leads]);
-
+  
   const TABS = [
     { id: "dashboard", label: "Dashboard",  icon: "▣",  group: "main" },
     { id: "pipeline",  label: "Pipeline",   icon: "⬛", group: "main" },
@@ -2383,8 +2384,7 @@ function NoxReachApp({ user, session, supabase }) {
     { id: "settings",  label: "Settings",   icon: "⚙",  group: "ref" },
   ];
 
-  const activeLeads = leads.filter(l => !l.archived);
-  const hasFilter   = search || filters.tier || filters.tag || filters.stage;
+  
 
   return (
     <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: COLORS.bg, minHeight: "100vh", color: COLORS.text }}>
