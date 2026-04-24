@@ -1609,10 +1609,10 @@ function UpgradeModal({ onClose, onUpgrade, reason }) {
           <div style={{ textAlign: "center", marginBottom: 20 }}>
             <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>NoxReach Pro</div>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 36, fontWeight: 800, color: COLORS.text, fontFamily: "'DM Mono', monospace" }}>€9</span>
+              <span style={{ fontSize: 36, fontWeight: 800, color: COLORS.text, fontFamily: "'DM Mono', monospace" }}>€19</span>
               <span style={{ fontSize: 14, color: COLORS.textSecondary }}>/month</span>
             </div>
-            <div style={{ fontSize: 11, color: COLORS.green }}>€79/year — save 2 months free</div>
+            <div style={{ fontSize: 11, color: COLORS.green }}>€152/year (€15/mo) — save 20%</div>
           </div>
 
           {/* Feature list */}
