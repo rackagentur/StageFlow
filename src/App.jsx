@@ -490,7 +490,13 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
 
         <div style={{ width: 1, height: 16, background: COLORS.border, margin: "0 2px" }} />
 
-        {STAGES.map(s => (
+        {[
+          { id: "target",    label: "Target",    color: "#444444", stages: ["target"] },
+          { id: "contacted", label: "Contacted", color: "#7B3FE4", stages: ["contacted"] },
+          { id: "followup",  label: "Follow-up", color: "#9B5FFF", stages: ["followup1","followup2"] },
+          { id: "replied",   label: "Replied",   color: "#22C55E", stages: ["replied"] },
+          { id: "booked",    label: "Booked",    color: "#D4AF37", stages: ["booked"] },
+        ].map(s => (
           <FilterPill key={s.id} label={s.label} active={filters.stage === s.id} color={s.color}
             onClick={() => toggle("stage", s.id)} onClear={() => toggle("stage", s.id)} />
         ))}
@@ -589,7 +595,11 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
     }
     if (filters.tier  && l.tier    !== filters.tier)  return false;
     if (filters.tag   && l.tag     !== filters.tag)   return false;
-    if (filters.stage && l.stage   !== filters.stage) return false;
+    if (filters.stage) {
+      const stageMap = { followup: ["followup1","followup2"] };
+      const allowed = stageMap[filters.stage] || [filters.stage];
+      if (!allowed.includes(l.stage)) return false;
+    }
     return true;
   });
 
@@ -2734,7 +2744,11 @@ const activeLeads = leads.filter(l => !l.archived);
                 if (search) { const q = search.toLowerCase(); if (![l.name,l.contact,l.instagram,l.notes,l.tag,l.tier].some(f => f && f.toLowerCase().includes(q))) return false; }
                 if (filters.tier  && l.tier  !== filters.tier)  return false;
                 if (filters.tag   && l.tag   !== filters.tag)   return false;
-                if (filters.stage && l.stage !== filters.stage) return false;
+                if (filters.stage) {
+          const stageMap = { followup: ["followup1","followup2"] };
+          const allowed = stageMap[filters.stage] || [filters.stage];
+          if (!allowed.includes(l.stage)) return false;
+        }
                 return true;
               }).length}
               totalCount={activeLeads.length}
