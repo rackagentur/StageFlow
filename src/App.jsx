@@ -755,7 +755,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
             <input
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              style={{ ...inputStyle, fontSize: 14, fontWeight: 700, marginTop: 0 }}
+              autoComplete="off" style={{ ...inputStyle, fontSize: 14, fontWeight: 700, marginTop: 0 }}
               autoFocus
             />
           ) : (
@@ -848,7 +848,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         <textarea
           value={form.notes}
           onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-          style={{ ...inputStyle, minHeight: 72, resize: "vertical", marginTop: 3 }}
+          autoComplete="off" style={{ ...inputStyle, minHeight: 72, resize: "vertical", marginTop: 3 }}
           placeholder="Context, connections, vibe of the venue…"
         />
       ) : (
