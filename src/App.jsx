@@ -1418,8 +1418,12 @@ function CopyBlock({ label, value }) {
   );
 }
 
-function AssetsView() {
+function AssetsView({ supabase, userId }) {
+  const [assets, setAssets] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [activeSection, setActiveSection] = useState("epk");
+
   const SECTIONS = [
     { id: "epk",   label: "EPK",         icon: "📄" },
     { id: "mixes", label: "Mixes",       icon: "🎧" },
@@ -1427,112 +1431,133 @@ function AssetsView() {
     { id: "links", label: "Quick Links", icon: "🔗" },
   ];
 
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("user_assets").select("*").eq("user_id", userId).single()
+      .then(({ data }) => setAssets(data || {}));
+  }, [userId]);
+
+  const set = (field) => (e) => setAssets(a => ({ ...a, [field]: e.target.value }));
+
+  const save = async () => {
+    setSaving(true);
+    const payload = { ...assets, user_id: userId };
+    const { error } = assets?.id
+      ? await supabase.from("user_assets").update(payload).eq("id", assets.id)
+      : await supabase.from("user_assets").insert([payload]);
+    if (!error) { setSaved(true); setTimeout(() => setSaved(false), 2000); }
+    setSaving(false);
+  };
+
+  const incomplete = !assets?.artist_name || !assets?.epk_url || !assets?.soundcloud || !assets?.booking_email;
+
+  const inputStyle = {
+    width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`,
+    borderRadius: 6, padding: "8px 10px", color: COLORS.text, fontSize: 12,
+    fontFamily: "'DM Sans', sans-serif", outline: "none", marginTop: 4,
+    colorScheme: "dark",
+  };
+  const labelStyle = { fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 12, display: "block" };
+
+  if (assets === null) return <div style={{ padding: 40, color: COLORS.textMuted, fontSize: 13 }}>Loading assets...</div>;
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 20 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, padding: "0 4px" }}>Your Assets</div>
-        {SECTIONS.map(s => (
-          <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ padding: "12px 14px", borderRadius: 10, textAlign: "left", cursor: "pointer", background: activeSection === s.id ? COLORS.purpleBg : COLORS.surface, border: `1px solid ${activeSection === s.id ? COLORS.purple : COLORS.border}`, color: activeSection === s.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeSection === s.id ? 700 : 500, display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
-            <span>{s.icon}</span>{s.label}
-          </button>
-        ))}
-        <div style={{ marginTop: 12, padding: "14px", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12 }}>
-          <img src="https://soundofgeez.com/BRANDWT.png" alt="GEEZ" style={{ width: "100%", objectFit: "contain", marginBottom: 10, maxHeight: 48 }} />
-          <div style={{ fontSize: 13, fontWeight: 800, color: COLORS.text, textAlign: "center" }}>GEEZ</div>
-          <div style={{ fontSize: 10, color: COLORS.textSecondary, textAlign: "center", marginTop: 2 }}>Cologne, DE · International DJ</div>
-          <div style={{ height: 1, background: COLORS.border, margin: "10px 0" }} />
-          <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5, textAlign: "center", fontStyle: "italic" }}>"Peak-driven Tech House. Disco soul. Tribal energy."</div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {incomplete && (
+        <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 12, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ fontSize: 20 }}>📋</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>Complete your asset kit</div>
+            <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5 }}>Venues will ask for your EPK, mix link, and booking email. Fill these in once and they're ready to paste into any outreach.</div>
+          </div>
+          <button onClick={() => setActiveSection("epk")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Fill in now →</button>
         </div>
-      </div>
-      <div>
-        {activeSection === "epk" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ marginBottom: 4 }}><div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>Electronic Press Kit</div><div style={{ fontSize: 12, color: COLORS.textSecondary }}>Send this to venues. It has everything they need.</div></div>
-            <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden" }}>
-              <div style={{ background: `linear-gradient(135deg, ${COLORS.purpleBg}, #0A0A18)`, padding: "28px 24px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.02em" }}>GEEZ</div>
-                  <div style={{ fontSize: 12, color: COLORS.textSecondary, marginTop: 4 }}>International DJ & Producer · Cologne, DE</div>
-                  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>{["Tech House", "Tribal", "Circuit"].map(t => <Badge key={t} color={COLORS.purple}>{t}</Badge>)}</div>
-                </div>
-                <a href="https://soundofgeez.com/GeezEPK.pdf" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                  <button style={{ padding: "12px 22px", background: COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: `0 4px 20px rgba(123,63,228,0.4)` }}>↓ Download EPK (PDF)</button>
-                </a>
-              </div>
-              <div style={{ padding: "18px 24px", display: "flex", flexDirection: "column", gap: 10 }}>
-                <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>What's inside the EPK</div>
-                {["Artist bio & history", "Booking contact info", "Genre & style overview", "Press photos", "Mix / audio links"].map((item, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: COLORS.textSecondary }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: COLORS.purple }} />{item}</div>
-                ))}
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, padding: "0 4px" }}>Your Assets</div>
+          {SECTIONS.map(s => (
+            <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ padding: "12px 14px", borderRadius: 10, textAlign: "left", cursor: "pointer", background: activeSection === s.id ? COLORS.purpleBg : COLORS.surface, border: `1px solid ${activeSection === s.id ? COLORS.purple : COLORS.border}`, color: activeSection === s.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeSection === s.id ? 700 : 500, display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
+              <span>{s.icon}</span>{s.label}
+            </button>
+          ))}
+          <button onClick={save} disabled={saving} style={{ marginTop: 12, padding: "10px", background: saved ? COLORS.green : COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            {saving ? "Saving..." : saved ? "✓ Saved" : "Save Assets"}
+          </button>
+        </div>
+
+        <div>
+          {activeSection === "epk" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>EPK & Identity</div>
+              <label style={labelStyle}>Artist Name</label>
+              <input style={inputStyle} value={assets.artist_name || ""} onChange={set("artist_name")} placeholder="e.g. GEEZ" />
+              <label style={labelStyle}>Location</label>
+              <input style={inputStyle} value={assets.location || ""} onChange={set("location")} placeholder="e.g. Cologne, DE" />
+              <label style={labelStyle}>Tagline</label>
+              <input style={inputStyle} value={assets.tagline || ""} onChange={set("tagline")} placeholder="e.g. Peak-driven Tech House. Tribal energy." />
+              <label style={labelStyle}>EPK PDF URL</label>
+              <input style={inputStyle} value={assets.epk_url || ""} onChange={set("epk_url")} placeholder="https://yoursite.com/epk.pdf" />
+              <label style={labelStyle}>Press Photos URL (ZIP or folder)</label>
+              <input style={inputStyle} value={assets.press_photos_url || ""} onChange={set("press_photos_url")} placeholder="https://yoursite.com/press_photos.zip" />
+              <label style={labelStyle}>Booking Email</label>
+              <input style={inputStyle} value={assets.booking_email || ""} onChange={set("booking_email")} placeholder="booking@yoursite.com" />
+              {assets.epk_url && <div style={{ marginTop: 12 }}><CopyBlock label="EPK PDF URL" value={assets.epk_url} /></div>}
+            </div>
+          )}
+          {activeSection === "mixes" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Mixes & Audio</div>
+              <label style={labelStyle}>SoundCloud URL</label>
+              <input style={inputStyle} value={assets.soundcloud || ""} onChange={set("soundcloud")} placeholder="https://soundcloud.com/yourname" />
+              <label style={labelStyle}>Spotify URL</label>
+              <input style={inputStyle} value={assets.spotify || ""} onChange={set("spotify")} placeholder="https://open.spotify.com/artist/..." />
+              <label style={labelStyle}>Mix Link 1</label>
+              <input style={inputStyle} value={assets.mix_link_1 || ""} onChange={set("mix_link_1")} placeholder="https://soundcloud.com/yourname/mix-1" />
+              <label style={labelStyle}>Mix Link 2</label>
+              <input style={inputStyle} value={assets.mix_link_2 || ""} onChange={set("mix_link_2")} placeholder="https://soundcloud.com/yourname/mix-2" />
+              {assets.soundcloud && <div style={{ marginTop: 12 }}><CopyBlock label="SoundCloud" value={assets.soundcloud} /></div>}
+              {assets.mix_link_1 && <CopyBlock label="Mix Link 1" value={assets.mix_link_1} />}
+              <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 12, padding: "14px 18px", marginTop: 8 }}>
+                <div style={{ fontSize: 11, color: COLORS.purple, fontWeight: 700, marginBottom: 6 }}>💡 Outreach tip</div>
+                <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>Don't lead with the mix link. Send the initial message first — build curiosity. Drop the SoundCloud link only when they ask or in follow-up 1.</div>
               </div>
             </div>
-            <CopyBlock label="EPK PDF URL" value="https://soundofgeez.com/GeezEPK.pdf" />
-            <AssetLink icon="🖼" label="Download Press Photos" sublabel="ZIP archive · soundofgeez.com" href="https://soundofgeez.com/press_photos.zip" accent={COLORS.gold} actionLabel="Download" />
-          </div>
-        )}
-        {activeSection === "mixes" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ marginBottom: 4 }}><div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>Mixes & Audio</div><div style={{ fontSize: 12, color: COLORS.textSecondary }}>Send a link before or after initial outreach.</div></div>
-            <AssetLink icon="☁" label="SoundCloud Profile" sublabel="gregorgusgeez · Full discography & mixes" href="https://soundcloud.com/gregorgusgeez" accent={COLORS.purple} actionLabel="Listen" />
-            <AssetLink icon="♫" label="Spotify" sublabel="Stream releases on Spotify" href="https://soundofgeez.com/music.html" accent={COLORS.green} actionLabel="Stream" />
-            <div style={{ marginTop: 4 }}><div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>Copy links for outreach</div><div style={{ display: "flex", flexDirection: "column", gap: 8 }}><CopyBlock label="SoundCloud" value="https://soundcloud.com/gregorgusgeez" /><CopyBlock label="Website" value="https://soundofgeez.com" /></div></div>
-            <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 12, padding: "14px 18px" }}>
-              <div style={{ fontSize: 11, color: COLORS.purple, fontWeight: 700, marginBottom: 6 }}>💡 Outreach tip</div>
-              <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>Don't lead with the mix link. Send the initial message first — build curiosity. Drop the SoundCloud link only when they ask or in follow-up 1.</div>
+          )}
+          {activeSection === "bio" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Bio & Press</div>
+              <label style={labelStyle}>Official Bio</label>
+              <textarea style={{ ...inputStyle, minHeight: 120, resize: "vertical", colorScheme: "dark" }} value={assets.bio || ""} onChange={set("bio")} placeholder="Your artist bio — use this in outreach, EPKs, and social bios." />
+              {assets.bio && (
+                <button onClick={() => navigator.clipboard.writeText(assets.bio)} style={{ alignSelf: "flex-start", marginTop: 4, padding: "5px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textSecondary, fontSize: 11, cursor: "pointer" }}>Copy Bio</button>
+              )}
+              <label style={labelStyle}>Website</label>
+              <input style={inputStyle} value={assets.website || ""} onChange={set("website")} placeholder="https://yoursite.com" />
+              <label style={labelStyle}>Genres (comma separated)</label>
+              <input style={inputStyle} value={assets.genres || ""} onChange={set("genres")} placeholder="e.g. Tech House, Tribal, Circuit" />
             </div>
-          </div>
-        )}
-        {activeSection === "bio" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ marginBottom: 4 }}><div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>Bio & Press</div><div style={{ fontSize: 12, color: COLORS.textSecondary }}>Use in outreach, EPKs, and social bios.</div></div>
-            <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden" }}>
-              <div style={{ padding: "14px 18px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.06em", textTransform: "uppercase" }}>Official Bio</div>
-                <button onClick={() => navigator.clipboard.writeText("GEEZ is an international circuit DJ known for precision-built tribal and tech house sets that rise from hypnotic groove into peak-hour intensity. With commanding stage presence and emotional control, he delivers nights that build, sweat, and release together. From Pride main stages to global circuit floors, GEEZ brings power without chaos and groove without compromise.")}
-                  style={{ padding: "5px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textSecondary, fontSize: 11, cursor: "pointer" }}>Copy</button>
-              </div>
-              <div style={{ padding: "18px", fontSize: 13, color: COLORS.text, lineHeight: 1.8, fontStyle: "italic" }}>"GEEZ is an international circuit DJ known for precision-built tribal and tech house sets that rise from hypnotic groove into peak-hour intensity. With commanding stage presence and emotional control, he delivers nights that build, sweat, and release together. From Pride main stages to global circuit floors, GEEZ brings power without chaos and groove without compromise."</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>Press Gallery</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                {[1,2,3,4,5,6].map(n => (
-                  <div key={n} style={{ borderRadius: 8, overflow: "hidden", border: `1px solid ${COLORS.border}`, aspectRatio: "1", background: COLORS.surface }}>
-                    <img src={`https://soundofgeez.com/assets/gallery${n}.jpg`} alt={`GEEZ press ${n}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 8 }}><AssetLink icon="🖼" label="Download All Press Photos" sublabel="High-res ZIP · For venue promoters" href="https://soundofgeez.com/press_photos.zip" accent={COLORS.gold} actionLabel="Download" /></div>
-            </div>
-          </div>
-        )}
-        {activeSection === "links" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ marginBottom: 4 }}><div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>Quick Links</div><div style={{ fontSize: 12, color: COLORS.textSecondary }}>Everything you need to paste into an outreach message.</div></div>
+          )}
+          {activeSection === "links" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <CopyBlock label="Website"      value="https://soundofgeez.com" />
-              <CopyBlock label="EPK (PDF)"    value="https://soundofgeez.com/GeezEPK.pdf" />
-              <CopyBlock label="SoundCloud"   value="https://soundcloud.com/gregorgusgeez" />
-              <CopyBlock label="Instagram"    value="https://instagram.com/gregorgusgeez" />
-              <CopyBlock label="Booking Email" value="info@soundofgeez.com" />
-              <CopyBlock label="Press Photos" value="https://soundofgeez.com/press_photos.zip" />
+              <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Quick Links</div>
+              <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 8 }}>Everything ready to paste into an outreach message.</div>
+              {assets.website      && <CopyBlock label="Website"       value={assets.website} />}
+              {assets.epk_url      && <CopyBlock label="EPK (PDF)"     value={assets.epk_url} />}
+              {assets.soundcloud   && <CopyBlock label="SoundCloud"    value={assets.soundcloud} />}
+              {assets.booking_email && <CopyBlock label="Booking Email" value={assets.booking_email} />}
+              {assets.press_photos_url && <CopyBlock label="Press Photos" value={assets.press_photos_url} />}
+              {assets.mix_link_1   && <CopyBlock label="Mix Link 1"    value={assets.mix_link_1} />}
+              {assets.mix_link_2   && <CopyBlock label="Mix Link 2"    value={assets.mix_link_2} />}
+              {!assets.website && !assets.epk_url && !assets.soundcloud && (
+                <div style={{ padding: "24px", textAlign: "center", color: COLORS.textMuted, fontSize: 12, border: `1px dashed ${COLORS.border}`, borderRadius: 10 }}>
+                  No links saved yet. Fill in your EPK and Mixes tabs first.
+                </div>
+              )}
             </div>
-            <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "16px 18px" }}>
-              <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Video Reels</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[{ label: "Geez & Jezebel @ Outsiders", type: "Live Set" }, { label: "Moussa & Geez @ Outsiders", type: "Live Set" }, { label: "Ballroom Code Queer Frankfurt", type: "Live Set" }, { label: "INSOMNIA PROMO", type: "Music Video" }, { label: "FREELOVE! Official", type: "Music Video" }].map((v, i) => (
-                  <a key={i} href="https://soundofgeez.com/videos.html" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
-                      <div><div style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>{v.label}</div><div style={{ fontSize: 10, color: COLORS.textSecondary, marginTop: 2 }}>{v.type}</div></div>
-                      <Badge color={v.type === "Live Set" ? COLORS.purple : COLORS.gold}>{v.type}</Badge>
-                    </div>
-                  </a>
-                ))}
-              </div>
-              <div style={{ marginTop: 10 }}><AssetLink icon="▶" label="View All Videos" sublabel="soundofgeez.com/videos" href="https://soundofgeez.com/videos.html" accent={COLORS.purple} actionLabel="Watch" /></div>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2393,7 +2418,8 @@ function NoxReachApp({ user, session, supabase }) {
 
   const showToast = (msg, type = "info") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3200); };
 
-  const handleUpgrade = () => { setIsPro(true); saveIsPro(true); setUpgradeModal(null); showToast("🎉 Welcome to Pro! All features unlocked.", "success"); };
+  const [showWelcomePro, setShowWelcomePro] = useState(false);
+  const handleUpgrade = () => { setIsPro(true); saveIsPro(true); setUpgradeModal(null); setShowWelcomePro(true); };
   const requestUpgrade = (reason) => setUpgradeModal(reason);
 
   const addLead = async (lead) => {
@@ -2534,6 +2560,42 @@ const activeLeads = leads.filter(l => !l.archived);
       `}</style>
 
       {showAddModal     && <AddLeadModal onClose={() => setShowAddModal(false)} onAdd={addLead} customTags={customTags} TAG_COLORS={TAG_COLORS} onAddTag={addCustomTag} />}
+      {showWelcomePro && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+          onClick={() => setShowWelcomePro(false)}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 420, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(123,63,228,0.2)` }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.purple}, ${COLORS.purpleLight}, ${COLORS.gold})` }} />
+            <div style={{ padding: "32px 28px" }}>
+              <div style={{ textAlign: "center", marginBottom: 24 }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.text, marginBottom: 6 }}>Welcome to Pro</div>
+                <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Everything is unlocked. Here's what you now have access to:</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                {[
+                  { icon: "∞", label: "Unlimited leads & gigs", desc: "No more caps. Track every opportunity." },
+                  { icon: "⏰", label: "Auto follow-up scheduling", desc: "Reminders set themselves at 5 and 14 days." },
+                  { icon: "✦", label: "All outreach templates", desc: "Berlin, Circuit, Disco, Leverage — all unlocked." },
+                  { icon: "▣", label: "Conversion Funnel + Next Actions", desc: "See exactly where bookings drop off." },
+                  { icon: "⚙", label: "Custom follow-up intervals", desc: "Set your own cadence in Settings." },
+                ].map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 14px", background: COLORS.bg, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: COLORS.purple, flexShrink: 0 }}>{f.icon}</div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text }}>{f.label}</div>
+                      <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 2 }}>{f.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setShowWelcomePro(false)} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>
+                Let's go →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
       {showResetConfirm && (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowResetConfirm(false)}>
@@ -2553,13 +2615,13 @@ const activeLeads = leads.filter(l => !l.archived);
       {/* Sidebar */}
       <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <a href="https://rackagentur.github.io/NoxReach/landing-v2.html" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}>
             <Logo size={28} />
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.02em", color: COLORS.text }}>NoxReach</div>
               <div style={{ fontSize: 10, color: "#00D4FF", letterSpacing: "0.12em", opacity: 0.75 }}>NIGHTLIFE OS</div>
             </div>
-          </div>
+          </a>
         </div>
         <nav style={{ padding: "16px 12px", flex: 1 }}>
           {TABS.filter(t => t.group === "main").map(tab => (
@@ -2645,7 +2707,7 @@ const activeLeads = leads.filter(l => !l.archived);
                 {activeTab === "followups" && `${dueCount} due today`}
                 {activeTab === "outreach"  && (isPro ? "4 templates ready" : "2 / 4 templates · Upgrade for all")}
                 {activeTab === "dashboard" && "Your booking overview"}
-                {activeTab === "assets"    && "GEEZ · soundofgeez.com"}
+                {activeTab === "assets"    && "Your Assets"}
                 {activeTab === "replyhub"  && `${repliedCount} message${repliedCount !== 1 ? "s" : ""}${unreadCount > 0 ? ` · ${unreadCount} unread` : ""}`}
                 {activeTab === "calendar"  && `${gigs.filter(g => new Date(g.date) >= new Date()).length} upcoming gigs`}
                 {activeTab === "settings"  && `Follow-up 1: ${settings.followup1Days}d · Follow-up 2: ${settings.followup2Days}d`}
@@ -2691,7 +2753,7 @@ const activeLeads = leads.filter(l => !l.archived);
           )}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
           {activeTab === "outreach"  && <OutreachView isPro={isPro} onUpgradeClick={requestUpgrade} />}
-          {activeTab === "assets"    && <AssetsView />}
+          {activeTab === "assets"    && <AssetsView supabase={supabase} userId={user.id} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} />}
           {activeTab === "replyhub"  && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} />}
           {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} />}

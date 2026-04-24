@@ -1,60 +1,29 @@
-# Stageflow
+# NoxReach
 
-**Booking OS for DJs. From outreach to booked.**
+**The booking OS for DJs.**
 
-> "DJs don't get rejected. They get ignored."
-
-Stageflow is a booking pipeline and follow-up system built for self-managed DJs. Track every venue you reach out to, auto-schedule follow-ups, and move leads from cold contact to confirmed gig — consistently.
-
----
-
-## Live
-
-🌐 [stageflow landing page](https://YOUR_USERNAME.github.io/stageflow)
-
----
-
-## What's in this repo
-
-| File | Description |
-|---|---|
-| `index.html` | Landing page — fully self-contained HTML/CSS/JS |
-
----
+NoxReach helps DJs track every venue, promoter, and agency contact, stay on top of follow-ups, and move leads from first message to booked night — without letting warm opportunities go cold.
 
 ## Stack
+- React (single-file, `src/App.jsx`)
+- Supabase (auth + database)
+- Vercel (hosting, auto-deploy from GitHub main)
+- GitHub Pages (landing page)
 
-- Vanilla HTML / CSS / JS — no build step, no dependencies
-- Fonts: Syne + DM Sans + DM Mono via Google Fonts
-- Deploys on GitHub Pages
+## Local dev
+```bash
+npm install
+npm run dev
+```
 
----
+## Deploy
+Push to `main` — Vercel auto-deploys in ~60 seconds.
 
-## The app
+## Key files
+- `src/App.jsx` — entire app
+- `landing-v2.html` — marketing landing page
+- `public/` — static assets (favicon, screenshots)
 
-The full Stageflow web app is a React single-page application built separately. Features:
-
-- Kanban pipeline (Target → Contacted → Follow-up 1 → Follow-up 2 → Replied → Booked)
-- Auto follow-up scheduling
-- Outreach templates (Berlin, Circuit, Disco, Leverage)
-- Reply Hub — manage inbound promoter messages
-- Gig Calendar
-- Conversion funnel + Next Actions dashboard
-- Custom genres
-- Free / Pro freemium model
-
----
-
-## Pricing
-
-| Plan | Price | Limits |
-|---|---|---|
-| Free | €0 | 10 leads, 5 gigs, 2 templates |
-| Pro | €9/mo or €79/yr | Unlimited everything |
-| Agency | Coming Phase 3 | Multi-artist, team access |
-
----
-
-## Contact
-
-hello@stageflow.io
+## Links
+- App: https://noxreach-nox.vercel.app/
+- Landing: https://rackagentur.github.io/NoxReach/landing-v2.html
