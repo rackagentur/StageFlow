@@ -39,6 +39,8 @@ function LoginScreen({ onAuth }) {
     borderRadius: 10, color: C.text, fontSize: 14, outline: "none",
     fontFamily: "'DM Sans', sans-serif",
     transition: "border-color 0.2s",
+    WebkitBoxShadow: `0 0 0 1000px ${C.surface} inset`,
+WebkitTextFillColor: C.text,
   };
 
   const handleSubmit = async (e) => {
@@ -713,8 +715,11 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   };
 
   const inputStyle = {
-    width: "100%",
-    background: COLORS.bg,
+   const inputStyle = {
+  width: "100%",
+  background: COLORS.bg,
+  WebkitBoxShadow: `0 0 0 1000px ${COLORS.bg} inset`,
+  WebkitTextFillColor: COLORS.text,
     border: `1px solid ${COLORS.border}`,
     borderRadius: 6,
     padding: "6px 10px",
