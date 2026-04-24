@@ -2669,11 +2669,8 @@ const activeLeads = leads.filter(l => !l.archived);
       <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
           <a href="https://rackagentur.github.io/NoxReach/landing-v2.html" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}>
-            <Logo size={28} />
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.02em", color: COLORS.text }}>NoxReach</div>
-              <div style={{ fontSize: 10, color: "#00D4FF", letterSpacing: "0.12em", opacity: 0.75 }}>NIGHTLIFE OS</div>
-            </div>
+            <img src="/nr-icon.png" alt="NoxReach" style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0 }} />
+            <img src="/nr-wordmark.png" alt="NoxReach" style={{ height: 18, objectFit: "contain" }} />
           </a>
         </div>
         <nav style={{ padding: "16px 12px", flex: 1 }}>
