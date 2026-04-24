@@ -348,8 +348,8 @@ function loadSettings() { try { const r = localStorage.getItem(STORAGE_KEY_SETTI
 function saveSettings(s) { try { localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s)); } catch {} }
 
 const STORAGE_KEY_PRO = "noxreach_pro_v1";
-function loadIsPro() { try { return localStorage.getItem(STORAGE_KEY_PRO) === "true"; } catch { return false; } }
-function saveIsPro(v) { try { localStorage.setItem(STORAGE_KEY_PRO, String(v)); } catch {} }
+function loadIsPro(userId) { try { return localStorage.getItem(STORAGE_KEY_PRO + "_" + userId) === "true"; } catch { return false; } }
+function saveIsPro(v, userId) { try { localStorage.setItem(STORAGE_KEY_PRO + "_" + userId, String(v)); } catch {} }
 const FREE_LIMITS = { leads: 9999, gigs: 9999, templates: 9999 };
 
 const STORAGE_KEY_TAGS = "noxreach_tags_v1";
@@ -2362,7 +2362,7 @@ function NoxReachApp({ user, session, supabase }) {
   const [gigs,  setGigs]                = useState([]);
   const [dataLoading, setDataLoading]   = useState(true);
   const [settings, setSettings]         = useState(() => loadSettings());
-  const [isPro, setIsPro]               = useState(() => loadIsPro());
+  const [isPro, setIsPro]               = useState(() => loadIsPro(user.id));
   const [upgradeModal, setUpgradeModal] = useState(null);
   const [customTags, setCustomTags]     = useState(() => loadCustomTags());
 
@@ -2419,7 +2419,7 @@ function NoxReachApp({ user, session, supabase }) {
   const showToast = (msg, type = "info") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3200); };
 
   const [showWelcomePro, setShowWelcomePro] = useState(false);
-  const handleUpgrade = () => { setIsPro(true); saveIsPro(true); setUpgradeModal(null); setShowWelcomePro(true); };
+  const handleUpgrade = () => { setIsPro(true); saveIsPro(true, user.id); setUpgradeModal(null); setShowWelcomePro(true); };
   const requestUpgrade = (reason) => setUpgradeModal(reason);
 
   const addLead = async (lead) => {
@@ -2659,7 +2659,7 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 4, background: COLORS.gold + "22", color: COLORS.gold, border: `1px solid ${COLORS.gold}44`, letterSpacing: "0.1em" }}>PRO</div>
               <span style={{ fontSize: 10, color: COLORS.textMuted }}>All features unlocked</span>
-              <button onClick={() => { setIsPro(false); saveIsPro(false); showToast("Switched to Free (demo)", "info"); }} style={{ marginLeft: "auto", fontSize: 9, color: COLORS.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0 }}>demo</button>
+              <button onClick={() => { setIsPro(false); saveIsPro(false, user.id); showToast("Switched to Free (demo)", "info"); }} style={{ marginLeft: "auto", fontSize: 9, color: COLORS.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0 }}>demo</button>
             </div>
           )}
 
