@@ -719,6 +719,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   background: COLORS.bg,
   WebkitBoxShadow: `0 0 0 1000px ${COLORS.bg} inset`,
   WebkitTextFillColor: COLORS.text,
+  colorScheme: "dark",
     border: `1px solid ${COLORS.border}`,
     borderRadius: 6,
     padding: "6px 10px",
