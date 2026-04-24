@@ -348,7 +348,7 @@ function saveSettings(s) { try { localStorage.setItem(STORAGE_KEY_SETTINGS, JSON
 const STORAGE_KEY_PRO = "noxreach_pro_v1";
 function loadIsPro() { try { return localStorage.getItem(STORAGE_KEY_PRO) === "true"; } catch { return false; } }
 function saveIsPro(v) { try { localStorage.setItem(STORAGE_KEY_PRO, String(v)); } catch {} }
-const FREE_LIMITS = { leads: 10, gigs: 5, templates: 2 };
+const FREE_LIMITS = { leads: 9999, gigs: 9999, templates: 9999 };
 
 const STORAGE_KEY_TAGS = "noxreach_tags_v1";
 const DEFAULT_TAGS = ["Tech-House", "Disco", "Festival"];
@@ -2674,7 +2674,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pipeline"  && (
             <>
               <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} />
-              {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} TAG_COLORS={TAG_COLORS} />}
+              {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} TAG_COLORS={TAG_COLORS} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} />}
             </>
           )}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
