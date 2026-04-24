@@ -834,7 +834,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
 
       <div style={labelStyle}>Follow-up Date</div>
       {editing ? (
-        <input type="date" value={form.follow_up_date} onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))} style={inputStyle} />
+        <input type="date" value={form.follow_up_date} onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))} style={{ ...inputStyle, colorScheme: "dark" }} />
       ) : (
         <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3 }}>{lead.follow_up_date || <span style={{ color: COLORS.textMuted }}>Not set</span>}</div>
       )}
@@ -848,7 +848,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         <textarea
           value={form.notes}
           onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-          autoComplete="off" style={{ ...inputStyle, minHeight: 72, resize: "vertical", marginTop: 3 }}
+          autoComplete="off" style={{ ...inputStyle, minHeight: 72, resize: "vertical", marginTop: 3, colorScheme: "dark" }}
           placeholder="Context, connections, vibe of the venue…"
         />
       ) : (
