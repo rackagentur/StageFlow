@@ -714,7 +714,6 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     setSaving(false);
   };
 
-  const inputStyle = {
    const inputStyle = {
   width: "100%",
   background: COLORS.bg,
