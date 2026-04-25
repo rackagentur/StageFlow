@@ -368,6 +368,18 @@ const relDate = (daysFromNow) => { const d = new Date(); d.setDate(d.getDate() +
 
 const INITIAL_GIGS = []; // New users start with empty calendar
 
+const formatShortDate = (isoStr) => {
+  if (!isoStr) return "—";
+  const d = new Date(isoStr);
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+};
+
+const formatShortDate = (isoStr) => {
+  if (!isoStr) return "—";
+  const d = new Date(isoStr);
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+};
+
 // ─── Primitives ──────────────────────────────────────────────────────────────
 
 function Badge({ children, color = COLORS.purple }) {
@@ -473,7 +485,7 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
       </div>
 
       {/* Filter pills row */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: 2 }}>
         <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4 }}>Filter</span>
 
         {TIERS.map(t => (
@@ -551,7 +563,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
       {lead.archived && (
         <div style={{ position: "absolute", top: 0, right: 0, background: COLORS.textMuted, color: COLORS.bg, fontSize: 9, fontWeight: 800, padding: "2px 8px", borderBottomLeftRadius: 6, letterSpacing: "0.1em" }}>ARCHIVED</div>
       )}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, paddingRight: (isOverdue && !lead.archived) ? 72 : 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{highlight(lead.name)}</div>
         <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
       </div>
@@ -816,7 +828,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {isOverdue && !lead.archived && (
         <div style={{ background: COLORS.gold + "22", border: `1px solid ${COLORS.gold}44`, borderRadius: 8, padding: "6px 10px", marginBottom: 10 }}>
           <div style={{ fontSize: 11, color: COLORS.gold, fontWeight: 600 }}>Follow-up overdue</div>
-          <div style={{ fontSize: 10, color: COLORS.textMuted }}>{lead.follow_up_date}</div>
+          <div style={{ fontSize: 10, color: COLORS.textMuted }}>{formatShortDate(lead.follow_up_date)}</div>
         </div>
       )}
 
@@ -893,7 +905,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {editing ? (
         <input type="date" value={form.follow_up_date} onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))} style={{ ...inputStyle, colorScheme: "dark" }} />
       ) : (
-        <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3 }}>{lead.follow_up_date || <span style={{ color: COLORS.textMuted }}>Not set</span>}</div>
+        <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3 }}>{lead.follow_up_date ? formatShortDate(lead.follow_up_date) : <span style={{ color: COLORS.textMuted }}>Not set</span>}</div>
       )}
 
       <div style={labelStyle}>Last Contact</div>
@@ -959,7 +971,7 @@ function Input({ label, value, onChange, placeholder, type = "text", required })
         {label}{required && <span style={{ color: COLORS.purple, marginLeft: 3 }}>*</span>}
       </label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 14px", color: COLORS.text, fontSize: 13, outline: "none", width: "100%", fontFamily: "inherit", transition: "border-color 0.15s" }}
+        style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 14px", color: COLORS.text, fontSize: 13, outline: "none", width: "100%", fontFamily: "inherit", transition: "border-color 0.15s", WebkitBoxShadow: `0 0 0 1000px ${COLORS.bg} inset`, WebkitTextFillColor: COLORS.text }}
         onFocus={e => e.target.style.borderColor = COLORS.purple}
         onBlur={e => e.target.style.borderColor = COLORS.border} />
     </div>
@@ -1380,7 +1392,7 @@ function FollowUpsView({ leads, onNavigate }) {
                   <div style={{ fontSize: 13, fontWeight: 800, color: daysLeft <= 2 ? COLORS.purpleLight : COLORS.textSecondary, fontFamily: "'DM Mono', monospace" }}>
                     {daysLeft === 1 ? "Tomorrow" : `${daysLeft}d`}
                   </div>
-                  <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 2 }}>{lead.followUpDate}</div>
+                  <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 2 }}>{formatShortDate(lead.followUpDate)}</div>
                 </div>
               </div>
             );
@@ -2779,6 +2791,8 @@ const activeLeads = leads.filter(l => !l.archived);
     <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: COLORS.bg, minHeight: "100vh", color: COLORS.text }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active, textarea:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px #0A0A0A inset !important; -webkit-text-fill-color: #F0F0F0 !important; caret-color: #F0F0F0 !important; transition: background-color 9999s ease-in-out 0s; }
+        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active, textarea:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px #0A0A0A inset !important; -webkit-text-fill-color: #F0F0F0 !important; caret-color: #F0F0F0 !important; transition: background-color 9999s ease-in-out 0s; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
