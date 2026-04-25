@@ -1684,23 +1684,23 @@ function AssetsView({ supabase, userId }) {
 
 function UpgradeModal({ onClose, onUpgrade, reason }) {
   const reasons = {
-    leads:     { title: "Lead limit reached",        desc: "Free plan includes up to 10 leads. Upgrade to track unlimited venues and promoters.", icon: "⬛" },
-    gigs:      { title: "Gig limit reached",         desc: "Free plan includes up to 5 gigs. Upgrade to add unlimited calendar entries.",         icon: "📅" },
-    templates: { title: "Pro template",              desc: "The Disco and Leverage templates are Pro features. Upgrade to unlock all 4.",          icon: "✦" },
-    autoschedule: { title: "Auto follow-up scheduling", desc: "Automatic reminder scheduling is a Pro feature. Upgrade to stop things falling through the cracks.", icon: "⏰" },
-    settings:  { title: "Custom follow-up intervals", desc: "Configuring your follow-up cadence is a Pro feature. Upgrade to own your workflow.",  icon: "⚙" },
-    funnel:    { title: "Conversion Funnel",          desc: "The conversion funnel and Next Actions queue are Pro features. See exactly where bookings are dropping off.", icon: "▣" },
+    leads:        { title: "You're building momentum",      desc: "Your pipeline is growing. Upgrade to keep adding venues — no cap, no friction.", icon: "⬛" },
+    gigs:         { title: "Your calendar is filling up",   desc: "More gigs means more to track. Upgrade to add every confirmed date.", icon: "📅" },
+    templates:    { title: "More scenes, more bookings",    desc: "Unlock all 4 outreach templates — Disco, Leverage and more. The right message for every room.", icon: "✦" },
+    autoschedule: { title: "Stop losing gigs to timing",    desc: "Pro schedules your follow-ups automatically — 5 days, 14 days, done. You focus on the music.", icon: "⏰" },
+    settings:     { title: "Own your outreach cadence",     desc: "Set your own follow-up timing. Every scene moves differently — your workflow should too.", icon: "⚙" },
+    funnel:       { title: "See exactly where to focus",    desc: "Know which stage is costing you bookings. Fix the leak before opportunities go cold.", icon: "▣" },
   };
   const r = reasons[reason] || reasons.leads;
 
   const PRO_FEATURES = [
-    "Unlimited leads & gigs",
-    "Auto follow-up scheduling",
-    "All 4 outreach templates + custom",
-    "Next Actions queue + Conversion Funnel",
-    "Configurable follow-up intervals",
-    "Cloud sync across devices",
-    "CSV export",
+    "Track every venue — no lead cap",
+    "Follow-ups schedule themselves at 5 and 14 days",
+    "All 4 outreach templates — right message, right room",
+    "Next Actions queue — know who to message today",
+    "Conversion Funnel — see where bookings drop off",
+    "Set your own follow-up cadence",
+    "Cloud sync — your pipeline everywhere",
   ];
 
   return (
