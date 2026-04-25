@@ -1434,6 +1434,11 @@ function DashboardView({ leads, onNavigate, isPro, onUpgradeClick }) {
                 {total >= 3 ? `${Math.round(fBooked / total * 100)}%` : "—"}
               </div>
             </div>
+            <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.15)", borderRadius: 7 }}>
+              <span style={{ fontSize: 11, color: "#00D4FF" }}>↗</span>
+              <span style={{ fontSize: 11, color: COLORS.textSecondary }}>Industry avg reply rate: <strong style={{ color: "#00D4FF" }}>18%</strong></span>
+              <span style={{ fontSize: 10, color: COLORS.textMuted, marginLeft: "auto" }}>DJ outreach benchmark</span>
+            </div>
           </div>
         </ProGate>
       </div>
