@@ -2874,7 +2874,7 @@ function NoxReachApp({ user, session, supabase }) {
   // Load assets for onboarding check
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from("user_assets").select("epk_url,soundcloud,booking_email").eq("user_id", user.id).single()
+    supabase.from("user_assets").select("epk_url,soundcloud,booking_email").eq("user_id", user.id).maybeSingle()
       .then(({ data, error }) => setOnboardingAssets(error ? {} : (data || {})));
   }, [user?.id]);
 
