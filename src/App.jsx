@@ -709,8 +709,28 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                     <LeadCard key={lead.id} lead={lead} onMove={onMove} onSelect={onSelect} isSelected={selectedLead?.id === lead.id} onArchive={onArchive} searchQuery={search} TAG_COLORS={TAG_COLORS} onUpdateLead={onUpdateLead} />
                   ))}
                   {colLeads.length === 0 && (
-                    <div style={{ border: `1px dashed ${COLORS.border}`, borderRadius: 10, padding: "24px 16px", textAlign: "center", color: COLORS.textMuted, fontSize: 11 }}>
-                      {hasFilter ? "No matches" : "Empty"}
+                    <div style={{ border: `1px dashed ${COLORS.border}`, borderRadius: 10, padding: "20px 14px", textAlign: "center" }}>
+                      {hasFilter ? (
+                        <div style={{ fontSize: 11, color: COLORS.textMuted }}>No matches</div>
+                      ) : col.id === "replied" ? (
+                        <>
+                          <div style={{ fontSize: 16, marginBottom: 6 }}>✉</div>
+                          <div style={{ fontSize: 11, color: COLORS.textMuted, lineHeight: 1.5 }}>No replies yet</div>
+                          <div style={{ fontSize: 10, color: COLORS.textSecondary, marginTop: 4 }}>Keep following up — replies come with persistence</div>
+                        </>
+                      ) : col.id === "booked" ? (
+                        <>
+                          <div style={{ fontSize: 16, marginBottom: 6 }}>📅</div>
+                          <div style={{ fontSize: 11, color: COLORS.textMuted, lineHeight: 1.5 }}>No bookings yet</div>
+                          <div style={{ fontSize: 10, color: COLORS.textSecondary, marginTop: 4 }}>Your first confirmed gig starts with one follow-up</div>
+                        </>
+                      ) : col.id === "target" ? (
+                        <>
+                          <div style={{ fontSize: 11, color: COLORS.textMuted }}>Add your first lead →</div>
+                        </>
+                      ) : (
+                        <div style={{ fontSize: 11, color: COLORS.textMuted }}>Empty</div>
+                      )}
                     </div>
                   )}
                 </div>
