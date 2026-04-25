@@ -745,6 +745,28 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
 
 // ─── Lead Detail ──────────────────────────────────────────────────────────────
 
+function AssetCopyRow({ label, value }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <span style={{ fontSize: 11, color: COLORS.textSecondary }}>{label}</span>
+      <button onClick={copy} style={{
+        fontSize: 10, fontWeight: 700, cursor: "pointer",
+        color: copied ? COLORS.green : COLORS.purple,
+        background: copied ? COLORS.green + "15" : "none",
+        border: `1px solid ${copied ? COLORS.green + "55" : COLORS.purpleDim}`,
+        borderRadius: 5, padding: "2px 8px",
+        transition: "all 0.2s",
+      }}>{copied ? "✓ Copied!" : "Copy →"}</button>
+    </div>
+  );
+}
+
 function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -944,24 +966,13 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, marginBottom: 8 }}>They replied — send your kit</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {assets?.epk_url && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 11, color: COLORS.textSecondary }}>EPK PDF</span>
-                <button onClick={() => navigator.clipboard.writeText(assets.epk_url)} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 5, padding: "2px 8px", cursor: "pointer" }}>Copy →</button>
-              </div>
-            )}
-            {assets?.soundcloud && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 11, color: COLORS.textSecondary }}>SoundCloud</span>
-                <button onClick={() => navigator.clipboard.writeText(assets.soundcloud)} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 5, padding: "2px 8px", cursor: "pointer" }}>Copy →</button>
-              </div>
-            )}
-            {assets?.booking_email && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 11, color: COLORS.textSecondary }}>Booking email</span>
-                <button onClick={() => navigator.clipboard.writeText(assets.booking_email)} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 5, padding: "2px 8px", cursor: "pointer" }}>Copy →</button>
-              </div>
-            )}
+            {[
+              assets?.epk_url      && { label: "EPK PDF",       value: assets.epk_url },
+              assets?.soundcloud   && { label: "SoundCloud",    value: assets.soundcloud },
+              assets?.booking_email && { label: "Booking email", value: assets.booking_email },
+            ].filter(Boolean).map(item => (
+              <AssetCopyRow key={item.label} label={item.label} value={item.value} />
+            ))}
           </div>
         </div>
       )}
