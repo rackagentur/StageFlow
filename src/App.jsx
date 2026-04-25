@@ -374,11 +374,7 @@ const formatShortDate = (isoStr) => {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 };
 
-const formatShortDate = (isoStr) => {
-  if (!isoStr) return "—";
-  const d = new Date(isoStr);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-};
+
 
 // ─── Primitives ──────────────────────────────────────────────────────────────
 
