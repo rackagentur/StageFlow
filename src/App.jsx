@@ -745,7 +745,7 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
 
 // ─── Lead Detail ──────────────────────────────────────────────────────────────
 
-function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS }) {
+function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     name: lead.name || "",
@@ -937,6 +937,33 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           Mark as Contacted
           <div style={{ fontSize: 10, fontWeight: 400, opacity: 0.8 }}>Follow-up reminder in 5 days</div>
         </button>
+      )}
+
+      {/* EPK prompt on Replied */}
+      {!lead.archived && lead.stage === "replied" && (assets?.epk_url || assets?.soundcloud || assets?.booking_email) && (
+        <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, marginBottom: 8 }}>They replied — send your kit</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {assets?.epk_url && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: COLORS.textSecondary }}>EPK PDF</span>
+                <button onClick={() => navigator.clipboard.writeText(assets.epk_url)} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 5, padding: "2px 8px", cursor: "pointer" }}>Copy →</button>
+              </div>
+            )}
+            {assets?.soundcloud && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: COLORS.textSecondary }}>SoundCloud</span>
+                <button onClick={() => navigator.clipboard.writeText(assets.soundcloud)} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 5, padding: "2px 8px", cursor: "pointer" }}>Copy →</button>
+              </div>
+            )}
+            {assets?.booking_email && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: COLORS.textSecondary }}>Booking email</span>
+                <button onClick={() => navigator.clipboard.writeText(assets.booking_email)} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 5, padding: "2px 8px", cursor: "pointer" }}>Copy →</button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Fields */}
@@ -3276,7 +3303,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pipeline"  && (
             <>
               <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} />
-              {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} />}
+              {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} />}
             </>
           )}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
