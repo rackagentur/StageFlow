@@ -2659,6 +2659,96 @@ Feel free to use this as a testimonial on the site.
   );
 }
 
+
+function OutreachMethodModal({ lead, onClose, onSelect, templates }) {
+  const METHODS = [
+    { id: "email",    icon: "📧", label: "Email",        hasTemplate: true  },
+    { id: "instagram",icon: "📸", label: "Instagram DM", hasTemplate: false },
+    { id: "whatsapp", icon: "💬", label: "WhatsApp",     hasTemplate: false },
+    { id: "phone",    icon: "📞", label: "Phone",        hasTemplate: false },
+    { id: "other",    icon: "✦",  label: "Other",        hasTemplate: false },
+  ];
+
+  const buildMailto = () => {
+    const template = templates.find(t => t.id === "berlin");
+    const body = template ? template.text : "Hey,\n\nI wanted to reach out about a potential booking.\n\n— GEEZ";
+    const subject = encodeURIComponent("Booking Inquiry — GEEZ");
+    const encodedBody = encodeURIComponent(body.replace("[Name]", lead.name));
+    const email = lead.contact || "";
+    return "mailto:" + email + "?subject=" + subject + "&body=" + encodedBody;
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 3000,
+      background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <style>{`@keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }`}</style>
+      <div style={{
+        background: COLORS.surface, border: "1px solid " + COLORS.purpleDim,
+        borderRadius: 20, width: 400, maxWidth: "95vw",
+        overflow: "hidden", animation: "slideUp 0.2s ease",
+        boxShadow: "0 0 60px rgba(107,47,212,0.15), 0 32px 80px rgba(0,0,0,0.7)",
+      }}>
+        <div style={{ height: 3, background: "linear-gradient(90deg, " + COLORS.purple + ", " + COLORS.purpleLight + ")" }} />
+        <div style={{ padding: "28px 28px 24px" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>
+            How did you reach out?
+          </div>
+          <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 20 }}>
+            {lead.name} · log your outreach method
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {METHODS.map(method => (
+              <button key={method.id}
+                onClick={() => {
+                  if (method.id === "email") {
+                    window.open(buildMailto(), "_blank");
+                  }
+                  onSelect(method.id);
+                }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 14,
+                  padding: "13px 16px", borderRadius: 10, cursor: "pointer",
+                  background: COLORS.bg, border: "1px solid " + COLORS.border,
+                  transition: "all 0.15s", textAlign: "left",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = COLORS.purple;
+                  e.currentTarget.style.background = COLORS.purpleBg;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = COLORS.border;
+                  e.currentTarget.style.background = COLORS.bg;
+                }}
+              >
+                <span style={{ fontSize: 20, width: 28, textAlign: "center", flexShrink: 0 }}>{method.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{method.label}</div>
+                  {method.hasTemplate && (
+                    <div style={{ fontSize: 11, color: COLORS.purple, marginTop: 2 }}>Opens email with template pre-filled →</div>
+                  )}
+                </div>
+                <span style={{ fontSize: 14, color: COLORS.textMuted }}>›</span>
+              </button>
+            ))}
+          </div>
+
+          <button onClick={onClose} style={{
+            width: "100%", marginTop: 12, padding: "10px",
+            background: "transparent", border: "1px solid " + COLORS.border,
+            borderRadius: 10, color: COLORS.textMuted, fontSize: 12, cursor: "pointer",
+          }}>
+            Skip
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function NoxReachApp({ user, session, supabase }) {
   const userEmail = user?.email || "";
   const userName  = user?.user_metadata?.full_name || userEmail.split("@")[0] || "DJ";
@@ -2728,6 +2818,7 @@ function NoxReachApp({ user, session, supabase }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [reviewNudge, setReviewNudge] = useState(null);
+  const [outreachPrompt, setOutreachPrompt] = useState(null);
   const [toast, setToast]               = useState(null);
 
   // Search + filter state lives here so header can own the bar
@@ -2794,9 +2885,12 @@ function NoxReachApp({ user, session, supabase }) {
     } else if (FOLLOWUP_MESSAGES[newStage]) {
       showToast(FOLLOWUP_MESSAGES[newStage], ["booked","replied"].includes(newStage) ? "success" : "schedule");
     }
+    if (["contacted","followup1","followup2"].includes(newStage)) {
+      const promptLead = leads.find(l => l.id === leadId) || { id: leadId, name: "this venue", contact: "" };
+      setTimeout(() => setOutreachPrompt(promptLead), 600);
+    }
     if (newStage === "booked") {
       const bookedLead = leads.find(l => l.id === leadId) || { id: leadId, name: "this venue" };
-      console.log("BOOKED TRIGGER", bookedLead);
       setReviewNudge(bookedLead);
     }
     // Persist to Supabase
@@ -2927,7 +3021,9 @@ const activeLeads = leads.filter(l => !l.archived);
         </div>
       )}
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
-      {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail="info@soundofgeez.com" />}
+      {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail="info@soundofgeez.com" />
+}
+      {outreachPrompt && <OutreachMethodModal lead={outreachPrompt} onClose={() => setOutreachPrompt(null)} templates={TEMPLATES} onSelect={(method) => { setOutreachPrompt(null); showToast("Logged: " + method, "success"); }} />}
         {showResetConfirm && (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowResetConfirm(false)}>
           <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderBright}`, borderRadius: 16, padding: 28, width: 360, maxWidth: "90vw", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }}>
