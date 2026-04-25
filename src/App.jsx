@@ -2577,6 +2577,91 @@ function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount }) {
   );
 }
 
+
+function ReviewNudgeModal({ lead, onClose, reviewEmail }) {
+  const subject = encodeURIComponent(`NoxReach feedback — ${lead.name} booked!`);
+  const body = encodeURIComponent(
+`Hey,
+
+I just booked ${lead.name} using NoxReach and wanted to share my experience.
+
+[Write one or two sentences about how NoxReach helped you get this booking]
+
+Feel free to use this as a testimonial on the site.
+
+— [Your name / DJ handle]`
+  );
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 3000,
+      background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{
+        background: COLORS.surface,
+        border: `1px solid ${COLORS.purpleDim}`,
+        borderRadius: 20, width: 420, maxWidth: "95vw",
+        overflow: "hidden",
+        boxShadow: `0 0 80px rgba(212,175,55,0.15), 0 32px 80px rgba(0,0,0,0.7)`,
+        animation: "slideUp 0.2s ease",
+      }}>
+        <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.gold}, ${COLORS.purple}, ${COLORS.purpleLight})` }} />
+        <div style={{ padding: "32px 28px", textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>
+            {lead.name} is booked!
+          </div>
+          <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.7, marginBottom: 24 }}>
+            Congrats on the booking. Would you take 30 seconds to share what helped?
+            Your feedback helps NoxReach grow — and gets you featured on the site.
+          </div>
+          <div style={{
+            background: COLORS.bg, border: `1px solid ${COLORS.border}`,
+            borderRadius: 12, padding: "14px 16px", marginBottom: 24, textAlign: "left",
+          }}>
+            <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>What happens</div>
+            {[
+              "Opens your email with the message pre-filled",
+              "You edit and hit send — takes 30 seconds",
+              "Best quotes get featured on NoxReach.io",
+            ].map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                <div style={{ width: 16, height: 16, borderRadius: "50%", background: COLORS.gold + "22", border: `1px solid ${COLORS.gold}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ fontSize: 8, color: COLORS.gold, fontWeight: 800 }}>{i + 1}</span>
+                </div>
+                <span style={{ fontSize: 12, color: COLORS.textSecondary }}>{s}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <a href={`mailto:${reviewEmail}?subject=${subject}&body=${body}`}
+              onClick={onClose}
+              style={{
+                display: "block", padding: "13px",
+                background: `linear-gradient(135deg, ${COLORS.gold}, #f0c040)`,
+                borderRadius: 12, color: "#000",
+                fontSize: 14, fontWeight: 800,
+                textDecoration: "none", textAlign: "center",
+                boxShadow: "0 4px 20px rgba(212,175,55,0.4)",
+              }}>
+              Share my experience →
+            </a>
+            <button onClick={onClose} style={{
+              padding: "10px", background: "transparent",
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: 12, color: COLORS.textMuted,
+              fontSize: 12, cursor: "pointer",
+            }}>
+              Maybe later
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function NoxReachApp({ user, session, supabase }) {
   const userEmail = user?.email || "";
   const userName  = user?.user_metadata?.full_name || userEmail.split("@")[0] || "DJ";
@@ -2645,6 +2730,7 @@ function NoxReachApp({ user, session, supabase }) {
   const [selectedLead, setSelectedLead] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [reviewNudge, setReviewNudge] = useState(null);
   const [toast, setToast]               = useState(null);
 
   // Search + filter state lives here so header can own the bar
@@ -2839,6 +2925,7 @@ const activeLeads = leads.filter(l => !l.archived);
         </div>
       )}
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
+      {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail="info@soundofgeez.com" />}
       {showResetConfirm && (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowResetConfirm(false)}>
           <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderBright}`, borderRadius: 16, padding: 28, width: 360, maxWidth: "90vw", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }}>
