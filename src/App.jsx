@@ -940,7 +940,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       )}
 
       {/* EPK prompt on Replied */}
-      {!lead.archived && lead.stage === "replied" && (assets?.epk_url || assets?.soundcloud || assets?.booking_email) && (
+      {!lead.archived && lead.stage === "replied" && assets && (assets?.epk_url || assets?.soundcloud || assets?.booking_email) && (
         <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, marginBottom: 8 }}>They replied — send your kit</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -2875,7 +2875,7 @@ function NoxReachApp({ user, session, supabase }) {
   useEffect(() => {
     if (!user?.id) return;
     supabase.from("user_assets").select("epk_url,soundcloud,booking_email").eq("user_id", user.id).single()
-      .then(({ data }) => setOnboardingAssets(data || {}));
+      .then(({ data, error }) => setOnboardingAssets(error ? {} : (data || {})));
   }, [user?.id]);
 
   // ── Load user's leads + gigs from Supabase on mount ─────────────────────
