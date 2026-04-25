@@ -2799,7 +2799,7 @@ function NoxReachApp({ user, session, supabase }) {
       showToast(FOLLOWUP_MESSAGES[newStage], ["booked","replied"].includes(newStage) ? "success" : "schedule");
     }
     if (newStage === "booked") {
-      const bookedLead = leads.find(l => l.id === leadId);
+      const bookedLead = leads.find(l => l.id === leadId) || { id: leadId, name: "this venue" };
       setTimeout(() => setReviewNudge(bookedLead), 1800);
     }
     // Persist to Supabase
@@ -2931,7 +2931,7 @@ const activeLeads = leads.filter(l => !l.archived);
       )}
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
 {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail="info@soundofgeez.com" />}
-      {showResetConfirm && (
+        {showResetConfirm && (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowResetConfirm(false)}>
           <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderBright}`, borderRadius: 16, padding: 28, width: 360, maxWidth: "90vw", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }}>
             <div style={{ fontSize: 18, marginBottom: 8 }}>⚠️</div>
