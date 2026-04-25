@@ -963,6 +963,22 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         )
       )}
 
+      {/* Contact Log */}
+      {(lead.contactLog || lead.outreachMethod) && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>Contact Log</div>
+          {lead.outreachMethod && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 11, color: COLORS.textMuted }}>Via</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.purpleLight, textTransform: "capitalize" }}>{lead.outreachMethod === "instagram" ? "Instagram DM" : lead.outreachMethod}</span>
+            </div>
+          )}
+          {lead.contactLog && (
+            <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "8px 10px", fontSize: 12, color: COLORS.text, lineHeight: 1.5 }}>{lead.contactLog}</div>
+          )}
+        </div>
+      )}
+
       {/* Stage tracker */}
       <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 16, marginBottom: 6 }}>All Stages</div>
       {STAGES.map(s => (
