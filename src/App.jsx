@@ -1356,7 +1356,7 @@ function DashboardView({ leads, onNavigate, isPro, onUpgradeClick }) {
                 <div style={{ height: 6, background: COLORS.bg, borderRadius: 4, overflow: "hidden", marginBottom: 4 }}>
                   <div style={{ height: "100%", width: `${stage.pct}%`, background: stage.color, borderRadius: 4, transition: "width 0.7s ease", opacity: 0.85 }} />
                 </div>
-                {i < funnel.length - 1 && dropoffs[i] !== null && dropoffs[i] > 0 && (
+                {i < funnel.length - 1 && dropoffs[i] !== null && dropoffs[i] > 0 && dropoffs[i] < 100 && total >= 3 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 6, margin: "6px 0 8px 14px" }}>
                     <div style={{ width: 1, height: 12, background: COLORS.border }} />
                     <span style={{ fontSize: 10, color: dropoffs[i] > 50 ? COLORS.red : COLORS.textMuted }}>↓ {dropoffs[i]}% drop-off</span>
@@ -1371,7 +1371,7 @@ function DashboardView({ leads, onNavigate, isPro, onUpgradeClick }) {
                 <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 2 }}>Target → Booked</div>
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.gold, fontFamily: "'DM Mono', monospace" }}>
-                {total > 0 ? Math.round(fBooked / total * 100) : 0}%
+                {total >= 3 ? `${Math.round(fBooked / total * 100)}%` : "—"}
               </div>
             </div>
           </div>
