@@ -964,7 +964,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {/* EPK prompt on Replied */}
       {!lead.archived && lead.stage === "replied" && assets && (assets?.epk_url || assets?.soundcloud || assets?.booking_email) && (
         <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, marginBottom: 8 }}>They replied — send your kit</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#00D4FF", marginBottom: 8 }}>✓ They replied — send your kit</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {[
               assets?.epk_url      && { label: "EPK PDF",       value: assets.epk_url },
@@ -2710,7 +2710,7 @@ Feel free to use this as a testimonial on the site.
     }} onClick={e => e.target === e.currentTarget && onClose()}>
       <style>{`@keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }`}</style>
       <div style={{
-        background: COLORS.surface,
+        background: "#111111",
         border: `1px solid ${COLORS.purpleDim}`,
         borderRadius: 20, width: 420, maxWidth: "95vw",
         overflow: "hidden",
