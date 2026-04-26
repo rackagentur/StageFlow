@@ -364,6 +364,57 @@
     .feat-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
 
     /* ═══════════════════════════════
+       REPLY HUB SECTION
+    ═══════════════════════════════════ */
+
+    /* ═══════════════════════════════════
+       REPLY HUB SECTION
+    ═══════════════════════════════════ */
+    .replyhub-section { background: var(--bg); }
+    .replyhub-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .rh-mock { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+    .rh-chrome { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 6px; }
+    .rh-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border2); }
+    .rh-url { margin-left: 8px; font-size: 10px; color: var(--text3); font-family: monospace; }
+    .rh-layout { display: flex; min-height: 380px; }
+    .rh-sidebar { width: 42px; background: var(--bg2); border-right: 1px solid var(--border); padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .rh-nr { width: 26px; height: 26px; background: #fff; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: #000; margin-bottom: 6px; }
+    .rh-nav-icon { font-size: 13px; opacity: 0.3; }
+    .rh-nav-icon.active { opacity: 1; }
+    .rh-content { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .rh-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .rh-page-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .rh-hot-badge { background: rgba(239,68,68,0.15); color: #ef4444; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+    .rh-thread { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .rh-thread.active { border-color: #8B4FFF; border-width: 1.5px; }
+    .rh-thread-header { padding: 9px 12px; display: flex; justify-content: space-between; align-items: center; background: var(--bg2); }
+    .rh-thread.active .rh-thread-header { background: #8B4FFF; }
+    .rh-thread-name { font-size: 11px; font-weight: 700; color: var(--text); }
+    .rh-thread.active .rh-thread-name { color: #fff; }
+    .rh-thread-tier { font-size: 9px; color: var(--text3); margin-left: 6px; }
+    .rh-thread.active .rh-thread-tier { color: rgba(255,255,255,0.6); }
+    .rh-status { font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 99px; text-transform: uppercase; }
+    .rh-status.replied { background: rgba(249,115,22,0.2); color: #f97316; }
+    .rh-status.epk { background: rgba(212,175,55,0.2); color: #D4AF37; }
+    .rh-status.neg { background: rgba(139,79,255,0.15); color: #8B4FFF; }
+    .rh-thread-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+    .rh-msg { background: var(--bg); border-radius: 7px; padding: 8px 10px; font-size: 10px; color: var(--text2); line-height: 1.5; font-style: italic; }
+    .rh-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+    .rh-action-btn { font-size: 9px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+    .rh-action-btn.blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .rh-action-btn.green { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .rh-action-btn.purple { background: rgba(139,79,255,0.15); color: #8B4FFF; }
+    .rh-log { border-top: 1px solid var(--border); padding-top: 8px; }
+    .rh-log-label { font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; }
+    .rh-log-entry { font-size: 9px; color: var(--text3); margin-bottom: 2px; }
+    .rh-log-entry.highlight { color: var(--text); font-weight: 600; }
+    .rh-features { display: flex; flex-direction: column; gap: 28px; margin-top: 32px; }
+    .rh-feature-icon { font-size: 20px; margin-bottom: 6px; }
+    .rh-feature-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+    .rh-feature-desc { font-size: 14px; color: var(--text2); line-height: 1.65; }
+    @media (max-width: 768px) { .replyhub-inner { grid-template-columns: 1fr; } }
+
+    /* ═══════════════════════════════════
        FOLLOW-UP SECTION
     ═══════════════════════════════ */
     .followup-section { background: var(--bg2); }
@@ -1181,7 +1232,58 @@
 </section>
 
 <!-- ══════════════════════════════════
-     FOLLOW-UP SECTION
+     REPLY HUB SECTION
+    ═══════════════════════════════════ */
+
+    /* ═══════════════════════════════════
+       REPLY HUB SECTION
+    ═══════════════════════════════════ */
+    .replyhub-section { background: var(--bg); }
+    .replyhub-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .rh-mock { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+    .rh-chrome { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 6px; }
+    .rh-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border2); }
+    .rh-url { margin-left: 8px; font-size: 10px; color: var(--text3); font-family: monospace; }
+    .rh-layout { display: flex; min-height: 380px; }
+    .rh-sidebar { width: 42px; background: var(--bg2); border-right: 1px solid var(--border); padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .rh-nr { width: 26px; height: 26px; background: #fff; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: #000; margin-bottom: 6px; }
+    .rh-nav-icon { font-size: 13px; opacity: 0.3; }
+    .rh-nav-icon.active { opacity: 1; }
+    .rh-content { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .rh-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .rh-page-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .rh-hot-badge { background: rgba(239,68,68,0.15); color: #ef4444; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+    .rh-thread { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .rh-thread.active { border-color: #8B4FFF; border-width: 1.5px; }
+    .rh-thread-header { padding: 9px 12px; display: flex; justify-content: space-between; align-items: center; background: var(--bg2); }
+    .rh-thread.active .rh-thread-header { background: #8B4FFF; }
+    .rh-thread-name { font-size: 11px; font-weight: 700; color: var(--text); }
+    .rh-thread.active .rh-thread-name { color: #fff; }
+    .rh-thread-tier { font-size: 9px; color: var(--text3); margin-left: 6px; }
+    .rh-thread.active .rh-thread-tier { color: rgba(255,255,255,0.6); }
+    .rh-status { font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 99px; text-transform: uppercase; }
+    .rh-status.replied { background: rgba(249,115,22,0.2); color: #f97316; }
+    .rh-status.epk { background: rgba(212,175,55,0.2); color: #D4AF37; }
+    .rh-status.neg { background: rgba(139,79,255,0.15); color: #8B4FFF; }
+    .rh-thread-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+    .rh-msg { background: var(--bg); border-radius: 7px; padding: 8px 10px; font-size: 10px; color: var(--text2); line-height: 1.5; font-style: italic; }
+    .rh-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+    .rh-action-btn { font-size: 9px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+    .rh-action-btn.blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .rh-action-btn.green { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .rh-action-btn.purple { background: rgba(139,79,255,0.15); color: #8B4FFF; }
+    .rh-log { border-top: 1px solid var(--border); padding-top: 8px; }
+    .rh-log-label { font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; }
+    .rh-log-entry { font-size: 9px; color: var(--text3); margin-bottom: 2px; }
+    .rh-log-entry.highlight { color: var(--text); font-weight: 600; }
+    .rh-features { display: flex; flex-direction: column; gap: 28px; margin-top: 32px; }
+    .rh-feature-icon { font-size: 20px; margin-bottom: 6px; }
+    .rh-feature-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+    .rh-feature-desc { font-size: 14px; color: var(--text2); line-height: 1.65; }
+    @media (max-width: 768px) { .replyhub-inner { grid-template-columns: 1fr; } }
+
+    /* ═══════════════════════════════════
+       FOLLOW-UP SECTION
 ══════════════════════════════════ -->
 <section class="followup-section">
   <div class="wrap">
