@@ -1015,7 +1015,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
               type="number"
               key={lead.id + "fee"}
               defaultValue={lead.fee || ""}
-              onBlur={e => { const v = parseInt(e.target.value); if (!isNaN(v)) updateLeadField(lead.id, { fee: v }); }}
+              onBlur={async e => { const v = parseInt(e.target.value); if (!isNaN(v)) { await supabase.from("leads").update({ fee: v }).eq("id", lead.id).eq("user_id", userId); onUpdate({ ...lead, fee: v }); } }}
               placeholder="e.g. 800"
               style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "7px 10px", color: COLORS.text, fontSize: 13, marginTop: 3, colorScheme: "dark" }}
             />
@@ -1023,7 +1023,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           <div style={{ flex: 1 }}>
             <div style={{ ...labelStyle }}>Deposit</div>
             <div
-              onClick={() => updateLeadField(lead.id, { deposit_paid: !lead.deposit_paid })}
+              onClick={async () => { const newVal = !lead.deposit_paid; await supabase.from("leads").update({ deposit_paid: newVal }).eq("id", lead.id).eq("user_id", userId); onUpdate({ ...lead, deposit_paid: newVal }); }}
               style={{ cursor: "pointer", marginTop: 3, background: lead.deposit_paid ? "rgba(74,222,128,0.12)" : "rgba(255,255,255,0.05)", border: `1px solid ${lead.deposit_paid ? "rgba(74,222,128,0.35)" : COLORS.border}`, borderRadius: 6, padding: "7px 10px", fontSize: 13, color: lead.deposit_paid ? "#4ade80" : COLORS.textMuted, textAlign: "center", userSelect: "none" }}
             >
               {lead.deposit_paid ? "Deposit received ✓" : "No deposit yet"}
