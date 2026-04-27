@@ -1006,6 +1006,31 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       <div style={labelStyle}>Last Contact</div>
       <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3 }}>{lead.last_contact || <span style={{ color: COLORS.textMuted }}>Never</span>}</div>
 
+      {/* Fee — booked leads only */}
+      {lead.stage === "booked" && (
+        <div style={{ display: "flex", gap: 10, marginTop: 14, marginBottom: 4 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ ...labelStyle }}>Fee (€)</div>
+            <input
+              type="number"
+              key={lead.id + "fee"}
+              defaultValue={lead.fee || ""}
+              onBlur={e => { const v = parseInt(e.target.value); updateLeadField(lead.id, "fee", v || null); }}
+              placeholder="e.g. 800"
+              style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "7px 10px", color: COLORS.text, fontSize: 13, marginTop: 3, colorScheme: "dark" }}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ ...labelStyle }}>Deposit</div>
+            <div
+              onClick={() => updateLeadField(lead.id, "deposit_paid", !lead.deposit_paid)}
+              style={{ cursor: "pointer", marginTop: 3, background: lead.deposit_paid ? "rgba(74,222,128,0.12)" : "rgba(255,255,255,0.05)", border: `1px solid ${lead.deposit_paid ? "rgba(74,222,128,0.35)" : COLORS.border}`, borderRadius: 6, padding: "7px 10px", fontSize: 13, color: lead.deposit_paid ? "#4ade80" : COLORS.textMuted, textAlign: "center", userSelect: "none" }}
+            >
+              {lead.deposit_paid ? "Deposit received ✓" : "No deposit yet"}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Notes */}
       <div style={{ ...labelStyle, marginTop: 14 }}>Notes</div>
       {editing ? (
@@ -1300,6 +1325,9 @@ function DashboardView({ leads, onNavigate, isPro, onUpgradeClick }) {
   const today    = new Date();
   const active   = leads.filter(l => !l.archived);
   const booked   = active.filter(l => l.stage === "booked").length;
+  const bookedLeadsAll = active.filter(l => l.stage === "booked");
+  const totalRevenue = bookedLeadsAll.reduce((sum, l) => sum + (l.fee || 0), 0);
+  const unpaidCount  = bookedLeadsAll.filter(l => l.fee && !l.deposit_paid).length;
   const replied  = active.filter(l => l.stage === "replied" || l.stage === "booked").length;
   const contacted = active.filter(l => l.stage !== "target").length;
   const replyRate = contacted > 0 ? Math.round((replied / contacted) * 100) : 0;
@@ -1347,6 +1375,8 @@ function DashboardView({ leads, onNavigate, isPro, onUpgradeClick }) {
         <StatCard label="Outreach Sent" value={contacted}       sub={`${active.filter(l => l.stage === "target").length} still in target`} accent={COLORS.purple} />
         <StatCard label="Reply Rate"    value={`${replyRate}%`} sub={`${replied} replies`}                                accent={COLORS.purpleLight} />
         <StatCard label="Booked"        value={booked}          sub="confirmed gigs"                                      accent={COLORS.gold} />
+        {totalRevenue > 0 && <StatCard label="Total Fees" value={`€${totalRevenue.toLocaleString()}`} sub="booked gigs" accent={COLORS.gold} />}
+        {unpaidCount > 0 && <StatCard label="Deposit Due" value={unpaidCount} sub="awaiting deposit" accent={COLORS.red} />}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -1375,7 +1405,14 @@ function DashboardView({ leads, onNavigate, isPro, onUpgradeClick }) {
                       <span style={{ fontSize: 10, fontWeight: 800, color: lead.urgencyColor, letterSpacing: "0.04em" }}>{lead.stageLabel}</span>
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.name}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                      {lead.name}
+                      {lead.stage === "booked" && lead.fee && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: lead.deposit_paid ? "#4ade80" : COLORS.gold, background: lead.deposit_paid ? "rgba(74,222,128,0.1)" : "rgba(212,175,55,0.1)", padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
+                          €{lead.fee}{lead.deposit_paid ? " ✓" : ""}
+                        </span>
+                      )}
+                    </div>
                       <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 2 }}>
                         {lead.stage === "replied" ? "They replied — close this booking" :
                          lead.stage === "contacted" ? "Send follow-up 1" :
