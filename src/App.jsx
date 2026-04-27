@@ -113,8 +113,8 @@ WebkitTextFillColor: C.text,
       }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <img src="https://rackagentur.github.io/NoxReach/public/nr-icon.png" width="56" height="56" style={{ borderRadius: 14, marginBottom: 12 }} alt="NR" />
-          <img src="https://rackagentur.github.io/NoxReach/public/nr-wordmark.png" height="20" style={{ marginBottom: 6 }} alt="NoxReach" />
+          <img src="https://rackagentur.github.io/NoxReach/public/nr-icon.png" width="52" height="52" style={{ borderRadius: 13, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
+          <img src="https://rackagentur.github.io/NoxReach/public/nr-wordmark.png" height="18" style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
           <div style={{ fontSize: 11, color: C.cyan, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
         </div>
 
@@ -1866,8 +1866,8 @@ function ProGate({ children, isPro, reason, onUpgradeClick, label = "Pro feature
 
 function InboundView({ leads, user }) {
   const inbound = leads.filter(l => !l.archived && l.stage === "replied" && l.contact && l.contact.includes("@"));
-  const bookingLink = `https://noxreach-nox.vercel.app/book/${user?.email?.split("@")[0]?.toLowerCase().replace(/[^a-z0-9]/g, "") || ""}`;
-  const [copied, setCopied] = React.useState(false);
+  const bookingLink = "https://noxreach-nox.vercel.app/book/gregorgus";
+  const [copied, setCopied] = useState(false);
   const copy = () => { navigator.clipboard.writeText(bookingLink); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   return (
