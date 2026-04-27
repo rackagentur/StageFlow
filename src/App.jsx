@@ -3064,6 +3064,8 @@ function NoxReachApp({ user, session, supabase }) {
       const dbFields = {};
       if (fields.outreachMethod !== undefined) dbFields.outreach_method = fields.outreachMethod;
       if (fields.contactLog !== undefined) dbFields.contact_log = fields.contactLog;
+      if (fields.fee !== undefined) dbFields.fee = fields.fee;
+      if (fields.deposit_paid !== undefined) dbFields.deposit_paid = fields.deposit_paid;
       if (Object.keys(dbFields).length > 0) {
         await supabase.from("leads").update(dbFields).eq("id", leadId).eq("user_id", user.id);
       }
