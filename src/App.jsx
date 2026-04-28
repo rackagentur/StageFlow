@@ -2524,7 +2524,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
   };
 
   // Replied leads are the "inbox" — they represent inbound promoter interest
-  const repliedLeads = leads.filter(l => !l.archived && (l.stage === "replied" || l.stage === "booked"));
+  const repliedLeads = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked"));
 
   // Simulate some message previews based on lead data
   const getMessage = (lead) => {
@@ -2809,13 +2809,13 @@ function useIsMobile() {
   return isMobile;
 }
 
-function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount }) {
+function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inboundCount }) {
   const NAV_ITEMS = [
     { id: 'dashboard', icon: String.fromCharCode(9635), label: 'Home' },
     { id: 'pipeline',  icon: String.fromCharCode(11035), label: 'Pipeline' },
     { id: 'followups', icon: String.fromCharCode(9200), label: 'Follow-ups', badge: dueCount },
-    { id: 'calendar',  icon: '📅', label: 'Calendar' },
     { id: 'replyhub',  icon: String.fromCharCode(9993), label: 'Reply', badge: unreadCount },
+    { id: 'inbound',   icon: '⬇', label: 'Inbound', badge: inboundCount },
   ];
   return (
     <div style={{
@@ -3459,7 +3459,7 @@ const activeLeads = leads.filter(l => !l.archived);
           )}
         </div>
 
-        {isMobile && <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} dueCount={dueCount} unreadCount={unreadCount} />}
+        {isMobile && <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} dueCount={dueCount} unreadCount={unreadCount} inboundCount={inboundCount} />}
 
         {/* Content */}
         <div style={{ padding: isMobile ? 16 : 28, flex: 1, display: activeTab === "pipeline" && selectedLead ? "grid" : "block", gridTemplateColumns: activeTab === "pipeline" && selectedLead ? "1fr 280px" : undefined, gap: 20 }}>
