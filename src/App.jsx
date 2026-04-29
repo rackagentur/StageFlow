@@ -3111,7 +3111,7 @@ function NoxReachApp({ user, session, supabase }) {
   const [settings, setSettings]         = useState(() => loadSettings());
   const [isPro, setIsPro]               = useState(() => loadIsPro(user.id));
 
-  React.useEffect(function() {
+  useEffect(function() {
     if (!user) return;
     supabase.from("profiles").select("is_pro").eq("id", user.id).single()
       .then(function(r) {
