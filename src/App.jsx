@@ -1992,6 +1992,89 @@ function DeleteAccountButton() {
   );
 }
 
+
+// ─── Welcome New User Modal ────────────────────────────────────────────────
+function WelcomeNewUserModal({ onClose }) {
+  const APP_URL = "https://noxreach-nox.vercel.app";
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 20, padding: 40, maxWidth: 480, width: "100%", position: "relative" }}>
+        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: COLORS.textMuted, fontSize: 20, cursor: "pointer" }}>✕</button>
+
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ fontSize: 40, marginBottom: 8 }}>🎛️</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.text, marginBottom: 6 }}>Welcome to NoxReach</div>
+          <div style={{ fontSize: 14, color: COLORS.textSecondary, lineHeight: 1.6 }}>The booking system for DJs who follow up. Here's how to get started in 5 minutes.</div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 28 }}>
+          {[
+            { num: "01", title: "Add your first leads", text: "Go to Pipeline → Add Lead. Add 3–5 venues or promoters you want to play. Tier them A1 to A3." },
+            { num: "02", title: "Send outreach", text: "Use the Outreach tab for copy-paste templates. Move leads to Contacted after you send." },
+            { num: "03", title: "Fill your Booking Kit", text: "Add your EPK, SoundCloud, and booking email. When a lead replies — you respond in seconds." },
+          ].map(s => (
+            <div key={s.num} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(107,47,212,0.15)", border: `1px solid rgba(107,47,212,0.3)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purple, flexShrink: 0, fontFamily: "monospace" }}>{s.num}</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, marginBottom: 2 }}>{s.title}</div>
+                <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>{s.text}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+          Let's go →
+        </button>
+
+        <div style={{ textAlign: "center", marginTop: 14, fontSize: 11, color: COLORS.textMuted }}>
+          Check your email — we sent you a quick-start guide too.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── Pro Welcome Modal ────────────────────────────────────────────────────
+function ProWelcomeModal({ onClose }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ background: COLORS.surface, border: `1px solid rgba(212,175,55,0.4)`, borderRadius: 20, padding: 40, maxWidth: 480, width: "100%", position: "relative", boxShadow: "0 0 60px rgba(212,175,55,0.15)" }}>
+        <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: COLORS.textMuted, fontSize: 20, cursor: "pointer" }}>✕</button>
+
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ fontSize: 40, marginBottom: 8 }}>⭐</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#D4AF37", marginBottom: 6 }}>You're now Pro</div>
+          <div style={{ fontSize: 14, color: COLORS.textSecondary, lineHeight: 1.6 }}>Here's what's just unlocked for you.</div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
+          {[
+            { icon: "∞", title: "Unlimited leads", text: "No cap on your pipeline. Track every venue, promoter, and festival you want to reach." },
+            { icon: "✉", title: "Booking Desk", text: "Full conversation context per lead. Log replies, attach your EPK, see contact history at a glance." },
+            { icon: "⏰", title: "Auto follow-up scheduling", text: "Follow-ups are scheduled automatically at 5 and 14 days. You just execute." },
+            { icon: "📈", title: "Conversion insights", text: "See where leads drop off in your pipeline. Funnel data, reply rates, booking rate." },
+            { icon: "◇", title: "Full Booking Kit", text: "Unlimited asset storage. EPK, mixes, press photos, bio — all ready to send instantly." },
+          ].map(f => (
+            <div key={f.icon} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "12px 14px", background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.15)", borderRadius: 10 }}>
+              <div style={{ fontSize: 18, width: 28, textAlign: "center", flexShrink: 0 }}>{f.icon}</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, marginBottom: 2 }}>{f.title}</div>
+                <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>{f.text}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: "linear-gradient(135deg, #D4AF37, #f0c040)", border: "none", borderRadius: 10, color: "#000", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+          Start using Pro →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, defaultTags, onAddTag, onRemoveTag, supabase, user }) {
   const [local, setLocal] = useState({ ...settings });
   const [saved,  setSaved]  = useState(false);
@@ -3111,6 +3194,16 @@ function NoxReachApp({ user, session, supabase }) {
   const [settings, setSettings]         = useState(() => loadSettings());
   const [isPro, setIsPro]               = useState(() => loadIsPro(user.id));
 
+  const [showWelcomeNew, setShowWelcomeNew] = useState(() => {
+    try { return !localStorage.getItem("nr_welcomed_" + user.id); } catch { return true; }
+  });
+
+  const dismissWelcomeNew = () => {
+    try { localStorage.setItem("nr_welcomed_" + user.id, "1"); } catch {}
+    setShowWelcomeNew(false);
+  };
+
+
   useEffect(function() {
     if (!user) return;
     supabase.from("profiles").select("is_pro").eq("id", user.id).single()
@@ -3409,6 +3502,8 @@ const activeLeads = leads.filter(l => !l.archived);
           </div>
         </div>
       )}
+            {showWelcomeNew && !isPro && <WelcomeNewUserModal onClose={dismissWelcomeNew} />}
+      {showWelcomePro && <ProWelcomeModal onClose={() => setShowWelcomePro(false)} />}
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
       {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail="info@soundofgeez.com" />
 }
