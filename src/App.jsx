@@ -3181,6 +3181,27 @@ function NoxReachApp({ user, session, supabase }) {
   const handleUpgrade = () => { setIsPro(true); saveIsPro(true, user.id); setUpgradeModal(null); setShowWelcomePro(true); };
   const requestUpgrade = (reason) => setUpgradeModal(reason);
 
+  const handleUpgrade = async (plan = "monthly") => {
+    try {
+      showToast("Opening checkout...", "info");
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) { showToast("Please sign in first", "error"); return; }
+      const res = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/create-checkout-session`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          body: JSON.stringify({ plan }),
+        }
+      );
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else { showToast(data.error || "Checkout failed", "error"); }
+    } catch (e) { showToast("Checkout error: " + e.message, "error"); }
+  };
+
+
   const addLead = async (lead) => {
     const activeCount = leads.filter(l => !l.archived).length;
     if (!isPro && activeCount >= FREE_LIMITS.leads) { requestUpgrade("leads"); return; }
