@@ -1938,6 +1938,53 @@ function InboundView({ leads, user, supabase }) {
 }
 
 
+
+// ─── Cookie Banner ─────────────────────────────────────────────────────────────
+
+function CookieBanner() {
+  const [visible, setVisible] = React.useState(() => {
+    try { return !localStorage.getItem("nr_cookie_consent"); } catch { return true; }
+  });
+
+  if (!visible) return null;
+
+  const accept = () => {
+    try { localStorage.setItem("nr_cookie_consent", "accepted"); } catch {}
+    setVisible(false);
+  };
+
+  const decline = () => {
+    try { localStorage.setItem("nr_cookie_consent", "declined"); } catch {}
+    setVisible(false);
+  };
+
+  return (
+    <div style={{
+      position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+      zIndex: 9999, width: "calc(100% - 48px)", maxWidth: 560,
+      background: "rgba(18,18,28,0.97)", border: `1px solid ${COLORS.border}`,
+      borderRadius: 14, padding: "16px 20px", display: "flex", alignItems: "center",
+      justifyContent: "space-between", gap: 16, backdropFilter: "blur(12px)",
+      boxShadow: "0 8px 40px rgba(0,0,0,0.5)"
+    }}>
+      <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6, flex: 1 }}>
+        We use essential cookies to keep you logged in and save your settings.
+        No tracking, no ads. <a href="#" onClick={e => e.preventDefault()} style={{ color: COLORS.purpleLight, textDecoration: "none" }}>Privacy Policy</a>
+      </div>
+      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        <button onClick={decline} style={{
+          padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`,
+          borderRadius: 8, color: COLORS.textMuted, fontSize: 12, cursor: "pointer", fontWeight: 600
+        }}>Decline</button>
+        <button onClick={accept} style={{
+          padding: "7px 14px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`,
+          border: "none", borderRadius: 8, color: "#fff", fontSize: 12, cursor: "pointer", fontWeight: 700
+        }}>Accept</button>
+      </div>
+    </div>
+  );
+}
+
 // ─── GDPR Right to Deletion ────────────────────────────────────────────────
 function DeleteAccountButton() {
   const [step, setStep] = React.useState("idle"); // idle | confirm | deleting | done | error
@@ -3623,6 +3670,7 @@ const activeLeads = leads.filter(l => !l.archived);
       )}
             {showWelcomeNew && !isPro && <WelcomeNewUserModal onClose={dismissWelcomeNew} />}
       {showWelcomePro && <ProWelcomeModal onClose={() => setShowWelcomePro(false)} />}
+      <CookieBanner />
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
       {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail="info@soundofgeez.com" />
 }
