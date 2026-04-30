@@ -1942,7 +1942,7 @@ function InboundView({ leads, user, supabase }) {
 // ─── Cookie Banner ─────────────────────────────────────────────────────────────
 
 function CookieBanner() {
-  const [visible, setVisible] = React.useState(() => {
+  const [visible, setVisible] = useState(() => {
     try { return !localStorage.getItem("nr_cookie_consent"); } catch { return true; }
   });
 
