@@ -315,10 +315,10 @@ const STAGES = [
 ];
 
 const TEMPLATES = [
-  { id: "berlin",   label: "Berlin",   tone: "Underground / Tech-House", icon: "◼", text: `Hey [Name],\n\nI've been building a sound around peak-hour Tech House — tribal-driven, energetic but controlled. Been playing [venue/night] lately and the response has been strong.\n\nWould love to get on your radar. Happy to send a recent mix + EPK.\n\n— GEEZ` },
-  { id: "circuit",  label: "Circuit",  tone: "High energy / Tribal",     icon: "◈", text: `Hey [Name],\n\nI play circuit and tribal Tech House — the kind of sets that lock a room in for 4+ hours. I've played [events] and the energy has been incredible every time.\n\nWould love to discuss what a booking could look like. I can send my latest mix.\n\n— GEEZ` },
-  { id: "disco",    label: "Disco",    tone: "Groovy / Soulful",         icon: "◇", text: `Hey [Name],\n\nI blend Disco soul with Tech House drive — it's a sound built for rooms that want to move without losing the groove. My recent sets at [venue] connected really well with that crowd.\n\nWould love to explore a potential booking. EPK and mix available on request.\n\n— GEEZ` },
-  { id: "leverage", label: "Leverage", tone: "Warm connection",          icon: "◉", text: `Hey [Name],\n\n[Mutual contact] suggested I reach out — they thought my sound and your events would align.\n\nI play peak-hour Tech House and tribal circuit sets. I've been [recent gig/achievement] and would love to explore what a booking might look like.\n\nLet me know if you'd like a mix or EPK.\n\n— GEEZ` },
+  { id: "berlin",   label: "Berlin",   tone: "Underground / Tech-House", icon: "◼", text: `Hey [Name],\n\nI've been building a sound around peak-hour Tech House — tribal-driven, energetic but controlled. Been playing [venue/night] lately and the response has been strong.\n\nWould love to get on your radar. Happy to send a recent mix + EPK.\n\n— ${artistName}` },
+  { id: "circuit",  label: "Circuit",  tone: "High energy / Tribal",     icon: "◈", text: `Hey [Name],\n\nI play circuit and tribal Tech House — the kind of sets that lock a room in for 4+ hours. I've played [events] and the energy has been incredible every time.\n\nWould love to discuss what a booking could look like. I can send my latest mix.\n\n— ${artistName}` },
+  { id: "disco",    label: "Disco",    tone: "Groovy / Soulful",         icon: "◇", text: `Hey [Name],\n\nI blend Disco soul with Tech House drive — it's a sound built for rooms that want to move without losing the groove. My recent sets at [venue] connected really well with that crowd.\n\nWould love to explore a potential booking. EPK and mix available on request.\n\n— ${artistName}` },
+  { id: "leverage", label: "Leverage", tone: "Warm connection",          icon: "◉", text: `Hey [Name],\n\n[Mutual contact] suggested I reach out — they thought my sound and your events would align.\n\nI play peak-hour Tech House and tribal circuit sets. I've been [recent gig/achievement] and would love to explore what a booking might look like.\n\nLet me know if you'd like a mix or EPK.\n\n— ${artistName}` },
 ];
 
 const INITIAL_LEADS = []; // New users start with empty pipeline
@@ -736,6 +736,13 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
 
 function AssetCopyRow({ label, value }) {
   const [copied, setCopied] = useState(false);
+  const [artistName, setArtistName] = useState("GEEZ");
+
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    supabase.from("user_assets").select("artist_name").eq("user_id", userId).maybeSingle()
+      .then(({ data }) => { if (data?.artist_name) setArtistName(data.artist_name); });
+  }, [userId]);
   const copy = () => {
     navigator.clipboard.writeText(value);
     setCopied(true);
@@ -1544,10 +1551,17 @@ function FollowUpsView({ leads, onNavigate }) {
   );
 }
 
-function OutreachView({ isPro, onUpgradeClick }) {
+function OutreachView({ isPro, onUpgradeClick, supabase, userId }) {
   const [selected, setSelected] = useState("berlin");
   const template = TEMPLATES.find(t => t.id === selected);
   const [copied, setCopied] = useState(false);
+  const [artistName, setArtistName] = useState("GEEZ");
+
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    supabase.from("user_assets").select("artist_name").eq("user_id", userId).maybeSingle()
+      .then(({ data }) => { if (data?.artist_name) setArtistName(data.artist_name); });
+  }, [userId]);
   const copy = () => { navigator.clipboard.writeText(template.text); setCopied(true); setTimeout(() => setCopied(false), 1800); };
   const freeTemplateIds = ["berlin", "circuit"];
 
@@ -1608,6 +1622,13 @@ function AssetLink({ icon, label, sublabel, href, accent, actionLabel = "Open" }
 
 function CopyBlock({ label, value }) {
   const [copied, setCopied] = useState(false);
+  const [artistName, setArtistName] = useState("GEEZ");
+
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    supabase.from("user_assets").select("artist_name").eq("user_id", userId).maybeSingle()
+      .then(({ data }) => { if (data?.artist_name) setArtistName(data.artist_name); });
+  }, [userId]);
   const copy = () => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1800); };
   return (
     <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
@@ -1869,6 +1890,13 @@ function InboundView({ leads, user, supabase }) {
   const inbound = leads.filter(l => !l.archived && l.stage === "replied" && l.contact && l.contact.includes("@"));
   const [username, setUsername] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [artistName, setArtistName] = useState("GEEZ");
+
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    supabase.from("user_assets").select("artist_name").eq("user_id", userId).maybeSingle()
+      .then(({ data }) => { if (data?.artist_name) setArtistName(data.artist_name); });
+  }, [userId]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -3198,8 +3226,8 @@ function OutreachMethodModal({ lead, onClose, onSelect, templates }) {
 
   const buildMailto = () => {
     const template = templates.find(t => t.id === "berlin");
-    const body = template ? template.text : "Hey,\n\nI wanted to reach out about a potential booking.\n\n— GEEZ";
-    const subject = encodeURIComponent("Booking Inquiry — GEEZ");
+    const body = template ? template.text : `Hey,\n\nI wanted to reach out about a potential booking.\n\n— ${artistName}`;
+    const subject = encodeURIComponent(`Booking Inquiry — ${artistName}`);
     const encodedBody = encodeURIComponent(body.replace("[Name]", lead.name));
     const email = lead.contact || "";
     return "mailto:" + email + "?subject=" + subject + "&body=" + encodedBody;
@@ -3786,7 +3814,7 @@ const activeLeads = leads.filter(l => !l.archived);
             </>
           )}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
-          {activeTab === "outreach"  && <OutreachView isPro={isPro} onUpgradeClick={requestUpgrade} />}
+          {activeTab === "outreach"  && <OutreachView isPro={isPro} onUpgradeClick={requestUpgrade} supabase={supabase} userId={user.id} />}
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} />}
