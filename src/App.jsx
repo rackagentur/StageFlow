@@ -1969,7 +1969,7 @@ function CookieBanner() {
     }}>
       <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6, flex: 1 }}>
         We use essential cookies to keep you logged in and save your settings.
-        No tracking, no ads. <a href="#" onClick={e => e.preventDefault()} style={{ color: COLORS.purpleLight, textDecoration: "none" }}>Privacy Policy</a>
+        No tracking, no ads. <a href="https://noxreach-nox.vercel.app/#privacy" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight, textDecoration: "none" }}>Privacy Policy</a>
       </div>
       <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
         <button onClick={decline} style={{
