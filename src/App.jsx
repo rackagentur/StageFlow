@@ -3376,9 +3376,13 @@ function NoxReachApp({ user, session, supabase }) {
 
   useEffect(function() {
     if (!user) return;
-    supabase.from("profiles").select("is_pro").eq("id", user.id).single()
+    supabase.from("profiles").select("is_pro, pro_expires_at").eq("id", user.id).single()
       .then(function(r) {
-        if (r["data"]["is_pro"]) {
+        const data = r["data"];
+        if (!data) return;
+        const trialActive = data.pro_expires_at && new Date(data.pro_expires_at) > new Date();
+        const isPaid = data.is_pro;
+        if (isPaid || trialActive) {
           setIsPro(true);
           saveIsPro(true, user.id);
           const proKey = "nr_pro_welcomed_" + user.id;
