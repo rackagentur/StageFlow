@@ -29,7 +29,7 @@ function LoginScreen({ onAuth }) {
   const C = {
     bg: "#060608", surface: "#0f0f18", border: "#1c1c2e", border2: "#252538",
     purple: "#6B2FD4", purpleL: "#8B4FFF", cyan: "#00D4FF",
-    text: "#f0f0f0", text2: "#9090a8", text3: "#50506a",
+    text: "#f0f0f0", text2: "#a8a8c0", text3: "#7070a0",
     gold: "#D4AF37", green: "#22C55E", red: "#ef4444",
   };
 
@@ -307,7 +307,7 @@ const COLORS = {
   border: "#1E1E1E", borderBright: "#2A2A2A",
   purple: "#6B2FD4", purpleLight: "#8B4FFF", purpleDim: "#3A1A80", purpleBg: "#0F0820",
   gold: "#D4AF37", goldDim: "#8A7020",
-  text: "#F0F0F0", textSecondary: "#888888", textMuted: "#444444",
+  text: "#F0F0F0", textSecondary: "#a0a0b8", textMuted: "#6a6a8a",
   green: "#22C55E", greenDim: "#0F4A25", red: "#EF4444",
 };
 
