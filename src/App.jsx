@@ -3211,6 +3211,13 @@ function NoxReachApp({ user, session, supabase }) {
         if (r["data"]["is_pro"]) {
           setIsPro(true);
           saveIsPro(true, user.id);
+          const proKey = "nr_pro_welcomed_" + user.id;
+          try {
+            if (!localStorage.getItem(proKey)) {
+              localStorage.setItem(proKey, "1");
+              setShowWelcomePro(true);
+            }
+          } catch {}
         }
       });
   }, [user]);
