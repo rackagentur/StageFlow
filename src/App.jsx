@@ -116,6 +116,7 @@ WebkitTextFillColor: C.text,
           <img src="https://rackagentur.github.io/NoxReach/public/nr-icon.png" width="52" height="52" style={{ borderRadius: 13, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
           <img src="https://rackagentur.github.io/NoxReach/public/nr-wordmark.png" height="18" style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
           <div style={{ fontSize: 11, color: C.cyan, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6, letterSpacing: "0.02em" }}>Track venues, replies, follow-ups, and booked gigs in one place.</div>
         </div>
 
         {/* Form card */}
@@ -3235,7 +3236,7 @@ Feel free to use this as a testimonial on the site.
                 textDecoration: "none", textAlign: "center",
                 boxShadow: "0 4px 20px rgba(212,175,55,0.4)",
               }}>
-              Share my experience →
+              Share my experience
             </a>
             <button onClick={onClose} style={{
               padding: "10px", background: "transparent",
