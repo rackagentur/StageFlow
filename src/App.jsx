@@ -2940,14 +2940,14 @@ function PricingView({ isPro, onUpgrade }) {
 // ─── Onboarding Banner ────────────────────────────────────────────────────────
 
 function OnboardingBanner({ leads, assets, onNavigate, onDismiss }) {
-  const hasLeads    = leads.filter(l => !l.archived).length >= 5;
+  const hasLeads    = leads.filter(l => !l.archived).length >= 3;
   const hasSentMsg  = leads.filter(l => !l.archived && l.stage !== "target").length >= 1;
   const hasAssets   = assets && (assets.epk_url || assets.soundcloud || assets.booking_email);
 
   const steps = [
     {
       num: "01",
-      title: "Add your first 5 leads",
+      title: "Add your first 3 leads",
       desc: "Venues, promoters, festivals — tier them A1 to A3.",
       done: hasLeads,
       action: () => onNavigate("pipeline"),
@@ -2978,9 +2978,10 @@ function OnboardingBanner({ leads, assets, onNavigate, onDismiss }) {
 
   return (
     <div style={{
-      background: allDone ? COLORS.greenDim : COLORS.purpleBg,
-      border: `1px solid ${allDone ? COLORS.green + "44" : COLORS.purpleDim}`,
-      borderRadius: 14, padding: "20px 24px", marginBottom: 24, position: "relative",
+      background: allDone ? COLORS.greenDim : "rgba(107,47,212,0.08)",
+      border: `1px solid ${allDone ? COLORS.green + "44" : COLORS.purple + "55"}`,
+      borderRadius: 16, padding: "24px 28px", marginBottom: 28, position: "relative",
+      boxShadow: allDone ? "none" : "0 0 40px rgba(107,47,212,0.08)",
     }}>
       {/* Header row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: allDone ? 8 : 16 }}>
