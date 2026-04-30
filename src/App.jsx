@@ -336,7 +336,7 @@ function saveSettings(s) { try { localStorage.setItem(STORAGE_KEY_SETTINGS, JSON
 const STORAGE_KEY_PRO = "noxreach_pro_v1";
 function loadIsPro(userId) { try { return localStorage.getItem(STORAGE_KEY_PRO + "_" + userId) === "true"; } catch { return false; } }
 function saveIsPro(v, userId) { try { localStorage.setItem(STORAGE_KEY_PRO + "_" + userId, String(v)); } catch {} }
-const FREE_LIMITS = { leads: 9999, gigs: 9999, templates: 9999 };
+const FREE_LIMITS = { leads: 15, gigs: 10, templates: 2 };
 
 const STORAGE_KEY_TAGS = "noxreach_tags_v1";
 const DEFAULT_TAGS = ["Tech-House", "Disco", "Festival"];
@@ -2911,7 +2911,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
 
 function PricingView({ isPro, onUpgrade }) {
   const free = [
-    "Up to 25 leads",
+    "Up to 15 leads",
     "Full pipeline (5 stages)",
     "Follow-up reminders",
     "2 outreach templates",
@@ -3006,14 +3006,14 @@ function PricingView({ isPro, onUpgrade }) {
 // ─── Onboarding Banner ────────────────────────────────────────────────────────
 
 function OnboardingBanner({ leads, assets, onNavigate, onDismiss }) {
-  const hasLeads    = leads.filter(l => !l.archived).length >= 3;
+  const hasLeads    = leads.filter(l => !l.archived).length >= 1;
   const hasSentMsg  = leads.filter(l => !l.archived && l.stage !== "target").length >= 1;
   const hasAssets   = assets && (assets.epk_url || assets.soundcloud || assets.booking_email);
 
   const steps = [
     {
       num: "01",
-      title: "Add your first 3 leads",
+      title: "Add your first lead",
       desc: "Venues, promoters, festivals — tier them A1 to A3.",
       done: hasLeads,
       action: () => onNavigate("pipeline"),
@@ -3503,7 +3503,7 @@ function NoxReachApp({ user, session, supabase }) {
   const FOLLOWUP_MESSAGES = {
     contacted: `Follow-up 1 scheduled in ${settings.followup1Days} days`,
     followup1: `Follow-up 2 scheduled in ${settings.followup2Days} days`,
-    followup2: "Final follow-up scheduled", replied: "Nice — they replied! Close this one.", booked: "🎉 Booked! You're on the lineup."
+    followup2: "Final follow-up scheduled", replied: "Nice — they replied! Move them to Replied.", booked: "🎉 Booked! You're on the lineup."
   };
 
   const saveSettingsHandler = (newSettings) => {
@@ -3738,7 +3738,7 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 4, background: COLORS.gold + "22", color: COLORS.gold, border: `1px solid ${COLORS.gold}44`, letterSpacing: "0.1em" }}>PRO</div>
               <span style={{ fontSize: 10, color: COLORS.textMuted }}>All features unlocked</span>
-              <button onClick={() => { setIsPro(false); saveIsPro(false, user.id); showToast("Switched to Free (demo)", "info"); }} style={{ marginLeft: "auto", fontSize: 9, color: COLORS.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0 }}>demo</button>
+              {user?.email === "info@soundofgeez.com" && <button onClick={() => { setIsPro(false); saveIsPro(false, user.id); showToast("Switched to Free (demo)", "info"); }} style={{ marginLeft: "auto", fontSize: 9, color: COLORS.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0 }}>demo</button>}
             </div>
           )}
 
