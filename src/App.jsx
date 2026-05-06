@@ -3677,22 +3677,6 @@ const loadAdminUsers = async () => {
     setLoadingAdminData(false);
   };
 
-      const enriched = await Promise.all(
-        (profiles || []).map(async (p) => {
-          const [leadsRes, gigsRes] = await Promise.all([
-            supabase.from("leads").select("*", { count: "exact", head: true }).eq("user_id", p.id).eq("archived", false),
-            supabase.from("gigs").select("*",  { count: "exact", head: true }).eq("user_id", p.id),
-          ]);
-          return { ...p, leadCount: leadsRes.count || 0, gigCount: gigsRes.count || 0 };
-        })
-      );
-
-      setAdminUsers(enriched);
-    } catch (err) {
-      console.error("Failed to load admin users:", err);
-    }
-    setLoadingAdminData(false);
-  };
 
   useEffect(() => {
     if (activeTab === "admin" && isAdmin) loadAdminUsers();
