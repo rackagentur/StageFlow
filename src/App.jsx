@@ -4012,6 +4012,18 @@ function PublicBookingForm({ supabase }) {
 
 export default function NoxReach() {
   if (window.location.pathname.startsWith('/book/')) return <PublicBookingForm supabase={supabase} />;
+  if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy.html') {
+    window.location.href = 'https://noxreach.com/privacy.html';
+    return null;
+  }
+  if (window.location.pathname === '/impressum' || window.location.pathname === '/impressum.html') {
+    window.location.href = 'https://noxreach.com/impressum.html';
+    return null;
+  }
+  if (window.location.pathname === '/terms' || window.location.pathname === '/terms.html') {
+    window.location.href = 'https://noxreach.com/terms.html';
+    return null;
+  }
   return (
     <>
       <AuthGate>
