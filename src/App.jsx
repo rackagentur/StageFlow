@@ -243,9 +243,9 @@ WebkitTextFillColor: C.text,
           Built for DJs who book with intent.
         </div>
         <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", display: "flex", gap: 16, justifyContent: "center" }}>
-          <a href="https://legal.noxreach.com/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>Privacy Policy</a>
-          <a href="https://legal.noxreach.com/impressum.html" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>Impressum</a>
-          <a href="https://legal.noxreach.com/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>Terms</a>
+          <a href="https://noxreach.com/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>Privacy Policy</a>
+          <a href="https://noxreach.com/impressum.html" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>Impressum</a>
+          <a href="https://noxreach.com/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>Terms</a>
         </div>
       </div>
     </div>
@@ -1975,7 +1975,7 @@ function CookieBanner() {
     }}>
       <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6, flex: 1 }}>
         We use essential cookies to keep you logged in and save your settings.
-        No tracking, no ads. <a href="https://legal.noxreach.com/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight, textDecoration: "none" }}>Privacy Policy</a>
+        No tracking, no ads. <a href="https://noxreach.com/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight, textDecoration: "none" }}>Privacy Policy</a>
       </div>
       <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
         <button onClick={decline} style={{
