@@ -1034,6 +1034,34 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                 </div>
               );
             })}
+            
+            {/* Add to Calendar CTA */}
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('switchToCalendar', { 
+                  detail: { venue: lead.name, tag: lead.tag } 
+                }));
+              }}
+              style={{
+                width: "100%",
+                marginTop: 12,
+                padding: "10px 14px",
+                background: COLORS.gold,
+                border: "none",
+                borderRadius: 8,
+                color: COLORS.bg,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}
+            >
+              <span>📅</span>
+              <span>Add to Calendar</span>
+            </button>
           </div>
         );
       })()}
@@ -3506,6 +3534,20 @@ function NoxReachApp({ user, session, supabase }) {
   };
 
   const [activeTab, setActiveTab]       = useState("pipeline");
+
+  // Listen for "Add to Calendar" from booked cards
+  useEffect(() => {
+    const handleSwitch = (e) => {
+      setActiveTab("calendar");
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('addGigFromBooked', { 
+          detail: e.detail 
+        }));
+      }, 100);
+    };
+    window.addEventListener('switchToCalendar', handleSwitch);
+    return () => window.removeEventListener('switchToCalendar', handleSwitch);
+  }, []);
   const [leads, setLeads]               = useState([]);
   const [gigs,  setGigs]                = useState([]);
   const [dataLoading, setDataLoading]   = useState(true);
