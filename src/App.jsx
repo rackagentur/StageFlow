@@ -3681,15 +3681,17 @@ const loadAdminUsers = async () => {
   }, [activeTab]);
 
   const loadUserLeads = async (userId) => {
+  console.log('🔍 loadUserLeads called with userId:', userId);
   try {
     const { data } = await supabase
       .from("leads")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
+    console.log('📊 Loaded leads:', data);
     setSelectedUserLeads(data || []);
   } catch (err) {
-    console.error("Failed to load user leads:", err);
+    console.error("❌ Failed to load user leads:", err);
     setSelectedUserLeads([]);
   }
 };
