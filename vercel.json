@@ -1,6 +1,8 @@
 {
-  "rewrites": [
-    { "source": "/book/(.*)", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "src": "/privacy.html", "dest": "/privacy.html" },
+    { "src": "/impressum.html", "dest": "/impressum.html" },
+    { "src": "/terms.html", "dest": "/terms.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
