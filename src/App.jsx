@@ -4211,41 +4211,40 @@ const activeLeads = leads.filter(l => !l.archived);
                 </>
               )}
 
-              {!loadingAdminData && selectedUser && (
-                <div>
-                <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
-                    ← Back to user list
-                  </button>
-                  <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
-                    <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>{selectedUser.display_name || selectedUser.username}</h2>
-                    <div style={{ fontSize: 13, color: COLORS.textSecondary }}>@{selectedUser.username}</div>
-                    <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 13, color: COLORS.textSecondary }}>
-                      <span>{selectedUser.leadCount} leads</span>
-                      <span>{selectedUser.gigCount} gigs</span>
-                      <span>{selectedUser.is_pro ? "Pro" : "Free"}</span>
-                      <span>Health: {selectedUser.health_status || "active"}</span>
-                    </div>
-                  </div>
-           <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>User's Pipeline (Read-Only)</div>
-<div style={{ opacity: 0.7, pointerEvents: "none" }}>
-  <PipelineView 
-    leads={selectedUserLeads} 
-    onMove={() => {}} 
-    onSelect={() => {}} 
-    selectedLead={null} 
-    onArchive={() => {}} 
-    search="" 
-    filters={{}} 
-    TAG_COLORS={TAG_COLORS} 
-    customTags={customTags} 
-    onUpdateLead={() => {}} 
-    isMobile={isMobile} 
-    onOpenNewLead={() => {}} 
-  />
-</div>
-                  </div>
-                </div>
-              )}
+             {!loadingAdminData && selectedUser && (
+  <div>
+    <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
+      ← Back to user list
+    </button>
+    <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
+      <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>{selectedUser.display_name || selectedUser.username}</h2>
+      <div style={{ fontSize: 13, color: COLORS.textSecondary }}>@{selectedUser.username}</div>
+      <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 13, color: COLORS.textSecondary }}>
+        <span>{selectedUser.leadCount} leads</span>
+        <span>{selectedUser.gigCount} gigs</span>
+        <span>{selectedUser.is_pro ? "Pro" : "Free"}</span>
+        <span>Health: {selectedUser.health_status || "active"}</span>
+      </div>
+    </div>
+    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>User's Pipeline (Read-Only)</div>
+    <div style={{ opacity: 0.7, pointerEvents: "none" }}>
+      <PipelineView 
+        leads={selectedUserLeads} 
+        onMove={() => {}} 
+        onSelect={() => {}} 
+        selectedLead={null} 
+        onArchive={() => {}} 
+        search="" 
+        filters={{}} 
+        TAG_COLORS={TAG_COLORS} 
+        customTags={customTags} 
+        onUpdateLead={() => {}} 
+        isMobile={isMobile} 
+        onOpenNewLead={() => {}} 
+      />
+    </div>
+  </div>
+)}
             </div>
           )}
         </div>
