@@ -3654,7 +3654,6 @@ const loadAdminUsers = async () => {
         .from("profiles")
         .select("id, username, display_name, is_pro, health_status, last_health_check, created_at, email");
 
-      console.log('📊 Fetched profiles:', profiles);
 
       const enriched = await Promise.all(
         (profiles || []).map(async (p) => {
@@ -3663,13 +3662,11 @@ const loadAdminUsers = async () => {
             supabase.from("gigs").select("*",  { count: "exact", head: true }).eq("user_id", p.id),
           ]);
           
-          console.log(`👤 ${p.username || p.email}: leads=${leadsRes.count}, gigs=${gigsRes.count}, error=${leadsRes.error || 'none'}`);
           
           return { ...p, leadCount: leadsRes.count || 0, gigCount: gigsRes.count || 0 };
         })
       );
 
-      console.log('✅ Enriched users:', enriched);
       setAdminUsers(enriched);
     } catch (err) {
       console.error("Failed to load admin users:", err);
