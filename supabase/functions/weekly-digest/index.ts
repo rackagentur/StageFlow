@@ -1,216 +1,194 @@
+// supabase/functions/weekly-digest/index.ts
+// Triggered weekly via cron to send follow-up digest
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = "https://ckttttvgvpvflgjzkbmy.supabase.co";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY")!;
+const FROM = "Gregorgus (GEEZ) <info@soundofgeez.com>";
 
-Deno.serve(async () => {
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function digestEmailHTML(displayName: string, followUps: any[], overdue: any[]) {
+  const total = followUps.length + overdue.length;
+  
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your week ahead</title>
+<style>
+  body { margin: 0; padding: 0; background: #060608; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #f0f0f0; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 48px 24px; }
+  .card { background: #0f0f18; border: 1px solid #1c1c2e; border-radius: 16px; padding: 40px; }
+  .greeting { font-size: 18px; font-weight: 600; color: #9090a8; margin: 0 0 24px; }
+  p { font-size: 15px; color: #9090a8; line-height: 1.85; margin: 0 0 18px; }
+  .punch { font-size: 16px; color: #f0f0f0; font-weight: 700; margin: 24px 0; }
+  .stat { font-size: 48px; font-weight: 800; color: #6B2FD4; font-family: 'Courier New', monospace; text-align: center; margin: 20px 0; }
+  .divider { border: none; border-top: 1px solid #1c1c2e; margin: 32px 0; }
+  .lead-list { margin: 0; padding: 0; list-style: none; }
+  .lead-item { padding: 14px 16px; margin-bottom: 10px; background: #0a0a10; border: 1px solid #1c1c2e; border-radius: 10px; }
+  .lead-name { font-size: 14px; font-weight: 700; color: #f0f0f0; margin-bottom: 4px; }
+  .lead-date { font-size: 12px; color: #9090a8; }
+  .overdue { border-color: #D4AF37; background: rgba(212, 175, 55, 0.08); }
+  .overdue .lead-date { color: #D4AF37; }
+  .cta-wrap { text-align: center; margin: 36px 0 0; }
+  .btn { display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #6B2FD4, #8B4FFF); color: #fff; font-size: 15px; font-weight: 800; text-decoration: none; border-radius: 10px; }
+  .sig { margin-top: 36px; padding-top: 28px; border-top: 1px solid #1c1c2e; }
+  .sig-name { font-size: 15px; font-weight: 700; color: #f0f0f0; margin-bottom: 3px; }
+  .sig-title { font-size: 12px; color: #50506a; font-family: 'Courier New', monospace; }
+  .footer { text-align: center; margin-top: 28px; font-size: 11px; color: #50506a; line-height: 1.7; }
+  .footer a { color: #6B2FD4; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="greeting">Hey ${displayName} —</div>
+    
+    ${total === 0 ? `
+      <p>Clean slate this week. No follow-ups scheduled.</p>
+      <p>That's either a sign you're crushing it, or it's time to add more leads to the pipeline.</p>
+    ` : `
+      <p>You've got follow-ups due this week.</p>
+      <div class="stat">${total}</div>
+      <p class="punch">${overdue.length > 0 ? `${overdue.length} overdue. Handle those first.` : 'Stay on top of them and replies come.'}</p>
+      
+      ${overdue.length > 0 ? `
+        <hr class="divider" />
+        <p style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #D4AF37; margin-bottom: 16px;">⚠ OVERDUE</p>
+        <ul class="lead-list">
+          ${overdue.slice(0, 5).map(lead => `
+            <li class="lead-item overdue">
+              <div class="lead-name">${lead.name}</div>
+              <div class="lead-date">Due ${new Date(lead.follow_up_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+            </li>
+          `).join('')}
+          ${overdue.length > 5 ? `<p style="font-size: 12px; color: #9090a8; margin-top: 10px;">+ ${overdue.length - 5} more overdue</p>` : ''}
+        </ul>
+      ` : ''}
+      
+      ${followUps.length > 0 ? `
+        <hr class="divider" />
+        <p style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6B2FD4; margin-bottom: 16px;">THIS WEEK</p>
+        <ul class="lead-list">
+          ${followUps.slice(0, 5).map(lead => `
+            <li class="lead-item">
+              <div class="lead-name">${lead.name}</div>
+              <div class="lead-date">Follow up by ${new Date(lead.follow_up_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+            </li>
+          `).join('')}
+          ${followUps.length > 5 ? `<p style="font-size: 12px; color: #9090a8; margin-top: 10px;">+ ${followUps.length - 5} more this week</p>` : ''}
+        </ul>
+      ` : ''}
+    `}
+    
+    <hr class="divider" />
+    <p style="margin:0">Set aside 20 minutes Monday morning. Knock them out before the week gets messy.</p>
+    
+    <div class="cta-wrap">
+      <a href="https://app.noxreach.com" class="btn">Open Follow-ups →</a>
+    </div>
+    
+    <div class="sig">
+      <div class="sig-name">Gregorgus (GEEZ)</div>
+      <div class="sig-title">Founder, NoxReach</div>
+    </div>
+  </div>
+  <div class="footer">
+    Weekly digest · <a href="https://app.noxreach.com/settings">Manage preferences</a><br />
+    <a href="mailto:hello@noxreach.io">hello@noxreach.io</a>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+async function sendDigest(email: string, displayName: string, followUps: any[], overdue: any[]) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: FROM,
+      to: [email],
+      subject: overdue.length > 0 
+        ? `⚠ ${overdue.length + followUps.length} follow-ups this week (${overdue.length} overdue)`
+        : followUps.length > 0
+        ? `📌 ${followUps.length} follow-ups due this week`
+        : "✓ Clean slate this week",
+      html: digestEmailHTML(displayName, followUps, overdue),
+    }),
+  });
+  return res.json();
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
   try {
-    const resendKey = Deno.env.get("RESEND_API_KEY");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const supabase = createClient(SUPABASE_URL, supabaseKey!);
+    const today = new Date();
+    const weekFromNow = new Date(today);
+    weekFromNow.setDate(today.getDate() + 7);
 
-    const now = new Date();
-    const todayStr = now.toISOString().split("T")[0];
-    const dateLabel = now.toLocaleDateString("en-GB", {
-      weekday: "long", day: "numeric", month: "long", year: "numeric"
-    });
-
-    // Fetch all users with emails
-    const { data: users, error: usersError } = await supabase
+    // Get all Pro users (or all users for testing)
+    const { data: profiles, error: profileError } = await supabase
       .from("profiles")
-      .select("id, display_name");
-    if (usersError) throw usersError;
+      .select("id, username, display_name")
+      .eq("is_pro", true); // Remove this line to send to all users during testing
 
-    // Fetch auth emails via admin API
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-    if (authError) throw authError;
-
-    const emailMap: Record<string, string> = {};
-    for (const u of authUsers.users) {
-      if (u.email) emailMap[u.id] = u.email;
-    }
+    if (profileError) throw profileError;
 
     const results = [];
 
-    for (const profile of users) {
-      const email = emailMap[profile.id];
-      if (!email) continue;
+    for (const profile of profiles || []) {
+      // Get user's email
+      const { data: { user } } = await supabase.auth.admin.getUserById(profile.id);
+      if (!user?.email) continue;
 
-      // Fetch this user's leads
-      const { data: leads, error: leadsError } = await supabase
+      // Get follow-ups for this user
+      const { data: leads } = await supabase
         .from("leads")
         .select("*")
         .eq("user_id", profile.id)
-        .eq("archived", false);
-      if (leadsError || !leads || leads.length === 0) continue;
+        .eq("archived", false)
+        .not("follow_up_date", "is", null)
+        .lte("follow_up_date", weekFromNow.toISOString().split('T')[0]);
 
-      const overdue = leads.filter(l =>
-        l.follow_up_date && l.follow_up_date < todayStr &&
-        !["booked","archived","declined"].includes(l.stage)
-      );
-      const dueToday = leads.filter(l =>
-        l.follow_up_date === todayStr &&
-        !["booked","archived","declined"].includes(l.stage)
-      );
-      const allDue = [...overdue, ...dueToday];
-      const replied = leads.filter(l => l.stage === "replied");
-      const bookedRecent = leads.filter(l => {
-        if (l.stage !== "booked") return false;
-        const d = l.last_contact ? new Date(l.last_contact) : null;
-        if (!d || isNaN(d.getTime())) return false;
-        return (now.getTime() - d.getTime()) / 86400000 <= 7;
-      });
-      const active = leads.filter(l => !["archived","declined"].includes(l.stage));
-      const bookedAll = leads.filter(l => l.stage === "booked" && !l.archived);
-      const totalFees = bookedAll.reduce((sum, l) => sum + (l.fee || 0), 0);
-      const depositDue = bookedAll.filter(l => l.fee && !l.deposit_paid).length;
+      if (!leads || leads.length === 0) {
+        // Skip users with no follow-ups
+        continue;
+      }
 
-      // Skip users with nothing to report
-      if (allDue.length === 0 && replied.length === 0 && bookedRecent.length === 0) continue;
+      // Split into overdue vs upcoming
+      const overdue = leads.filter(l => new Date(l.follow_up_date) < today);
+      const upcoming = leads.filter(l => new Date(l.follow_up_date) >= today);
 
-      const formatDate = (dateStr: string | null) => {
-        if (!dateStr) return "—";
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return "—";
-        const hours = Math.round((now.getTime() - d.getTime()) / 3600000);
-        if (hours < 24) return `${hours}h ago`;
-        const days = Math.round(hours / 24);
-        if (days < 7) return `${days}d ago`;
-        return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-      };
-
-      const leadRow = (l: any, tagText: string, tagColor: string, tagTextColor: string, dotColor: string, dateText: string) => `
-        <tr>
-          <td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-            <table cellpadding="0" cellspacing="0" style="width:100%"><tr>
-              <td style="width:14px;vertical-align:middle;padding-right:10px">
-                <div style="width:7px;height:7px;border-radius:50%;background:${dotColor}"></div>
-              </td>
-              <td style="vertical-align:middle;font-size:14px;color:rgba(255,255,255,0.85)">${l.name}</td>
-              <td style="vertical-align:middle;text-align:right;padding-left:12px;white-space:nowrap">
-                <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:${tagColor};color:${tagTextColor}">${tagText}</span>
-              </td>
-              <td style="vertical-align:middle;font-size:11px;color:rgba(255,255,255,0.3);text-align:right;padding-left:12px;white-space:nowrap;min-width:56px">${dateText}</td>
-            </tr></table>
-          </td>
-        </tr>`;
-
-      const followupRows = allDue.map(l => {
-        const isOverdue = l.follow_up_date < todayStr;
-        const dateText = isOverdue
-          ? `${Math.round((now.getTime() - new Date(l.follow_up_date).getTime()) / 86400000)}d overdue`
-          : "Today";
-        return leadRow(l,
-          isOverdue ? "Overdue" : "Due today",
-          isOverdue ? "rgba(239,68,68,0.12)" : "rgba(212,175,55,0.12)",
-          isOverdue ? "#f87171" : "#D4AF37",
-          isOverdue ? "#ef4444" : "#D4AF37",
-          dateText
-        );
-      }).join("");
-
-      const repliedRows = replied.map(l =>
-        leadRow(l, "Replied", "rgba(139,92,246,0.12)", "#a78bfa", "#8B5CF6", formatDate(l.last_contact))
-      ).join("");
-
-      const bookedRows = bookedRecent.map(l =>
-        leadRow(l, "Confirmed", "rgba(74,222,128,0.12)", "#4ade80", "#4ade80", formatDate(l.last_contact))
-      ).join("");
-
-      const sectionBlock = (label: string, rows: string, emptyMsg: string) => `
-        <tr><td style="padding:24px 36px;border-bottom:1px solid rgba(255,255,255,0.06)">
-          <div style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:14px">${label}</div>
-          ${rows
-            ? `<table cellpadding="0" cellspacing="0" style="width:100%">${rows}</table>`
-            : `<div style="font-size:13px;color:rgba(255,255,255,0.25);font-style:italic">${emptyMsg}</div>`
-          }
-        </td></tr>`;
-
-      const displayName = profile.display_name || email.split("@")[0];
-
-      const html = `<!DOCTYPE html>
-<html><body style="margin:0;padding:0;background:#0f0f0f;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif">
-<table cellpadding="0" cellspacing="0" style="width:100%;max-width:580px;margin:24px auto;background:#0a0a0a;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
-
-  <tr><td style="padding:32px 36px 24px;border-bottom:1px solid rgba(255,255,255,0.07)">
-    <table cellpadding="0" cellspacing="0" style="margin-bottom:18px"><tr>
-      <td><img src="https://noxreach.com/public/nr-icon.png" width="38" height="38" style="border-radius:10px;display:block" alt="NR"></td>
-      <td style="padding-left:10px"><img src="https://noxreach.com/public/nr-wordmark.png" height="20" style="display:block" alt="NoxReach"></td>
-    </tr></table>
-    <div style="font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.4px;margin-bottom:4px">Your weekly pipeline digest</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.4)">${dateLabel}</div>
-  </td></tr>
-
-  <tr><td>
-    <table cellpadding="0" cellspacing="0" style="width:100%;border-bottom:1px solid rgba(255,255,255,0.07)"><tr>
-      <td style="width:16%;padding:20px 16px;text-align:center;border-right:1px solid rgba(255,255,255,0.05)">
-        <div style="font-size:26px;font-weight:600;color:${allDue.length > 0 ? "#f97316" : "#D4AF37"};letter-spacing:-1px;line-height:1;margin-bottom:4px">${allDue.length}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;line-height:1.3">Follow-ups due</div>
-      </td>
-      <td style="width:16%;padding:20px 16px;text-align:center;border-right:1px solid rgba(255,255,255,0.05)">
-        <div style="font-size:26px;font-weight:600;color:#8B5CF6;letter-spacing:-1px;line-height:1;margin-bottom:4px">${replied.length}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;line-height:1.3">Replied — act</div>
-      </td>
-      <td style="width:16%;padding:20px 16px;text-align:center;border-right:1px solid rgba(255,255,255,0.05)">
-        <div style="font-size:26px;font-weight:600;color:#4ade80;letter-spacing:-1px;line-height:1;margin-bottom:4px">${bookedRecent.length}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;line-height:1.3">Booked this week</div>
-      </td>
-      <td style="width:16%;padding:20px 16px;text-align:center">
-        <div style="font-size:26px;font-weight:600;color:rgba(255,255,255,0.45);letter-spacing:-1px;line-height:1;margin-bottom:4px">${active.length}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;line-height:1.3">Active leads</div>
-      </td>
-      <td style="width:16%;padding:20px 16px;text-align:center;border-left:1px solid rgba(255,255,255,0.05)">
-        <div style="font-size:26px;font-weight:600;color:#D4AF37;letter-spacing:-1px;line-height:1;margin-bottom:4px">€${totalFees.toLocaleString()}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;line-height:1.3">Total fees</div>
-      </td>
-      <td style="width:16%;padding:20px 16px;text-align:center;border-left:1px solid rgba(255,255,255,0.05)">
-        <div style="font-size:26px;font-weight:600;color:${depositDue > 0 ? "#f97316" : "rgba(255,255,255,0.45)"};letter-spacing:-1px;line-height:1;margin-bottom:4px">${depositDue}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;line-height:1.3">Deposit due</div>
-      </td>
-    </tr></table>
-  </td></tr>
-
-  ${sectionBlock("Follow-ups due", followupRows, "No follow-ups due — you're ahead of the pipeline.")}
-  ${sectionBlock("Replied — needs your response", repliedRows, "No replied leads waiting.")}
-  ${sectionBlock("Booked this week", bookedRows, "No new bookings this week — keep pushing.")}
-
-  <tr><td style="background:#0a0a0a;padding:28px 36px;text-align:center">
-    <a href="https://app.noxreach.com" style="display:inline-block;background:#D4AF37;color:#0a0a0a;font-size:14px;font-weight:600;padding:13px 28px;border-radius:8px;text-decoration:none;letter-spacing:0.01em;margin-bottom:14px">Open NoxReach →</a>
-    <div style="font-size:12px;color:rgba(255,255,255,0.25)">Your pipeline is waiting</div>
-  </td></tr>
-
-  <tr><td style="padding:14px 36px 24px;border-top:1px solid rgba(255,255,255,0.05);text-align:center">
-    <div style="font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:0.04em">Weekly digest · NoxReach · <a href="https://app.noxreach.com" style="color:rgba(255,255,255,0.2)">Unsubscribe</a></div>
-  </td></tr>
-
-</table>
-</body></html>`;
-
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${resendKey}`,
-        },
-        body: JSON.stringify({
-          from: "NoxReach <digest@soundofgeez.com>",
-          to: [email],
-          subject: `NoxReach digest — ${allDue.length} follow-up${allDue.length !== 1 ? "s" : ""} due · ${dateLabel}`,
-          html,
-        }),
-      });
-
-      const result = await res.json();
-      results.push({ email, result });
+      const displayName = profile.display_name || profile.username || user.email.split("@")[0];
+      
+      const result = await sendDigest(user.email, displayName, upcoming, overdue);
+      results.push({ email: user.email, result });
+      
+      console.log(`Digest sent to: ${user.email}`, result);
     }
 
     return new Response(JSON.stringify({ ok: true, sent: results.length, results }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
   } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
+    console.error("weekly-digest error:", err.message);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
