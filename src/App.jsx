@@ -432,14 +432,17 @@ function Logo({ size = 24 }) {
 
 // ─── Search + Filter Bar ─────────────────────────────────────────────────────
 
-function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, totalCount, customTags, TAG_COLORS }) {
+function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, totalCount, customTags, TAG_COLORS, isMobile }) {
   const inputRef = useRef(null);
+  const [showFilters, setShowFilters] = useState(false);
   const hasAnyFilter = search || filters.tier || filters.tag || filters.stage;
   const isFiltered = hasAnyFilter && resultCount < totalCount;
   const TIERS = ["A1", "A2", "A3"];
 
   const toggle = (key, val) => setFilters(f => ({ ...f, [key]: f[key] === val ? null : val }));
   const clearAll = () => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); };
+
+  const activeFilterCount = [filters.tier, filters.tag, filters.stage].filter(Boolean).length;
 
   return (
     <div style={{ marginBottom: 16 }}>
@@ -465,42 +468,114 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
             <button onClick={() => setSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: COLORS.textSecondary, cursor: "pointer", fontSize: 16, lineHeight: 1 }}>×</button>
           )}
         </div>
-        {hasAnyFilter && (
+        
+        {/* Mobile: Filter toggle button */}
+        {isMobile && (
+          <button 
+            onClick={() => setShowFilters(!showFilters)} 
+            style={{ 
+              padding: "9px 14px", 
+              background: activeFilterCount > 0 ? COLORS.purpleBg : "transparent", 
+              border: `1px solid ${activeFilterCount > 0 ? COLORS.purple : COLORS.border}`, 
+              borderRadius: 9, 
+              color: activeFilterCount > 0 ? COLORS.purple : COLORS.textSecondary, 
+              fontSize: 12, 
+              cursor: "pointer", 
+              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <span>Filter</span>
+            {activeFilterCount > 0 && (
+              <span style={{ 
+                background: COLORS.purple, 
+                color: COLORS.bg, 
+                borderRadius: "50%", 
+                width: 16, 
+                height: 16, 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                fontSize: 10, 
+                fontWeight: 700 
+              }}>
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        )}
+        
+        {/* Desktop: Clear all button */}
+        {!isMobile && hasAnyFilter && (
           <button onClick={clearAll} style={{ padding: "9px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
             Clear all
           </button>
         )}
       </div>
 
-      {/* Filter pills row */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: 2 }}>
-        <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4 }}>Filter</span>
+      {/* Filter pills row - Desktop always shows, Mobile toggles */}
+      {(!isMobile || showFilters) && (
+        <div style={{ 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: 10,
+          padding: isMobile ? "12px" : "0",
+          background: isMobile ? COLORS.surface : "transparent",
+          border: isMobile ? `1px solid ${COLORS.border}` : "none",
+          borderRadius: isMobile ? 10 : 0,
+        }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", alignItems: "center", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling: "touch", paddingBottom: 2 }}>
+            <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4, flexShrink: 0 }}>Tier</span>
 
-        {TIERS.map(t => (
-          <FilterPill key={t} label={t} active={filters.tier === t} color={TIER_COLORS[t]}
-            onClick={() => toggle("tier", t)} onClear={() => toggle("tier", t)} />
-        ))}
+            {TIERS.map(t => (
+              <FilterPill key={t} label={t} active={filters.tier === t} color={TIER_COLORS[t]}
+                onClick={() => toggle("tier", t)} onClear={() => toggle("tier", t)} />
+            ))}
+          </div>
 
-        <div style={{ width: 1, height: 16, background: COLORS.border, margin: "0 2px" }} />
+          <div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", alignItems: "center", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling: "touch", paddingBottom: 2 }}>
+            <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4, flexShrink: 0 }}>Tag</span>
 
-        {customTags.map(t => (
-          <FilterPill key={t} label={t} active={filters.tag === t} color={TAG_COLORS[t] || COLORS.purple}
-            onClick={() => toggle("tag", t)} onClear={() => toggle("tag", t)} />
-        ))}
+            {customTags.map(t => (
+              <FilterPill key={t} label={t} active={filters.tag === t} color={TAG_COLORS[t] || COLORS.purple}
+                onClick={() => toggle("tag", t)} onClear={() => toggle("tag", t)} />
+            ))}
+          </div>
 
-        <div style={{ width: 1, height: 16, background: COLORS.border, margin: "0 2px" }} />
+          <div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", alignItems: "center", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling: "touch", paddingBottom: 2 }}>
+            <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4, flexShrink: 0 }}>Stage</span>
 
-        {[
-          { id: "target",    label: "Target",    color: "#444444", stages: ["target"] },
-          { id: "contacted", label: "Contacted", color: "#7B3FE4", stages: ["contacted"] },
-          { id: "followup",  label: "Follow-up", color: "#9B5FFF", stages: ["followup1","followup2"] },
-          { id: "replied",   label: "Replied",   color: "#22C55E", stages: ["replied"] },
-          { id: "booked",    label: "Booked",    color: "#D4AF37", stages: ["booked"] },
-        ].map(s => (
-          <FilterPill key={s.id} label={s.label} active={filters.stage === s.id} color={s.color}
-            onClick={() => toggle("stage", s.id)} onClear={() => toggle("stage", s.id)} />
-        ))}
-      </div>
+            {[
+              { id: "target",    label: "Target",    color: "#444444", stages: ["target"] },
+              { id: "contacted", label: "Contacted", color: "#7B3FE4", stages: ["contacted"] },
+              { id: "followup",  label: "Follow-up", color: "#9B5FFF", stages: ["followup1","followup2"] },
+              { id: "replied",   label: "Replied",   color: "#22C55E", stages: ["replied"] },
+              { id: "booked",    label: "Booked",    color: "#D4AF37", stages: ["booked"] },
+            ].map(s => (
+              <FilterPill key={s.id} label={s.label} active={filters.stage === s.id} color={s.color}
+                onClick={() => toggle("stage", s.id)} onClear={() => toggle("stage", s.id)} />
+            ))}
+          </div>
+
+          {/* Mobile: Clear all button inside filter panel */}
+          {isMobile && hasAnyFilter && (
+            <button onClick={clearAll} style={{ 
+              padding: "8px 12px", 
+              background: "transparent", 
+              border: `1px solid ${COLORS.border}`, 
+              borderRadius: 8, 
+              color: COLORS.textSecondary, 
+              fontSize: 12, 
+              cursor: "pointer",
+              alignSelf: "flex-start",
+            }}>
+              Clear all filters
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Result count */}
       {hasAnyFilter && (
@@ -513,6 +588,7 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
     </div>
   );
 }
+
 
 // ─── Lead Card ────────────────────────────────────────────────────────────────
 
@@ -626,7 +702,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
 
-function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead }) {
+function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead }) {
   const [showArchived, setShowArchived] = useState(false);
 
   const applyFilters = (list) => list.filter(l => {
@@ -721,7 +797,23 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                         </>
                       ) : col.id === "target" ? (
                         <>
-                          <div style={{ fontSize: 11, color: COLORS.textMuted }}>Add your first lead →</div>
+                          <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 8 }}>Add your first lead</div>
+                          <button 
+                            onClick={onOpenNewLead}
+                            style={{
+                              padding: "8px 12px",
+                              background: COLORS.purple,
+                              border: "none",
+                              borderRadius: 6,
+                              color: COLORS.bg,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              width: "100%",
+                            }}
+                          >
+                            + Add Lead
+                          </button>
                         </>
                       ) : (
                         <div style={{ fontSize: 11, color: COLORS.textMuted }}>Empty</div>
@@ -3848,6 +3940,7 @@ const activeLeads = leads.filter(l => !l.archived);
             <SearchFilterBar
               search={search} setSearch={setSearch}
               filters={filters} setFilters={setFilters}
+              isMobile={isMobile}
               customTags={customTags} TAG_COLORS={TAG_COLORS}
               resultCount={leads.filter(l => {
                 if (l.archived) return false;
@@ -3888,7 +3981,7 @@ const activeLeads = leads.filter(l => !l.archived);
           )}
           {activeTab === "pipeline"  && (
             <>
-              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} />
+              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} />
               {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} />}
             </>
           )}
