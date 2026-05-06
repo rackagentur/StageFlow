@@ -2582,6 +2582,12 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
       const { data, error } = await supabase.from("gigs").insert([gigToDb({ ...addForm }, userId)]).select().single();
       if (error) throw error;
       setGigs(prev => [...prev, dbToGig(data)]);
+      
+      // Navigate calendar to the gig's month
+      const gigDate = new Date(addForm.date);
+      setViewMonth(gigDate.getMonth());
+      setViewYear(gigDate.getFullYear());
+      
       showToast(`${addForm.venue} added to calendar`, "success");
       setShowAdd(false);
       setAddForm({ venue: "", city: "", date: "", status: "confirmed", fee: "", tag: "Tech-House", notes: "" });
