@@ -1,4 +1,5 @@
 {
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/((?!privacy\\.html|impressum\\.html|terms\\.html).*)",
