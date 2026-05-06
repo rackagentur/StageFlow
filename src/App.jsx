@@ -2557,6 +2557,16 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
   const [showAdd,   setShowAdd]   = useState(false);
   const [addForm,   setAddForm]   = useState({ venue: "", city: "", date: "", status: "confirmed", fee: "", tag: "Tech-House", notes: "" });
 
+  // Listen for "Add to Calendar" from Booked modal
+  useEffect(() => {
+    const handleAddFromBooked = (e) => {
+      setShowAdd(true);
+      setAddForm(f => ({ ...f, venue: e.detail.venue || "", tag: e.detail.tag || "Tech-House" }));
+    };
+    window.addEventListener('addGigFromBooked', handleAddFromBooked);
+    return () => window.removeEventListener('addGigFromBooked', handleAddFromBooked);
+  }, []);
+
   const monthStart  = new Date(viewYear, viewMonth, 1);
   const monthEnd    = new Date(viewYear, viewMonth + 1, 0);
   const startPad    = monthStart.getDay();
@@ -2978,8 +2988,43 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
                 </button>
               )}
               {selected.stage === "booked" && (
-                <div style={{ padding: "10px 14px", background: COLORS.gold + "18", border: `1px solid ${COLORS.gold}44`, borderRadius: 8, fontSize: 12, color: COLORS.gold, fontWeight: 600, marginBottom: 16 }}>
-                  ✓ Booking confirmed — this gig is locked in
+                <div style={{ padding: "14px 16px", background: COLORS.gold + "18", border: `1px solid ${COLORS.gold}44`, borderRadius: 10, marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <div style={{ fontSize: 16 }}>✓</div>
+                    <div style={{ fontSize: 13, color: COLORS.gold, fontWeight: 700 }}>Booking confirmed — this gig is locked in</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setActiveTab("calendar");
+                      // Small delay to let tab switch complete, then trigger add form
+                      setTimeout(() => {
+                        const calendarSection = document.querySelector('[data-calendar-view]');
+                        if (calendarSection) {
+                          window.dispatchEvent(new CustomEvent('addGigFromBooked', { 
+                            detail: { venue: selected.name, tag: selected.tag } 
+                          }));
+                        }
+                      }, 100);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      background: COLORS.gold,
+                      border: "none",
+                      borderRadius: 8,
+                      color: COLORS.bg,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <span>📅</span>
+                    <span>Add to Calendar</span>
+                  </button>
                 </div>
               )}
 
