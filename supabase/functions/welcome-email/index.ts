@@ -2,7 +2,7 @@
 // Triggered on new user signup via DB webhook on auth.users INSERT
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const FROM = "Gregorgus (GEEZ) via NoxReach <welcome@soundofgeez.com>";
+const FROM = "Gregorgus (GEEZ) <info@soundofgeez.com>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

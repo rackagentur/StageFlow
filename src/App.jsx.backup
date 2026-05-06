@@ -432,17 +432,14 @@ function Logo({ size = 24 }) {
 
 // ─── Search + Filter Bar ─────────────────────────────────────────────────────
 
-function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, totalCount, customTags, TAG_COLORS, isMobile }) {
+function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, totalCount, customTags, TAG_COLORS }) {
   const inputRef = useRef(null);
-  const [showFilters, setShowFilters] = useState(false);
   const hasAnyFilter = search || filters.tier || filters.tag || filters.stage;
   const isFiltered = hasAnyFilter && resultCount < totalCount;
   const TIERS = ["A1", "A2", "A3"];
 
   const toggle = (key, val) => setFilters(f => ({ ...f, [key]: f[key] === val ? null : val }));
   const clearAll = () => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); };
-
-  const activeFilterCount = [filters.tier, filters.tag, filters.stage].filter(Boolean).length;
 
   return (
     <div style={{ marginBottom: 16 }}>
@@ -468,114 +465,42 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
             <button onClick={() => setSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: COLORS.textSecondary, cursor: "pointer", fontSize: 16, lineHeight: 1 }}>×</button>
           )}
         </div>
-        
-        {/* Mobile: Filter toggle button */}
-        {isMobile && (
-          <button 
-            onClick={() => setShowFilters(!showFilters)} 
-            style={{ 
-              padding: "9px 14px", 
-              background: activeFilterCount > 0 ? COLORS.purpleBg : "transparent", 
-              border: `1px solid ${activeFilterCount > 0 ? COLORS.purple : COLORS.border}`, 
-              borderRadius: 9, 
-              color: activeFilterCount > 0 ? COLORS.purple : COLORS.textSecondary, 
-              fontSize: 12, 
-              cursor: "pointer", 
-              whiteSpace: "nowrap",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <span>Filter</span>
-            {activeFilterCount > 0 && (
-              <span style={{ 
-                background: COLORS.purple, 
-                color: COLORS.bg, 
-                borderRadius: "50%", 
-                width: 16, 
-                height: 16, 
-                display: "flex", 
-                alignItems: "center", 
-                justifyContent: "center", 
-                fontSize: 10, 
-                fontWeight: 700 
-              }}>
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        )}
-        
-        {/* Desktop: Clear all button */}
-        {!isMobile && hasAnyFilter && (
+        {hasAnyFilter && (
           <button onClick={clearAll} style={{ padding: "9px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
             Clear all
           </button>
         )}
       </div>
 
-      {/* Filter pills row - Desktop always shows, Mobile toggles */}
-      {(!isMobile || showFilters) && (
-        <div style={{ 
-          display: "flex", 
-          flexDirection: "column", 
-          gap: 10,
-          padding: isMobile ? "12px" : "0",
-          background: isMobile ? COLORS.surface : "transparent",
-          border: isMobile ? `1px solid ${COLORS.border}` : "none",
-          borderRadius: isMobile ? 10 : 0,
-        }}>
-          <div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", alignItems: "center", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling: "touch", paddingBottom: 2 }}>
-            <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4, flexShrink: 0 }}>Tier</span>
+      {/* Filter pills row */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: 2 }}>
+        <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4 }}>Filter</span>
 
-            {TIERS.map(t => (
-              <FilterPill key={t} label={t} active={filters.tier === t} color={TIER_COLORS[t]}
-                onClick={() => toggle("tier", t)} onClear={() => toggle("tier", t)} />
-            ))}
-          </div>
+        {TIERS.map(t => (
+          <FilterPill key={t} label={t} active={filters.tier === t} color={TIER_COLORS[t]}
+            onClick={() => toggle("tier", t)} onClear={() => toggle("tier", t)} />
+        ))}
 
-          <div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", alignItems: "center", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling: "touch", paddingBottom: 2 }}>
-            <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4, flexShrink: 0 }}>Tag</span>
+        <div style={{ width: 1, height: 16, background: COLORS.border, margin: "0 2px" }} />
 
-            {customTags.map(t => (
-              <FilterPill key={t} label={t} active={filters.tag === t} color={TAG_COLORS[t] || COLORS.purple}
-                onClick={() => toggle("tag", t)} onClear={() => toggle("tag", t)} />
-            ))}
-          </div>
+        {customTags.map(t => (
+          <FilterPill key={t} label={t} active={filters.tag === t} color={TAG_COLORS[t] || COLORS.purple}
+            onClick={() => toggle("tag", t)} onClear={() => toggle("tag", t)} />
+        ))}
 
-          <div style={{ display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap", alignItems: "center", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling: "touch", paddingBottom: 2 }}>
-            <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4, flexShrink: 0 }}>Stage</span>
+        <div style={{ width: 1, height: 16, background: COLORS.border, margin: "0 2px" }} />
 
-            {[
-              { id: "target",    label: "Target",    color: "#444444", stages: ["target"] },
-              { id: "contacted", label: "Contacted", color: "#7B3FE4", stages: ["contacted"] },
-              { id: "followup",  label: "Follow-up", color: "#9B5FFF", stages: ["followup1","followup2"] },
-              { id: "replied",   label: "Replied",   color: "#22C55E", stages: ["replied"] },
-              { id: "booked",    label: "Booked",    color: "#D4AF37", stages: ["booked"] },
-            ].map(s => (
-              <FilterPill key={s.id} label={s.label} active={filters.stage === s.id} color={s.color}
-                onClick={() => toggle("stage", s.id)} onClear={() => toggle("stage", s.id)} />
-            ))}
-          </div>
-
-          {/* Mobile: Clear all button inside filter panel */}
-          {isMobile && hasAnyFilter && (
-            <button onClick={clearAll} style={{ 
-              padding: "8px 12px", 
-              background: "transparent", 
-              border: `1px solid ${COLORS.border}`, 
-              borderRadius: 8, 
-              color: COLORS.textSecondary, 
-              fontSize: 12, 
-              cursor: "pointer",
-              alignSelf: "flex-start",
-            }}>
-              Clear all filters
-            </button>
-          )}
-        </div>
-      )}
+        {[
+          { id: "target",    label: "Target",    color: "#444444", stages: ["target"] },
+          { id: "contacted", label: "Contacted", color: "#7B3FE4", stages: ["contacted"] },
+          { id: "followup",  label: "Follow-up", color: "#9B5FFF", stages: ["followup1","followup2"] },
+          { id: "replied",   label: "Replied",   color: "#22C55E", stages: ["replied"] },
+          { id: "booked",    label: "Booked",    color: "#D4AF37", stages: ["booked"] },
+        ].map(s => (
+          <FilterPill key={s.id} label={s.label} active={filters.stage === s.id} color={s.color}
+            onClick={() => toggle("stage", s.id)} onClear={() => toggle("stage", s.id)} />
+        ))}
+      </div>
 
       {/* Result count */}
       {hasAnyFilter && (
@@ -588,7 +513,6 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
     </div>
   );
 }
-
 
 // ─── Lead Card ────────────────────────────────────────────────────────────────
 
@@ -702,7 +626,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
 
-function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead }) {
+function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead }) {
   const [showArchived, setShowArchived] = useState(false);
 
   const applyFilters = (list) => list.filter(l => {
@@ -797,23 +721,7 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                         </>
                       ) : col.id === "target" ? (
                         <>
-                          <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 8 }}>Add your first lead</div>
-                          <button 
-                            onClick={onOpenNewLead}
-                            style={{
-                              padding: "8px 12px",
-                              background: COLORS.purple,
-                              border: "none",
-                              borderRadius: 6,
-                              color: COLORS.bg,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              width: "100%",
-                            }}
-                          >
-                            + Add Lead
-                          </button>
+                          <div style={{ fontSize: 11, color: COLORS.textMuted }}>Add your first lead →</div>
                         </>
                       ) : (
                         <div style={{ fontSize: 11, color: COLORS.textMuted }}>Empty</div>
@@ -1034,34 +942,6 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                 </div>
               );
             })}
-            
-            {/* Add to Calendar CTA */}
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('switchToCalendar', { 
-                  detail: { venue: lead.name, tag: lead.tag } 
-                }));
-              }}
-              style={{
-                width: "100%",
-                marginTop: 12,
-                padding: "10px 14px",
-                background: COLORS.gold,
-                border: "none",
-                borderRadius: 8,
-                color: COLORS.bg,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-              }}
-            >
-              <span>📅</span>
-              <span>Add to Calendar</span>
-            </button>
           </div>
         );
       })()}
@@ -2585,16 +2465,6 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
   const [showAdd,   setShowAdd]   = useState(false);
   const [addForm,   setAddForm]   = useState({ venue: "", city: "", date: "", status: "confirmed", fee: "", tag: "Tech-House", notes: "" });
 
-  // Listen for "Add to Calendar" from Booked modal
-  useEffect(() => {
-    const handleAddFromBooked = (e) => {
-      setShowAdd(true);
-      setAddForm(f => ({ ...f, venue: e.detail.venue || "", tag: e.detail.tag || "Tech-House" }));
-    };
-    window.addEventListener('addGigFromBooked', handleAddFromBooked);
-    return () => window.removeEventListener('addGigFromBooked', handleAddFromBooked);
-  }, []);
-
   const monthStart  = new Date(viewYear, viewMonth, 1);
   const monthEnd    = new Date(viewYear, viewMonth + 1, 0);
   const startPad    = monthStart.getDay();
@@ -2620,12 +2490,6 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
       const { data, error } = await supabase.from("gigs").insert([gigToDb({ ...addForm }, userId)]).select().single();
       if (error) throw error;
       setGigs(prev => [...prev, dbToGig(data)]);
-      
-      // Navigate calendar to the gig's month
-      const gigDate = new Date(addForm.date);
-      setViewMonth(gigDate.getMonth());
-      setViewYear(gigDate.getFullYear());
-      
       showToast(`${addForm.venue} added to calendar`, "success");
       setShowAdd(false);
       setAddForm({ venue: "", city: "", date: "", status: "confirmed", fee: "", tag: "Tech-House", notes: "" });
@@ -3016,43 +2880,8 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
                 </button>
               )}
               {selected.stage === "booked" && (
-                <div style={{ padding: "14px 16px", background: COLORS.gold + "18", border: `1px solid ${COLORS.gold}44`, borderRadius: 10, marginBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                    <div style={{ fontSize: 16 }}>✓</div>
-                    <div style={{ fontSize: 13, color: COLORS.gold, fontWeight: 700 }}>Booking confirmed — this gig is locked in</div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setActiveTab("calendar");
-                      // Small delay to let tab switch complete, then trigger add form
-                      setTimeout(() => {
-                        const calendarSection = document.querySelector('[data-calendar-view]');
-                        if (calendarSection) {
-                          window.dispatchEvent(new CustomEvent('addGigFromBooked', { 
-                            detail: { venue: selected.name, tag: selected.tag } 
-                          }));
-                        }
-                      }, 100);
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      background: COLORS.gold,
-                      border: "none",
-                      borderRadius: 8,
-                      color: COLORS.bg,
-                      fontSize: 12,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                    }}
-                  >
-                    <span>📅</span>
-                    <span>Add to Calendar</span>
-                  </button>
+                <div style={{ padding: "10px 14px", background: COLORS.gold + "18", border: `1px solid ${COLORS.gold}44`, borderRadius: 8, fontSize: 12, color: COLORS.gold, fontWeight: 600, marginBottom: 16 }}>
+                  ✓ Booking confirmed — this gig is locked in
                 </div>
               )}
 
@@ -3534,29 +3363,11 @@ function NoxReachApp({ user, session, supabase }) {
   };
 
   const [activeTab, setActiveTab]       = useState("pipeline");
-
-  // Listen for "Add to Calendar" from booked cards
-  useEffect(() => {
-    const handleSwitch = (e) => {
-      setActiveTab("calendar");
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('addGigFromBooked', { 
-          detail: e.detail 
-        }));
-      }, 100);
-    };
-    window.addEventListener('switchToCalendar', handleSwitch);
-    return () => window.removeEventListener('switchToCalendar', handleSwitch);
-  }, []);
   const [leads, setLeads]               = useState([]);
   const [gigs,  setGigs]                = useState([]);
   const [dataLoading, setDataLoading]   = useState(true);
   const [settings, setSettings]         = useState(() => loadSettings());
   const [isPro, setIsPro]               = useState(() => loadIsPro(user.id));
-  const [adminUsers, setAdminUsers]     = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedUserLeads, setSelectedUserLeads] = useState([]);
-  const [loadingAdminData, setLoadingAdminData] = useState(false);
 
   const [showWelcomeNew, setShowWelcomeNew] = useState(() => {
     try { return !localStorage.getItem("nr_welcomed_" + user.id); } catch { return true; }
@@ -3645,55 +3456,6 @@ function NoxReachApp({ user, session, supabase }) {
     loadData();
   }, [user?.id]);
 
-  const isAdmin = (session?.user?.email || user?.email) === "info@soundofgeez.com";
-
-const loadAdminUsers = async () => {
-    if (!isAdmin) return;
-    setLoadingAdminData(true);
-    try {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, display_name, is_pro, health_status, last_health_check, created_at, email");
-
-
-      const enriched = await Promise.all(
-        (profiles || []).map(async (p) => {
-          const [leadsRes, gigsRes] = await Promise.all([
-            supabase.from("leads").select("*", { count: "exact", head: true }).eq("user_id", p.id).eq("archived", false),
-            supabase.from("gigs").select("*",  { count: "exact", head: true }).eq("user_id", p.id),
-          ]);
-          
-          
-          return { ...p, leadCount: leadsRes.count || 0, gigCount: gigsRes.count || 0 };
-        })
-      );
-
-      setAdminUsers(enriched);
-    } catch (err) {
-      console.error("Failed to load admin users:", err);
-    }
-    setLoadingAdminData(false);
-  };
-
-
-  useEffect(() => {
-    if (activeTab === "admin" && isAdmin) loadAdminUsers();
-  }, [activeTab]);
-
-  const loadUserLeads = async (userId) => {
-  try {
-    const { data } = await supabase
-      .from("leads")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-    setSelectedUserLeads(data || []);
-  } catch (err) {
-    console.error("Failed to load user leads:", err);
-    setSelectedUserLeads([]);
-  }
-};
-  
   // Derived — always up to date with customTags
   const TAG_COLORS = Object.fromEntries(customTags.map(t => [t, tagColor(t)]));
 
@@ -3897,7 +3659,6 @@ const activeLeads = leads.filter(l => !l.archived);
     { id: "settings",  label: "Settings",   icon: "⚙",  group: "ref" },
     { id: "inbound",   label: "Inbound",    icon: "⬇",  badge: inboundCount, group: "ref" },
     { id: "pricing",   label: "Pricing",    icon: "◈",  group: "ref" },
-    ...(isAdmin ? [{ id: "admin", label: "Admin", icon: "👤", group: "ref" }] : []),
   ];
 
   
@@ -4087,7 +3848,6 @@ const activeLeads = leads.filter(l => !l.archived);
             <SearchFilterBar
               search={search} setSearch={setSearch}
               filters={filters} setFilters={setFilters}
-              isMobile={isMobile}
               customTags={customTags} TAG_COLORS={TAG_COLORS}
               resultCount={leads.filter(l => {
                 if (l.archived) return false;
@@ -4128,7 +3888,7 @@ const activeLeads = leads.filter(l => !l.archived);
           )}
           {activeTab === "pipeline"  && (
             <>
-              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} />
+              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} />
               {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} />}
             </>
           )}
@@ -4140,113 +3900,6 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} />}
           {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} supabase={supabase} user={user} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
-          {activeTab === "admin" && isAdmin && (
-            <div>
-              {loadingAdminData && (
-                <div style={{ padding: 40, textAlign: "center", color: COLORS.textSecondary }}>Loading users…</div>
-              )}
-
-              {!loadingAdminData && !selectedUser && (
-                <>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
-                    {[
-                      { label: "Total Users",     value: adminUsers.length },
-                      { label: "Pro Subscribers", value: adminUsers.filter(u => u.is_pro).length },
-                      { label: "Active",          value: adminUsers.filter(u => u.health_status === "active").length },
-                      { label: "Avg Leads/User",  value: adminUsers.length > 0 ? (adminUsers.reduce((s, u) => s + u.leadCount, 0) / adminUsers.length).toFixed(1) : 0 },
-                    ].map(card => (
-                      <div key={card.label} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 16 }}>
-                        <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 8 }}>{card.label}</div>
-                        <div style={{ fontSize: 24, fontWeight: 500 }}>{card.value}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                          {["User", "Status", "Health", "Leads", "Gigs", ""].map(h => (
-                            <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 12, fontWeight: 500, color: COLORS.textSecondary, textTransform: "uppercase" }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {adminUsers.map(u => {
-                          const healthColor = {
-                            active:              { bg: "rgba(0,212,170,0.15)",  fg: "#00D4AA" },
-                            no_leads_added:      { bg: "rgba(255,165,0,0.15)",  fg: "#FFA500" },
-                            leads_not_contacted: { bg: "rgba(255,215,0,0.15)",  fg: "#FFD700" },
-                            replies_no_bookings: { bg: "rgba(0,212,255,0.15)",  fg: "#00D4FF" },
-                          }[u.health_status] || { bg: "rgba(255,68,68,0.15)", fg: "#FF4444" };
-                          return (
-                            <tr key={u.id} style={{ borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer" }} onClick={() => setSelectedUser(u)}>
-                              <td style={{ padding: "14px 16px" }}>
-                                <div style={{ fontWeight: 500, marginBottom: 2 }}>{u.display_name || u.username || u.id}</div>
-                                <div style={{ fontSize: 12, color: COLORS.textSecondary }}>{u.username}</div>
-                              </td>
-                              <td style={{ padding: "14px 16px" }}>
-                                <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 500, textTransform: "uppercase", background: u.is_pro ? "linear-gradient(135deg,#D4AF37,#F4D03F)" : COLORS.border, color: u.is_pro ? "#2C2C2A" : COLORS.textSecondary }}>
-                                  {u.is_pro ? "Pro" : "Free"}
-                                </span>
-                              </td>
-                              <td style={{ padding: "14px 16px" }}>
-                                <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 500, background: healthColor.bg, color: healthColor.fg }}>
-                                  {u.health_status || "active"}
-                                </span>
-                              </td>
-                              <td style={{ padding: "14px 16px", fontWeight: 500 }}>{u.leadCount}</td>
-                              <td style={{ padding: "14px 16px", fontWeight: 500 }}>{u.gigCount}</td>
-                              <td style={{ padding: "14px 16px" }}>
-                               <button style={{ padding: "6px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.purple, fontSize: 13, cursor: "pointer" }} onClick={() => { setSelectedUser(u); loadUserLeads(u.id); }}>
-                                  View →
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
-
-             {!loadingAdminData && selectedUser && (
-  <div>
-    <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
-      ← Back to user list
-    </button>
-    <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>{selectedUser.display_name || selectedUser.username}</h2>
-      <div style={{ fontSize: 13, color: COLORS.textSecondary }}>@{selectedUser.username}</div>
-      <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 13, color: COLORS.textSecondary }}>
-        <span>{selectedUser.leadCount} leads</span>
-        <span>{selectedUser.gigCount} gigs</span>
-        <span>{selectedUser.is_pro ? "Pro" : "Free"}</span>
-        <span>Health: {selectedUser.health_status || "active"}</span>
-      </div>
-    </div>
-    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>User's Pipeline (Read-Only)</div>
-    <div style={{ opacity: 0.7, pointerEvents: "none" }}>
-      <PipelineView 
-        leads={selectedUserLeads} 
-        onMove={() => {}} 
-        onSelect={() => {}} 
-        selectedLead={null} 
-        onArchive={() => {}} 
-        search="" 
-        filters={{}} 
-        TAG_COLORS={TAG_COLORS} 
-        customTags={customTags} 
-        onUpdateLead={() => {}} 
-        isMobile={isMobile} 
-        onOpenNewLead={() => {}} 
-      />
-    </div>
-  </div>
-)}
-            </div>
-          )}
         </div>
       </div>
     </div>
