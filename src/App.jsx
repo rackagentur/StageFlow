@@ -3645,7 +3645,7 @@ function NoxReachApp({ user, session, supabase }) {
     loadData();
   }, [user?.id]);
 
-  const isAdmin = user?.email === "info@soundofgeez.com";
+  const isAdmin = (session?.user?.email || user?.email) === "info@soundofgeez.com";
 
 const loadAdminUsers = async () => {
     if (!isAdmin) return;
