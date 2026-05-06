@@ -3555,6 +3555,7 @@ function NoxReachApp({ user, session, supabase }) {
   const [isPro, setIsPro]               = useState(() => loadIsPro(user.id));
   const [adminUsers, setAdminUsers]     = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUserLeads, setSelectedUserLeads] = useState([]);
   const [loadingAdminData, setLoadingAdminData] = useState(false);
 
   const [showWelcomeNew, setShowWelcomeNew] = useState(() => {
@@ -3679,6 +3680,20 @@ const loadAdminUsers = async () => {
     if (activeTab === "admin" && isAdmin) loadAdminUsers();
   }, [activeTab]);
 
+  const loadUserLeads = async (userId) => {
+  try {
+    const { data } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    setSelectedUserLeads(data || []);
+  } catch (err) {
+    console.error("Failed to load user leads:", err);
+    setSelectedUserLeads([]);
+  }
+};
+  
   // Derived — always up to date with customTags
   const TAG_COLORS = Object.fromEntries(customTags.map(t => [t, tagColor(t)]));
 
@@ -4198,7 +4213,7 @@ const activeLeads = leads.filter(l => !l.archived);
 
               {!loadingAdminData && selectedUser && (
                 <div>
-                  <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
+                 <button style={{...}} onClick={() => { setSelectedUser(u); loadUserLeads(u.id); }}>
                     ← Back to user list
                   </button>
                   <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
@@ -4211,11 +4226,23 @@ const activeLeads = leads.filter(l => !l.archived);
                       <span>Health: {selectedUser.health_status || "active"}</span>
                     </div>
                   </div>
-                  <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>User's Pipeline (Read-Only)</div>
-                  <div style={{ opacity: 0.7, pointerEvents: "none" }}>
-                    <div style={{ padding: 40, textAlign: "center", color: COLORS.textSecondary, border: `1px dashed ${COLORS.border}`, borderRadius: 12 }}>
-                      Pipeline view — load user leads here
-                    </div>
+           <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>User's Pipeline (Read-Only)</div>
+<div style={{ opacity: 0.7, pointerEvents: "none" }}>
+  <PipelineView 
+    leads={selectedUserLeads} 
+    onMove={() => {}} 
+    onSelect={() => {}} 
+    selectedLead={null} 
+    onArchive={() => {}} 
+    search="" 
+    filters={{}} 
+    TAG_COLORS={TAG_COLORS} 
+    customTags={customTags} 
+    onUpdateLead={() => {}} 
+    isMobile={isMobile} 
+    onOpenNewLead={() => {}} 
+  />
+</div>
                   </div>
                 </div>
               )}
