@@ -4227,7 +4227,7 @@ const activeLeads = leads.filter(l => !l.archived);
                     </div>
                   </div>
            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>User's Pipeline (Read-Only)</div>
-<div style={{ opacity: 0.7, pointerEvents: "none" }}></div>
+<div style={{ opacity: 0.7, pointerEvents: "none" }}>
   <PipelineView 
     leads={selectedUserLeads} 
     onMove={() => {}} 
