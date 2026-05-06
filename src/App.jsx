@@ -4024,6 +4024,18 @@ export default function NoxReach() {
     window.location.href = 'https://noxreach.com/terms.html';
     return null;
   }
+  if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy.html') {
+    window.location.href = 'https://noxreach.com/privacy.html';
+    return null;
+  }
+  if (window.location.pathname === '/impressum' || window.location.pathname === '/impressum.html') {
+    window.location.href = 'https://noxreach.com/impressum.html';
+    return null;
+  }
+  if (window.location.pathname === '/terms' || window.location.pathname === '/terms.html') {
+    window.location.href = 'https://noxreach.com/terms.html';
+    return null;
+  }
   return (
     <>
       <AuthGate>
