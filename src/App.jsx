@@ -4198,7 +4198,7 @@ const activeLeads = leads.filter(l => !l.archived);
                               <td style={{ padding: "14px 16px", fontWeight: 500 }}>{u.leadCount}</td>
                               <td style={{ padding: "14px 16px", fontWeight: 500 }}>{u.gigCount}</td>
                               <td style={{ padding: "14px 16px" }}>
-                                <button style={{ padding: "6px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.purple, fontSize: 13, cursor: "pointer" }}>
+                               <button style={{ padding: "6px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.purple, fontSize: 13, cursor: "pointer" }} onClick={() => { setSelectedUser(u); loadUserLeads(u.id); }}>
                                   View →
                                 </button>
                               </td>
@@ -4213,7 +4213,7 @@ const activeLeads = leads.filter(l => !l.archived);
 
               {!loadingAdminData && selectedUser && (
                 <div>
-                 <button style={{...}} onClick={() => { setSelectedUser(u); loadUserLeads(u.id); }}>
+                <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
                     ← Back to user list
                   </button>
                   <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
