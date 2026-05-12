@@ -3306,6 +3306,332 @@ function useIsMobile() {
   return isMobile;
 }
 
+// CSV Import Modal Component - Add this to App.jsx
+
+function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
+  const [file, setFile] = useState(null);
+  const [parsing, setParsing] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [mapping, setMapping] = useState({
+    name: null,
+    contact: null,
+    tier: null,
+    tag: null,
+    instagram: null,
+    notes: null,
+  });
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleFileSelect = async (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+
+    if (!selectedFile.name.endsWith('.csv')) {
+      alert('Please select a CSV file');
+      return;
+    }
+
+    setFile(selectedFile);
+    setParsing(true);
+
+    try {
+      const text = await selectedFile.text();
+      const lines = text.split('\n').filter(l => l.trim());
+      
+      if (lines.length === 0) {
+        alert('CSV file is empty');
+        setParsing(false);
+        return;
+      }
+
+      // Parse header
+      const headerLine = lines[0];
+      const headers = headerLine.split(',').map(h => h.trim().replace(/['"]/g, ''));
+
+      // Parse first 5 rows for preview
+      const rows = lines.slice(1, 6).map(line => {
+        const values = line.split(',').map(v => v.trim().replace(/['"]/g, ''));
+        const row = {};
+        headers.forEach((h, i) => {
+          row[h] = values[i] || '';
+        });
+        return row;
+      });
+
+      // Auto-detect column mapping
+      const autoMapping = { ...mapping };
+      headers.forEach(h => {
+        const lower = h.toLowerCase();
+        if (lower.includes('name') || lower.includes('venue')) autoMapping.name = h;
+        if (lower.includes('contact') || lower.includes('email') || lower.includes('phone')) autoMapping.contact = h;
+        if (lower.includes('tier') || lower.includes('level')) autoMapping.tier = h;
+        if (lower.includes('tag') || lower.includes('category') || lower.includes('type')) autoMapping.tag = h;
+        if (lower.includes('instagram') || lower.includes('ig') || lower.includes('social')) autoMapping.instagram = h;
+        if (lower.includes('note')) autoMapping.notes = h;
+      });
+
+      setMapping(autoMapping);
+      setPreview({ headers, rows, totalRows: lines.length - 1 });
+    } catch (error) {
+      alert('Failed to parse CSV: ' + error.message);
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!file || !preview) return;
+    if (!mapping.name || !mapping.contact) {
+      alert('Please map at least Name and Contact columns');
+      return;
+    }
+
+    setImporting(true);
+    setResult(null);
+
+    try {
+      // Parse full CSV
+      const text = await file.text();
+      const lines = text.split('\n').filter(l => l.trim()).slice(1); // Skip header
+
+      const leads = [];
+      const errors = [];
+      const duplicates = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        try {
+          const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
+          const row = {};
+          preview.headers.forEach((h, idx) => {
+            row[h] = values[idx] || '';
+          });
+
+          const name = row[mapping.name];
+          const contact = row[mapping.contact];
+
+          if (!name || !contact) {
+            errors.push({ row: i + 2, reason: 'Missing name or contact' });
+            continue;
+          }
+
+          // Check for duplicates
+          const { data: exists } = await supabase
+            .rpc('lead_exists', { 
+              p_user_id: userId, 
+              p_name: name, 
+              p_contact: contact 
+            });
+
+          if (exists) {
+            duplicates.push({ row: i + 2, name, contact });
+            continue;
+          }
+
+          leads.push({
+            user_id: userId,
+            name,
+            contact,
+            tier: mapping.tier ? row[mapping.tier] : 'A2',
+            tag: mapping.tag ? row[mapping.tag] : '',
+            instagram: mapping.instagram ? row[mapping.instagram] : '',
+            notes: mapping.notes ? row[mapping.notes] : '',
+            stage: 'target',
+            archived: false,
+          });
+        } catch (err) {
+          errors.push({ row: i + 2, reason: err.message });
+        }
+      }
+
+      // Bulk insert leads
+      let imported = 0;
+      if (leads.length > 0) {
+        const { data, error } = await supabase
+          .from('leads')
+          .insert(leads)
+          .select();
+
+        if (error) throw error;
+        imported = data.length;
+      }
+
+      // Log import
+      await supabase.from('lead_imports').insert({
+        user_id: userId,
+        filename: file.name,
+        total_rows: lines.length,
+        imported_rows: imported,
+        duplicate_rows: duplicates.length,
+        error_rows: errors.length,
+        status: 'completed',
+      });
+
+      setResult({
+        success: true,
+        imported,
+        duplicates: duplicates.length,
+        errors: errors.length,
+        errorDetails: errors,
+        duplicateDetails: duplicates,
+      });
+
+      if (imported > 0) {
+        setTimeout(() => {
+          onImport();
+          onClose();
+        }, 3000);
+      }
+
+    } catch (error) {
+      setResult({
+        success: false,
+        error: error.message,
+      });
+      
+      // Log failed import
+      await supabase.from('lead_imports').insert({
+        user_id: userId,
+        filename: file.name,
+        total_rows: preview.totalRows,
+        imported_rows: 0,
+        duplicate_rows: 0,
+        error_rows: preview.totalRows,
+        status: 'failed',
+        error_message: error.message,
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={onClose}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 16, width: '100%', maxWidth: 800, maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+        
+        {/* Header */}
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Import Leads from CSV</div>
+            <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Upload a CSV file with venue data</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: COLORS.textSecondary, fontSize: 24, cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+
+        <div style={{ padding: 24 }}>
+          {/* File Upload */}
+          {!preview && (
+            <div>
+              <label style={{ display: 'block', marginBottom: 12, fontSize: 13, fontWeight: 600, color: COLORS.textSecondary }}>Select CSV File</label>
+              <input type="file" accept=".csv" onChange={handleFileSelect} disabled={parsing} style={{ width: '100%', padding: 12, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.text, fontSize: 14 }} />
+              
+              {parsing && (
+                <div style={{ marginTop: 16, textAlign: 'center', color: COLORS.textSecondary }}>
+                  Parsing CSV...
+                </div>
+              )}
+
+              <div style={{ marginTop: 20, padding: 16, background: COLORS.bg, borderRadius: 8, border: `1px solid ${COLORS.border}` }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>CSV Format Requirements:</div>
+                <ul style={{ margin: 0, paddingLeft: 20, fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>
+                  <li>First row must contain column headers</li>
+                  <li>Required columns: Name, Contact (email or phone)</li>
+                  <li>Optional columns: Tier, Tag, Instagram, Notes</li>
+                  <li>Duplicate leads (by name or contact) will be skipped</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Preview & Mapping */}
+          {preview && !result && (
+            <div>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Preview: {preview.totalRows} rows found</div>
+                <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 16 }}>Map your CSV columns to NoxReach fields:</div>
+
+                {/* Column Mapping */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+                  {Object.keys(mapping).map(field => (
+                    <div key={field}>
+                      <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 600, color: COLORS.textSecondary, textTransform: 'capitalize' }}>
+                        {field} {(field === 'name' || field === 'contact') && <span style={{ color: COLORS.red }}>*</span>}
+                      </label>
+                      <select value={mapping[field] || ''} onChange={e => setMapping({ ...mapping, [field]: e.target.value || null })} style={{ width: '100%', padding: '8px 12px', background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.text, fontSize: 13 }}>
+                        <option value="">-- Skip --</option>
+                        {preview.headers.map(h => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Preview Table */}
+                <div style={{ overflowX: 'auto', background: COLORS.bg, borderRadius: 8, border: `1px solid ${COLORS.border}` }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                        {preview.headers.slice(0, 5).map(h => (
+                          <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: COLORS.textSecondary, whiteSpace: 'nowrap' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {preview.rows.map((row, i) => (
+                        <tr key={i} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                          {preview.headers.slice(0, 5).map(h => (
+                            <td key={h} style={{ padding: '8px 12px', color: COLORS.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>{row[h]}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={() => { setFile(null); setPreview(null); setMapping({ name: null, contact: null, tier: null, tag: null, instagram: null, notes: null }); }} style={{ flex: 1, padding: '12px 20px', background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.text, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  Cancel
+                </button>
+                <button onClick={handleImport} disabled={!mapping.name || !mapping.contact || importing} style={{ flex: 1, padding: '12px 20px', background: COLORS.purple, border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!mapping.name || !mapping.contact || importing) ? 0.5 : 1 }}>
+                  {importing ? 'Importing...' : `Import ${preview.totalRows} Leads`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Result */}
+          {result && (
+            <div>
+              {result.success ? (
+                <div style={{ textAlign: 'center', padding: '32px 20px' }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>✓</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: COLORS.green }}>Import Successful!</div>
+                  <div style={{ fontSize: 14, color: COLORS.textSecondary, marginBottom: 20 }}>
+                    Imported {result.imported} leads
+                    {result.duplicates > 0 && ` · Skipped ${result.duplicates} duplicates`}
+                    {result.errors > 0 && ` · ${result.errors} errors`}
+                  </div>
+                  <div style={{ fontSize: 12, color: COLORS.textTertiary }}>Closing in 3 seconds...</div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '32px 20px' }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>✕</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: COLORS.red }}>Import Failed</div>
+                  <div style={{ fontSize: 14, color: COLORS.textSecondary, marginBottom: 20 }}>{result.error}</div>
+                  <button onClick={onClose} style={{ padding: '12px 24px', background: COLORS.purple, border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                    Close
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 // AnalyticsView Component - Insert this into App.jsx
 
 function AnalyticsView({ userId, supabase, COLORS }) {
@@ -3977,6 +4303,7 @@ const loadAdminUsers = async () => {
     saveCustomTags(next);
   }; // null or reason string
   const [selectedLead, setSelectedLead] = useState(null);
+  const [showCSVImport, setShowCSVImport] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [reviewNudge, setReviewNudge] = useState(null);
@@ -4220,6 +4547,7 @@ const activeLeads = leads.filter(l => !l.archived);
       )}
             {showWelcomeNew && !isPro && <WelcomeNewUserModal onClose={dismissWelcomeNew} />}
       {showWelcomePro && <ProWelcomeModal onClose={() => setShowWelcomePro(false)} />}
+      {showCSVImport && <CSVImportModal onClose={() => setShowCSVImport(false)} onImport={() => { loadData(); setShowCSVImport(false); }} userId={user.id} supabase={supabase} COLORS={COLORS} />}
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
       {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail="info@soundofgeez.com" />
 }
@@ -4344,7 +4672,11 @@ const activeLeads = leads.filter(l => !l.archived);
                   ⏰ {dueCount} follow-up{dueCount > 1 ? "s" : ""} due
                 </div>
               )}
-              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Lead</button>
+              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Lead
+              </button>
+              <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                <span>📊</span> Import CSV
+              </button>
             </div>
           </div>
 
