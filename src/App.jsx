@@ -3306,6 +3306,270 @@ function useIsMobile() {
   return isMobile;
 }
 
+// AnalyticsView Component - Insert this into App.jsx
+
+function AnalyticsView({ userId, supabase, COLORS }) {
+  const [stats, setStats] = useState(null);
+  const [tierStats, setTierStats] = useState([]);
+  const [tagStats, setTagStats] = useState([]);
+  const [weeklyActivity, setWeeklyActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [userId]);
+
+  const loadAnalytics = async () => {
+    setLoading(true);
+    try {
+      // Load user pipeline stats
+      const { data: userStats } = await supabase
+        .from("user_pipeline_stats")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
+      setStats(userStats || {
+        total_leads: 0,
+        target_count: 0,
+        contacted_count: 0,
+        replied_count: 0,
+        booked_count: 0,
+        conversion_rate: 0,
+        response_rate: 0,
+      });
+
+      // Load tier performance
+      const { data: tiers } = await supabase
+        .from("tier_stats")
+        .select("*")
+        .order("response_rate", { ascending: false });
+      setTierStats(tiers || []);
+
+      // Load tag performance
+      const { data: tags } = await supabase
+        .from("tag_stats")
+        .select("*")
+        .order("response_rate", { ascending: false });
+      setTagStats(tags || []);
+
+      // Load weekly activity
+      const { data: activity } = await supabase
+        .rpc("get_user_weekly_activity", { p_user_id: userId, p_weeks: 8 });
+      setWeeklyActivity(activity || []);
+
+    } catch (error) {
+      console.error("Failed to load analytics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: 60, color: COLORS.textSecondary }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
+        <div>Loading analytics...</div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div style={{ textAlign: "center", padding: 60, color: COLORS.textSecondary }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
+        <div>No analytics data available yet.</div>
+        <div style={{ fontSize: 13, marginTop: 8 }}>Add some leads to see your stats!</div>
+      </div>
+    );
+  }
+
+  const maxWeeklyLeads = Math.max(...weeklyActivity.map(w => parseInt(w.leads_added) || 0), 1);
+  const maxWeeklyGigs = Math.max(...weeklyActivity.map(w => parseInt(w.gigs_booked) || 0), 1);
+
+  return (
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      {/* Key Metrics Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 32 }}>
+        {[
+          { label: "Total Leads", value: stats.total_leads, icon: "📊", color: COLORS.purple },
+          { label: "Total Gigs", value: stats.booked_count, icon: "🎵", color: COLORS.gold },
+          { label: "Conversion Rate", value: `${stats.conversion_rate}%`, icon: "📈", color: COLORS.green },
+          { label: "Response Rate", value: `${stats.response_rate}%`, icon: "💬", color: COLORS.cyan },
+        ].map(card => (
+          <div key={card.label} style={{
+            background: COLORS.surface,
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: 12,
+            padding: 20,
+            position: "relative",
+            overflow: "hidden",
+          }}>
+            <div style={{
+              position: "absolute",
+              top: -10,
+              right: -10,
+              fontSize: 60,
+              opacity: 0.08,
+            }}>{card.icon}</div>
+            <div style={{ position: "relative" }}>
+              <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 8, fontWeight: 500 }}>
+                {card.label}
+              </div>
+              <div style={{ fontSize: 32, fontWeight: 700, color: card.color }}>
+                {card.value}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Conversion Funnel */}
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Pipeline Conversion Funnel</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {[
+            { label: "Target", count: stats.target_count, color: COLORS.textTertiary, width: 100 },
+            { label: "Contacted", count: stats.contacted_count, color: COLORS.purple, width: stats.total_leads > 0 ? (stats.contacted_count / stats.total_leads) * 100 : 0 },
+            { label: "Replied", count: stats.replied_count, color: COLORS.cyan, width: stats.contacted_count > 0 ? (stats.replied_count / stats.contacted_count) * 100 : 0 },
+            { label: "Booked", count: stats.booked_count, color: COLORS.gold, width: stats.replied_count > 0 ? (stats.booked_count / stats.replied_count) * 100 : 0 },
+          ].map((stage, i) => (
+            <div key={stage.label} style={{ flex: 1 }}>
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 4 }}>{stage.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 600, color: stage.color }}>{stage.count}</div>
+              </div>
+              <div style={{ 
+                height: 40,
+                background: `linear-gradient(to right, ${stage.color}, ${stage.color}AA)`,
+                borderRadius: 8,
+                width: `${Math.max(stage.width, 10)}%`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#fff",
+              }}>
+                {stage.width >= 20 && `${Math.round(stage.width)}%`}
+              </div>
+              {i < 3 && (
+                <div style={{ textAlign: "center", margin: "8px 0", fontSize: 18, color: COLORS.textTertiary }}>→</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Weekly Activity Chart */}
+      {weeklyActivity.length > 0 && (
+        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Activity Timeline (Last 8 Weeks)</div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 200 }}>
+            {weeklyActivity.map(week => {
+              const leadsHeight = (parseInt(week.leads_added) / maxWeeklyLeads) * 180;
+              const gigsHeight = (parseInt(week.gigs_booked) / maxWeeklyGigs) * 180;
+              const weekLabel = new Date(week.week_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              
+              return (
+                <div key={week.week_start} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <div style={{ display: "flex", gap: 2, height: 180, alignItems: "flex-end" }}>
+                    <div style={{
+                      width: 16,
+                      height: leadsHeight || 4,
+                      background: COLORS.purple,
+                      borderRadius: 4,
+                      position: "relative",
+                    }} title={`${week.leads_added} leads`} />
+                    <div style={{
+                      width: 16,
+                      height: gigsHeight || 4,
+                      background: COLORS.gold,
+                      borderRadius: 4,
+                      position: "relative",
+                    }} title={`${week.gigs_booked} gigs`} />
+                  </div>
+                  <div style={{ fontSize: 10, color: COLORS.textTertiary, transform: "rotate(-45deg)", transformOrigin: "center", marginTop: 8 }}>
+                    {weekLabel}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", gap: 16, marginTop: 20, justifyContent: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
+              <div style={{ width: 12, height: 12, background: COLORS.purple, borderRadius: 2 }} />
+              <span style={{ color: COLORS.textSecondary }}>Leads Added</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
+              <div style={{ width: 12, height: 12, background: COLORS.gold, borderRadius: 2 }} />
+              <span style={{ color: COLORS.textSecondary }}>Gigs Booked</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Performance Tables */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        {/* Tier Performance */}
+        {tierStats.length > 0 && (
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Performance by Tier</div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                  <th style={{ padding: "8px 0", textAlign: "left", fontSize: 12, fontWeight: 500, color: COLORS.textSecondary }}>Tier</th>
+                  <th style={{ padding: "8px 0", textAlign: "right", fontSize: 12, fontWeight: 500, color: COLORS.textSecondary }}>Leads</th>
+                  <th style={{ padding: "8px 0", textAlign: "right", fontSize: 12, fontWeight: 500, color: COLORS.textSecondary }}>Response%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tierStats.map(tier => (
+                  <tr key={tier.tier} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <td style={{ padding: "10px 0", fontSize: 14, fontWeight: 500 }}>{tier.tier}</td>
+                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tier.total_leads}</td>
+                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tier.response_rate > 0 ? COLORS.green : COLORS.textTertiary }}>
+                      {tier.response_rate}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Tag Performance */}
+        {tagStats.length > 0 && (
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Performance by Tag</div>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                  <th style={{ padding: "8px 0", textAlign: "left", fontSize: 12, fontWeight: 500, color: COLORS.textSecondary }}>Tag</th>
+                  <th style={{ padding: "8px 0", textAlign: "right", fontSize: 12, fontWeight: 500, color: COLORS.textSecondary }}>Leads</th>
+                  <th style={{ padding: "8px 0", textAlign: "right", fontSize: 12, fontWeight: 500, color: COLORS.textSecondary }}>Response%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tagStats.slice(0, 10).map(tag => (
+                  <tr key={tag.tag} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                    <td style={{ padding: "10px 0", fontSize: 14, fontWeight: 500 }}>{tag.tag}</td>
+                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tag.total_leads}</td>
+                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tag.response_rate > 0 ? COLORS.green : COLORS.textTertiary }}>
+                      {tag.response_rate}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inboundCount }) {
   const NAV_ITEMS = [
     { id: 'dashboard', icon: String.fromCharCode(9635), label: 'Home' },
@@ -3888,6 +4152,7 @@ const activeLeads = leads.filter(l => !l.archived);
   
   const TABS = [
     { id: "dashboard", label: "Dashboard",  icon: "▣",  group: "main" },
+    { id: "analytics", label: "Analytics", icon: "📊", group: "main" },
     { id: "pipeline",  label: "Pipeline",   icon: "⬛", group: "main" },
     { id: "followups", label: "Follow-ups", icon: "⏰", badge: dueCount, group: "main" },
     { id: "bookingdesk",  label: "Reply Hub",  icon: "✉",  badge: unreadCount, group: "main" },
@@ -4066,6 +4331,7 @@ const activeLeads = leads.filter(l => !l.archived);
                 {activeTab === "followups" && `${dueCount} due today`}
                 {activeTab === "outreach"  && (isPro ? "4 templates ready" : "2 / 4 templates · Upgrade for all")}
                 {activeTab === "dashboard" && "Your booking overview"}
+                {activeTab === "analytics" && "Your performance metrics"}
                 {activeTab === "bookingkit"    && "Your Assets"}
                 {activeTab === "bookingdesk"  && `${repliedCount} message${repliedCount !== 1 ? "s" : ""}${unreadCount > 0 ? ` · ${unreadCount} unread` : ""}`}
                 {activeTab === "calendar"  && `${gigs.filter(g => new Date(g.date) >= new Date()).length} upcoming gigs`}
@@ -4126,6 +4392,7 @@ const activeLeads = leads.filter(l => !l.archived);
               <DashboardView leads={leads} onNavigate={setActiveTab} isPro={isPro} onUpgradeClick={requestUpgrade} TAG_COLORS={TAG_COLORS} />
             </>
           )}
+          {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} />}
           {activeTab === "pipeline"  && (
             <>
               <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} />
