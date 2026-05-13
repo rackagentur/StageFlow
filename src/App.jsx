@@ -6527,7 +6527,7 @@ const activeLeads = leads.filter(l => !l.archived);
               )}
               <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Lead
               </button>
-              <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.purple}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
                 <span>📊</span> Import CSV
               </button>
             </div>
