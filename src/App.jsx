@@ -1182,7 +1182,10 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {/* Template Picker & Smart Suggestions - Bundle 5.2-5.4 */}
       {!lead.archived && ['target', 'contacted', 'followup1', 'followup2'].includes(lead.stage) && (
         <button
-          onClick={() => setShowTemplatePicker(true)}
+          onClick={() => {
+            console.log('Template Picker button clicked, setShowTemplatePicker:', typeof setShowTemplatePicker);
+            setShowTemplatePicker(true);
+          }}
           style={{
             marginTop: 16,
             padding: '10px 16px',
@@ -4239,15 +4242,26 @@ Best,
             disabled={saving}
             style={{
               flex: 1,
-              background: COLORS.surface,
-              color: COLORS.text2,
-              border: `1px solid ${COLORS.border}`,
+              background: 'transparent',
+              color: COLORS.text,
+              border: `2px solid ${COLORS.purple}44`,
               padding: '12px 24px',
               borderRadius: 8,
               fontSize: 14,
               fontWeight: 600,
               cursor: saving ? 'not-allowed' : 'pointer',
-              opacity: saving ? 0.5 : 1
+              opacity: saving ? 0.5 : 1,
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => {
+              if (!saving) {
+                e.currentTarget.style.background = COLORS.purple + '11';
+                e.currentTarget.style.borderColor = COLORS.purple + '66';
+              }
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.borderColor = COLORS.purple + '44';
             }}
           >
             Cancel
