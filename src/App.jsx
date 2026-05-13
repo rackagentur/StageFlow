@@ -855,7 +855,7 @@ function AssetCopyRow({ label, value }) {
   );
 }
 
-function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets }) {
+function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets, setShowTemplatePicker }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     name: lead.name || "",
@@ -4738,16 +4738,30 @@ function SmartSuggestionsModal({ supabase, user, currentLead, onClose, onAdd }) 
   async function loadSuggestions() {
     setLoading(true);
 
+    // Get existing leads to filter out duplicates
+    const { data: existingLeads } = await supabase
+      .from('leads')
+      .select('name')
+      .eq('user_id', user.id);
+    
+    const existingNames = new Set(
+      (existingLeads || []).map(l => l.name.toLowerCase().trim())
+    );
+
     // Call the find_similar_leads function
     const { data, error } = await supabase.rpc('find_similar_leads', {
       p_user_id: user.id,
       p_tier: currentLead.tier,
       p_tag: currentLead.tag,
-      p_limit: 5
+      p_limit: 10  // Get more to account for filtering
     });
 
     if (!error && data) {
-      setSuggestions(data);
+      // Filter out venues already in pipeline
+      const filtered = data.filter(
+        venue => !existingNames.has(venue.name.toLowerCase().trim())
+      );
+      setSuggestions(filtered.slice(0, 5)); // Keep top 5 after filtering
     }
 
     setLoading(false);
@@ -6545,7 +6559,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pipeline"  && (
             <>
               <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} />
-              {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} />}
+              {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} />}
             </>
           )}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
