@@ -1178,6 +1178,43 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         </div>
       )}
 
+
+      {/* Template Picker & Smart Suggestions - Bundle 5.2-5.4 */}
+      {!lead.archived && ['target', 'contacted', 'followup1', 'followup2'].includes(lead.stage) && (
+        <button
+          onClick={() => setShowTemplatePicker(true)}
+          style={{
+            marginTop: 16,
+            padding: '10px 16px',
+            backgroundColor: COLORS.purple,
+            color: 'white',
+            border: 'none',
+            borderRadius: 6,
+            cursor: 'pointer',
+            fontSize: 12,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            width: '100%',
+            justifyContent: 'center'
+          }}
+        >
+          📝 Use Template
+        </button>
+      )}
+
+      {!lead.archived && lead.tier && lead.tag && ['target', 'contacted', 'followup1', 'followup2'].includes(lead.stage) && (
+        <SmartSuggestionsButton
+          supabase={supabase}
+          user={{ id: userId }}
+          lead={lead}
+          onLeadAdded={(newLead) => {
+            if (onUpdate) onUpdate(newLead);
+          }}
+        />
+      )}
+
       {/* Stage tracker */}
       <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 16, marginBottom: 6 }}>All Stages</div>
       {STAGES.map(s => (
@@ -1195,6 +1232,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6 }}>
           <button
             onClick={() => onArchive(lead.id)}
+
             style={{ fontSize: 11, padding: "6px 0", background: "transparent", color: COLORS.textMuted, border: `1px solid ${COLORS.border}`, borderRadius: 6, cursor: "pointer" }}
           >
             ☐ Archive lead
@@ -3632,6 +3670,1525 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
     </div>
   );
 }
+
+// Message Templates Components (Bundle 5.2)
+// TemplatesView Component - Message Templates Management
+// Reusable outreach templates with placeholders
+
+
+// Template Create/Edit Modal
+
+
+// TemplatePicker Component - Quick insert templates into outreach
+// Used in LeadDetail panel for fast template insertion
+
+
+
+
+// Message Templates Components (Bundle 5.2)
+// TemplatesView Component - Message Templates Management
+// Reusable outreach templates with placeholders
+
+function TemplatesView({ supabase, user }) {
+  const [templates, setTemplates] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  async function loadTemplates() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('message_templates')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      setTemplates(data);
+    }
+    setLoading(false);
+  }
+
+  async function deleteTemplate(id) {
+    if (!confirm('Delete this template?')) return;
+    
+    const { error } = await supabase
+      .from('message_templates')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+    
+    if (!error) {
+      setTemplates(templates.filter(t => t.id !== id));
+    }
+  }
+
+  function getCategoryColor(category) {
+    const colors = {
+      'Initial Outreach': '#6B2FD4',
+      'Follow-up': '#8B4FFF',
+      'Booking Request': '#00D4FF',
+      'Thank You': '#10B981',
+      'Other': '#6B7280'
+    };
+    return colors[category] || colors['Other'];
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: 32, textAlign: 'center', color: COLORS.text2 }}>
+        Loading templates...
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: 32 
+      }}>
+        <div>
+          <h2 style={{ 
+            fontSize: 28, 
+            fontWeight: 700, 
+            color: COLORS.text,
+            marginBottom: 4
+          }}>
+            Message Templates
+          </h2>
+          <p style={{ color: COLORS.text2, fontSize: 14 }}>
+            Reusable outreach templates with smart placeholders
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            background: COLORS.purple,
+            color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: 8,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          + New Template
+        </button>
+      </div>
+
+      {/* Placeholder Guide */}
+      <div style={{
+        background: COLORS.surface,
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 24
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>
+          Available Placeholders:
+        </div>
+        <div style={{ 
+          display: 'flex', 
+          gap: 12, 
+          flexWrap: 'wrap',
+          fontSize: 12,
+          color: COLORS.text2
+        }}>
+          <code style={{ 
+            background: COLORS.bg, 
+            padding: '4px 8px', 
+            borderRadius: 4,
+            color: COLORS.cyan
+          }}>
+            {'{venue_name}'}
+          </code>
+          <code style={{ 
+            background: COLORS.bg, 
+            padding: '4px 8px', 
+            borderRadius: 4,
+            color: COLORS.cyan
+          }}>
+            {'{contact_name}'}
+          </code>
+          <code style={{ 
+            background: COLORS.bg, 
+            padding: '4px 8px', 
+            borderRadius: 4,
+            color: COLORS.cyan
+          }}>
+            {'{artist_name}'}
+          </code>
+          <code style={{ 
+            background: COLORS.bg, 
+            padding: '4px 8px', 
+            borderRadius: 4,
+            color: COLORS.cyan
+          }}>
+            {'{genre}'}
+          </code>
+          <code style={{ 
+            background: COLORS.bg, 
+            padding: '4px 8px', 
+            borderRadius: 4,
+            color: COLORS.cyan
+          }}>
+            {'{instagram}'}
+          </code>
+        </div>
+      </div>
+
+      {/* Empty State */}
+      {templates.length === 0 ? (
+        <div style={{
+          background: COLORS.surface,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 12,
+          padding: 48,
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📝</div>
+          <div style={{ fontSize: 18, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>
+            No templates yet
+          </div>
+          <div style={{ fontSize: 14, color: COLORS.text2, marginBottom: 24 }}>
+            Create reusable templates to speed up your outreach
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              background: COLORS.purple,
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Create First Template
+          </button>
+        </div>
+      ) : (
+        /* Templates Grid */
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+          gap: 20
+        }}>
+          {templates.map(template => (
+            <div
+              key={template.id}
+              style={{
+                background: COLORS.surface,
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: 12,
+                padding: 20,
+                position: 'relative'
+              }}
+            >
+              {/* Category Badge */}
+              <div style={{
+                display: 'inline-block',
+                background: getCategoryColor(template.category) + '20',
+                color: getCategoryColor(template.category),
+                padding: '4px 10px',
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                marginBottom: 12,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                {template.category}
+              </div>
+
+              {/* Template Name */}
+              <div style={{ 
+                fontSize: 16, 
+                fontWeight: 600, 
+                color: COLORS.text,
+                marginBottom: 8
+              }}>
+                {template.name}
+              </div>
+
+              {/* Subject (if exists) */}
+              {template.subject && (
+                <div style={{ 
+                  fontSize: 13, 
+                  color: COLORS.text2,
+                  marginBottom: 8,
+                  fontStyle: 'italic'
+                }}>
+                  Subject: {template.subject}
+                </div>
+              )}
+
+              {/* Body Preview */}
+              <div style={{
+                fontSize: 13,
+                color: COLORS.text2,
+                lineHeight: 1.6,
+                marginBottom: 16,
+                maxHeight: 80,
+                overflow: 'hidden',
+                position: 'relative'
+              }}>
+                {template.body.substring(0, 150)}
+                {template.body.length > 150 && '...'}
+              </div>
+
+              {/* Stats */}
+              <div style={{
+                display: 'flex',
+                gap: 16,
+                fontSize: 12,
+                color: COLORS.text3,
+                marginBottom: 16,
+                paddingTop: 12,
+                borderTop: `1px solid ${COLORS.border}`
+              }}>
+                <div>Used {template.use_count || 0} times</div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => setEditingTemplate(template)}
+                  style={{
+                    flex: 1,
+                    background: COLORS.purple + '15',
+                    color: COLORS.purple,
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => deleteTemplate(template.id)}
+                  style={{
+                    background: '#EF444415',
+                    color: '#EF4444',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create/Edit Modal */}
+      {(showCreateModal || editingTemplate) && (
+        <TemplateModal
+          supabase={supabase}
+          user={user}
+          template={editingTemplate}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingTemplate(null);
+          }}
+          onSave={() => {
+            loadTemplates();
+            setShowCreateModal(false);
+            setEditingTemplate(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// Template Create/Edit Modal
+function TemplateModal({ supabase, user, template, onClose, onSave }) {
+  const [name, setName] = useState(template?.name || '');
+  const [subject, setSubject] = useState(template?.subject || '');
+  const [body, setBody] = useState(template?.body || '');
+  const [category, setCategory] = useState(template?.category || 'Initial Outreach');
+  const [saving, setSaving] = useState(false);
+
+  const categories = [
+    'Initial Outreach',
+    'Follow-up',
+    'Booking Request',
+    'Thank You',
+    'Other'
+  ];
+
+  async function handleSave() {
+    if (!name.trim() || !body.trim()) {
+      alert('Please fill in template name and body');
+      return;
+    }
+
+    setSaving(true);
+
+    const templateData = {
+      user_id: user.id,
+      name: name.trim(),
+      subject: subject.trim() || null,
+      body: body.trim(),
+      category
+    };
+
+    let error;
+    if (template) {
+      // Update existing
+      ({ error } = await supabase
+        .from('message_templates')
+        .update(templateData)
+        .eq('id', template.id)
+        .eq('user_id', user.id));
+    } else {
+      // Create new
+      ({ error } = await supabase
+        .from('message_templates')
+        .insert([templateData]));
+    }
+
+    setSaving(false);
+
+    if (!error) {
+      onSave();
+    } else {
+      alert('Failed to save template');
+    }
+  }
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0,0,0,0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: 20
+    }}>
+      <div style={{
+        background: COLORS.bg,
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 16,
+        width: '100%',
+        maxWidth: 600,
+        maxHeight: '90vh',
+        overflow: 'auto',
+        padding: 32
+      }}>
+        {/* Header */}
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ fontSize: 24, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>
+            {template ? 'Edit Template' : 'New Template'}
+          </h3>
+          <p style={{ fontSize: 14, color: COLORS.text2 }}>
+            Use placeholders like {'{venue_name}'} to personalize messages
+          </p>
+        </div>
+
+        {/* Template Name */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ 
+            display: 'block', 
+            fontSize: 13, 
+            fontWeight: 600, 
+            color: COLORS.text2,
+            marginBottom: 8
+          }}>
+            Template Name *
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="e.g., Initial Club Outreach"
+            style={{
+              width: '100%',
+              background: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: 8,
+              padding: '10px 14px',
+              fontSize: 14,
+              color: COLORS.text
+            }}
+          />
+        </div>
+
+        {/* Category */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ 
+            display: 'block', 
+            fontSize: 13, 
+            fontWeight: 600, 
+            color: COLORS.text2,
+            marginBottom: 8
+          }}>
+            Category
+          </label>
+          <select
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            style={{
+              width: '100%',
+              background: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: 8,
+              padding: '10px 14px',
+              fontSize: 14,
+              color: COLORS.text
+            }}
+          >
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Subject (Optional) */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ 
+            display: 'block', 
+            fontSize: 13, 
+            fontWeight: 600, 
+            color: COLORS.text2,
+            marginBottom: 8
+          }}>
+            Subject Line (Optional)
+          </label>
+          <input
+            type="text"
+            value={subject}
+            onChange={e => setSubject(e.target.value)}
+            placeholder="e.g., Booking Inquiry - {artist_name}"
+            style={{
+              width: '100%',
+              background: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: 8,
+              padding: '10px 14px',
+              fontSize: 14,
+              color: COLORS.text
+            }}
+          />
+        </div>
+
+        {/* Body */}
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ 
+            display: 'block', 
+            fontSize: 13, 
+            fontWeight: 600, 
+            color: COLORS.text2,
+            marginBottom: 8
+          }}>
+            Message Body *
+          </label>
+          <textarea
+            value={body}
+            onChange={e => setBody(e.target.value)}
+            placeholder="Hey {contact_name},
+
+I'm reaching out about potential booking opportunities at {venue_name}...
+
+Best,
+{artist_name}"
+            rows={12}
+            style={{
+              width: '100%',
+              background: COLORS.surface,
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: 8,
+              padding: '12px 14px',
+              fontSize: 14,
+              color: COLORS.text,
+              fontFamily: 'inherit',
+              resize: 'vertical'
+            }}
+          />
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button
+            onClick={onClose}
+            disabled={saving}
+            style={{
+              flex: 1,
+              background: COLORS.surface,
+              color: COLORS.text2,
+              border: `1px solid ${COLORS.border}`,
+              padding: '12px 24px',
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.5 : 1
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              flex: 1,
+              background: COLORS.purple,
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.5 : 1
+            }}
+          >
+            {saving ? 'Saving...' : (template ? 'Save Changes' : 'Create Template')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// TemplatePicker Component - Quick insert templates into outreach
+// Used in LeadDetail panel for fast template insertion
+
+function TemplatePicker({ supabase, user, lead, onInsert }) {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+
+  useEffect(() => {
+    if (showPicker) {
+      loadTemplates();
+    }
+  }, [showPicker]);
+
+  async function loadTemplates() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('message_templates')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('use_count', { ascending: false });
+    
+    if (!error && data) {
+      setTemplates(data);
+    }
+    setLoading(false);
+  }
+
+  async function handleSelectTemplate(template) {
+    // Increment use count
+    await supabase.rpc('increment_template_usage', { 
+      template_id: template.id 
+    });
+
+    // Replace placeholders
+    const artistName = user.user_metadata?.full_name || 'GEEZ'; // Get from user_assets later
+    const venueName = lead.name || '{venue_name}';
+    const contactName = lead.contact?.split('@')[0] || '{contact_name}';
+    const genre = lead.tag || '{genre}';
+    const instagram = lead.instagram || '{instagram}';
+
+    let message = template.body
+      .replace(/{venue_name}/g, venueName)
+      .replace(/{contact_name}/g, contactName)
+      .replace(/{artist_name}/g, artistName)
+      .replace(/{genre}/g, genre)
+      .replace(/{instagram}/g, instagram);
+
+    onInsert(message);
+    setShowPicker(false);
+  }
+
+  if (!showPicker) {
+    return (
+      <button
+        onClick={() => setShowPicker(true)}
+        style={{
+          background: COLORS.purple + '15',
+          color: COLORS.purple,
+          border: 'none',
+          padding: '8px 16px',
+          borderRadius: 6,
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }}
+      >
+        📝 Use Template
+      </button>
+    );
+  }
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0,0,0,0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: 20
+    }}>
+      <div style={{
+        background: COLORS.bg,
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 16,
+        width: '100%',
+        maxWidth: 500,
+        maxHeight: '80vh',
+        overflow: 'auto',
+        padding: 24
+      }}>
+        {/* Header */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 20
+        }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: COLORS.text }}>
+            Select Template
+          </h3>
+          <button
+            onClick={() => setShowPicker(false)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: COLORS.text2,
+              fontSize: 24,
+              cursor: 'pointer',
+              padding: 0,
+              width: 32,
+              height: 32
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 32, color: COLORS.text2 }}>
+            Loading templates...
+          </div>
+        ) : templates.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 32 }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>📝</div>
+            <div style={{ fontSize: 14, color: COLORS.text2, marginBottom: 16 }}>
+              No templates yet
+            </div>
+            <div style={{ fontSize: 13, color: COLORS.text3 }}>
+              Create templates in the Templates tab
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {templates.map(template => (
+              <button
+                key={template.id}
+                onClick={() => handleSelectTemplate(template)}
+                style={{
+                  background: COLORS.surface,
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: 10,
+                  padding: 16,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = COLORS.purple;
+                  e.currentTarget.style.background = COLORS.purple + '08';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = COLORS.border;
+                  e.currentTarget.style.background = COLORS.surface;
+                }}
+              >
+                {/* Category Badge */}
+                <div style={{
+                  display: 'inline-block',
+                  background: COLORS.purple + '20',
+                  color: COLORS.purple,
+                  padding: '2px 8px',
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  marginBottom: 8,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  {template.category}
+                </div>
+
+                {/* Template Name */}
+                <div style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: COLORS.text,
+                  marginBottom: 6
+                }}>
+                  {template.name}
+                </div>
+
+                {/* Preview */}
+                <div style={{
+                  fontSize: 12,
+                  color: COLORS.text2,
+                  lineHeight: 1.5,
+                  maxHeight: 40,
+                  overflow: 'hidden'
+                }}>
+                  {template.body.substring(0, 100)}...
+                </div>
+
+                {/* Use Count */}
+                {template.use_count > 0 && (
+                  <div style={{
+                    fontSize: 11,
+                    color: COLORS.text3,
+                    marginTop: 8
+                  }}>
+                    Used {template.use_count} times
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+// Smart Suggestions Components (Bundle 5.3)
+// SmartSuggestions Component - AI-powered lead suggestions
+// Suggests similar venues based on tier, tag, and existing pipeline
+
+function SmartSuggestionsModal({ supabase, user, currentLead, onClose, onAdd }) {
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(null);
+
+  useEffect(() => {
+    loadSuggestions();
+  }, []);
+
+  async function loadSuggestions() {
+    setLoading(true);
+
+    // Call the find_similar_leads function
+    const { data, error } = await supabase.rpc('find_similar_leads', {
+      p_user_id: user.id,
+      p_tier: currentLead.tier,
+      p_tag: currentLead.tag,
+      p_limit: 5
+    });
+
+    if (!error && data) {
+      setSuggestions(data);
+    }
+
+    setLoading(false);
+  }
+
+  async function handleAddLead(suggestion) {
+    setAdding(suggestion.id);
+
+    // Create new lead from suggestion
+    const newLead = {
+      user_id: user.id,
+      name: suggestion.name,
+      contact: suggestion.contact || null,
+      instagram: suggestion.instagram || null,
+      tier: suggestion.tier,
+      tag: suggestion.tag,
+      stage: 'target',
+      notes: suggestion.notes || null,
+      archived: false
+    };
+
+    const { error } = await supabase
+      .from('leads')
+      .insert([newLead]);
+
+    setAdding(null);
+
+    if (!error) {
+      // Remove from suggestions
+      setSuggestions(suggestions.filter(s => s.id !== suggestion.id));
+      
+      // Show toast
+      const toast = document.createElement('div');
+      toast.textContent = `✓ ${suggestion.name} added to pipeline`;
+      toast.style.cssText = `
+        position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+        background: ${COLORS.purple}; color: white; padding: 12px 24px;
+        border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 10000;
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+
+      // Call onAdd callback
+      if (onAdd) onAdd();
+
+      // Close modal if no more suggestions
+      if (suggestions.length <= 1) {
+        setTimeout(() => onClose(), 2000);
+      }
+    } else {
+      alert('Failed to add lead');
+    }
+  }
+
+  function getTierColor(tier) {
+    const colors = {
+      'A1': '#FFD700',
+      'A2': '#C0C0C0',
+      'A3': '#CD7F32'
+    };
+    return colors[tier] || '#6B7280';
+  }
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0,0,0,0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: 20
+    }}>
+      <div style={{
+        background: COLORS.bg,
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 16,
+        width: '100%',
+        maxWidth: 600,
+        maxHeight: '85vh',
+        overflow: 'auto',
+        padding: 32
+      }}>
+        {/* Header */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 8
+          }}>
+            <h3 style={{ fontSize: 24, fontWeight: 700, color: COLORS.text }}>
+              Smart Suggestions
+            </h3>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: COLORS.text2,
+                fontSize: 28,
+                cursor: 'pointer',
+                padding: 0,
+                lineHeight: 1
+              }}
+            >
+              ×
+            </button>
+          </div>
+          <p style={{ fontSize: 14, color: COLORS.text2 }}>
+            Similar venues to <span style={{ color: COLORS.text, fontWeight: 600 }}>{currentLead.name}</span>
+          </p>
+          <div style={{ 
+            display: 'flex', 
+            gap: 8, 
+            marginTop: 12,
+            fontSize: 12
+          }}>
+            <span style={{
+              background: getTierColor(currentLead.tier) + '20',
+              color: getTierColor(currentLead.tier),
+              padding: '4px 10px',
+              borderRadius: 6,
+              fontWeight: 600
+            }}>
+              {currentLead.tier}
+            </span>
+            {currentLead.tag && (
+              <span style={{
+                background: COLORS.purple + '20',
+                color: COLORS.purple,
+                padding: '4px 10px',
+                borderRadius: 6,
+                fontWeight: 600
+              }}>
+                {currentLead.tag}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Loading State */}
+        {loading ? (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: 48,
+            color: COLORS.text2 
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+            <div>Finding similar venues...</div>
+          </div>
+        ) : suggestions.length === 0 ? (
+          /* Empty State */
+          <div style={{ 
+            textAlign: 'center', 
+            padding: 48 
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>
+              No similar venues found
+            </div>
+            <div style={{ fontSize: 14, color: COLORS.text2, marginBottom: 24 }}>
+              Try adding more leads with the same tier and tag
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                background: COLORS.purple,
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          /* Suggestions List */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {suggestions.map(suggestion => (
+              <div
+                key={suggestion.id}
+                style={{
+                  background: COLORS.surface,
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: 12,
+                  padding: 16
+                }}
+              >
+                {/* Venue Header */}
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: 12
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ 
+                      fontSize: 16, 
+                      fontWeight: 600, 
+                      color: COLORS.text,
+                      marginBottom: 6
+                    }}>
+                      {suggestion.name}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{
+                        background: getTierColor(suggestion.tier) + '20',
+                        color: getTierColor(suggestion.tier),
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 600
+                      }}>
+                        {suggestion.tier}
+                      </span>
+                      {suggestion.tag && (
+                        <span style={{
+                          background: COLORS.purple + '20',
+                          color: COLORS.purple,
+                          padding: '2px 8px',
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: 600
+                        }}>
+                          {suggestion.tag}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleAddLead(suggestion)}
+                    disabled={adding === suggestion.id}
+                    style={{
+                      background: adding === suggestion.id ? COLORS.border : COLORS.purple,
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: 6,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: adding === suggestion.id ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap',
+                      marginLeft: 12
+                    }}
+                  >
+                    {adding === suggestion.id ? 'Adding...' : '+ Add'}
+                  </button>
+                </div>
+
+                {/* Contact Info */}
+                {(suggestion.contact || suggestion.instagram) && (
+                  <div style={{ 
+                    fontSize: 13, 
+                    color: COLORS.text2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4,
+                    paddingTop: 12,
+                    borderTop: `1px solid ${COLORS.border}`
+                  }}>
+                    {suggestion.contact && (
+                      <div>📧 {suggestion.contact}</div>
+                    )}
+                    {suggestion.instagram && (
+                      <div>📸 {suggestion.instagram}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Notes Preview */}
+                {suggestion.notes && (
+                  <div style={{
+                    fontSize: 12,
+                    color: COLORS.text3,
+                    marginTop: 8,
+                    fontStyle: 'italic',
+                    maxHeight: 40,
+                    overflow: 'hidden'
+                  }}>
+                    {suggestion.notes.substring(0, 100)}
+                    {suggestion.notes.length > 100 && '...'}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Footer Info */}
+        {!loading && suggestions.length > 0 && (
+          <div style={{
+            marginTop: 24,
+            padding: 16,
+            background: COLORS.surface,
+            borderRadius: 10,
+            fontSize: 13,
+            color: COLORS.text2,
+            textAlign: 'center'
+          }}>
+            💡 Suggestions are based on similar tier and tag in your pipeline
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Smart Suggestions Button Component
+// Used in LeadDetail panel to trigger suggestions
+function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded }) {
+  const [showModal, setShowModal] = useState(false);
+
+  // Only show for leads in Target or Contacted stage
+  if (!['target', 'contacted'].includes(lead.stage)) {
+    return null;
+  }
+
+  // Need at least tier and tag to find similar leads
+  if (!lead.tier || !lead.tag) {
+    return null;
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => setShowModal(true)}
+        style={{
+          background: COLORS.cyan + '15',
+          color: COLORS.cyan,
+          border: 'none',
+          padding: '8px 16px',
+          borderRadius: 6,
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          width: '100%'
+        }}
+      >
+        🎯 Find Similar Venues
+      </button>
+
+      {showModal && (
+        <SmartSuggestionsModal
+          supabase={supabase}
+          user={user}
+          currentLead={lead}
+          onClose={() => setShowModal(false)}
+          onAdd={onLeadAdded}
+        />
+      )}
+    </>
+  );
+}
+
+
+// Quick Actions & Keyboard Shortcuts (Bundle 5.4)
+// Quick Actions & Keyboard Shortcuts (Bundle 5.4)
+// Global keyboard shortcuts for power users
+
+// Keyboard Shortcuts Hook
+function useKeyboardShortcuts({ 
+  onNewLead, 
+  onImportCSV, 
+  onSearch,
+  onCloseModal,
+  searchInputRef 
+}) {
+  useEffect(() => {
+    function handleKeyDown(e) {
+      // Don't trigger if user is typing in an input/textarea
+      const isTyping = ['INPUT', 'TEXTAREA'].includes(e.target.tagName);
+      
+      // Esc - Close modals (works everywhere)
+      if (e.key === 'Escape') {
+        onCloseModal?.();
+        return;
+      }
+
+      // Don't trigger other shortcuts while typing
+      if (isTyping) return;
+
+      // Cmd/Ctrl + K - Focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        onSearch?.();
+        searchInputRef?.current?.focus();
+        return;
+      }
+
+      // N - New lead
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        onNewLead?.();
+        return;
+      }
+
+      // I - Import CSV
+      if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault();
+        onImportCSV?.();
+        return;
+      }
+
+      // ? - Show help
+      if (e.key === '?') {
+        e.preventDefault();
+        // Will be handled by parent component
+        const helpEvent = new CustomEvent('showShortcutsHelp');
+        window.dispatchEvent(helpEvent);
+        return;
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onNewLead, onImportCSV, onSearch, onCloseModal, searchInputRef]);
+}
+
+// Shortcuts Help Modal
+function ShortcutsHelpModal({ onClose }) {
+  const shortcuts = [
+    { key: 'N', action: 'New Lead', description: 'Open add lead form' },
+    { key: 'I', action: 'Import CSV', description: 'Open CSV import modal' },
+    { key: 'Cmd + K', action: 'Search', description: 'Focus search bar' },
+    { key: 'Esc', action: 'Close', description: 'Close any open modal' },
+    { key: '?', action: 'Help', description: 'Show this shortcuts guide' },
+  ];
+
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.7)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000,
+        padding: 20
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: COLORS.bg,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 16,
+          width: '100%',
+          maxWidth: 500,
+          padding: 32
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8
+          }}>
+            <h3 style={{ 
+              fontSize: 24, 
+              fontWeight: 700, 
+              color: COLORS.text 
+            }}>
+              Keyboard Shortcuts
+            </h3>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: COLORS.text2,
+                fontSize: 28,
+                cursor: 'pointer',
+                padding: 0,
+                lineHeight: 1
+              }}
+            >
+              ×
+            </button>
+          </div>
+          <p style={{ fontSize: 14, color: COLORS.text2 }}>
+            Speed up your workflow with keyboard shortcuts
+          </p>
+        </div>
+
+        {/* Shortcuts List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {shortcuts.map((shortcut, idx) => (
+            <div
+              key={idx}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: 12,
+                background: COLORS.surface,
+                borderRadius: 8,
+                border: `1px solid ${COLORS.border}`
+              }}
+            >
+              {/* Key Badge */}
+              <div style={{
+                minWidth: 80,
+                padding: '6px 12px',
+                background: COLORS.bg,
+                border: `2px solid ${COLORS.border}`,
+                borderRadius: 6,
+                textAlign: 'center',
+                fontFamily: 'monospace',
+                fontSize: 13,
+                fontWeight: 700,
+                color: COLORS.text
+              }}>
+                {shortcut.key}
+              </div>
+
+              {/* Action & Description */}
+              <div style={{ flex: 1 }}>
+                <div style={{ 
+                  fontSize: 14, 
+                  fontWeight: 600, 
+                  color: COLORS.text,
+                  marginBottom: 2
+                }}>
+                  {shortcut.action}
+                </div>
+                <div style={{ 
+                  fontSize: 12, 
+                  color: COLORS.text2 
+                }}>
+                  {shortcut.description}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          marginTop: 24,
+          padding: 16,
+          background: COLORS.purple + '10',
+          borderRadius: 10,
+          fontSize: 13,
+          color: COLORS.text2,
+          textAlign: 'center'
+        }}>
+          💡 Press <kbd style={{ 
+            background: COLORS.bg, 
+            padding: '2px 6px', 
+            borderRadius: 4,
+            border: `1px solid ${COLORS.border}`,
+            fontFamily: 'monospace'
+          }}>?</kbd> anytime to see this guide
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Quick Actions Floating Button (Mobile/Desktop)
+// Shows ? button in bottom-right corner
+function QuickActionsButton({ onShowHelp }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <button
+      onClick={onShowHelp}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        position: 'fixed',
+        bottom: 24,
+        right: 24,
+        width: 48,
+        height: 48,
+        background: isHovered ? COLORS.purpleLight : COLORS.purple,
+        border: 'none',
+        borderRadius: '50%',
+        color: 'white',
+        fontSize: 20,
+        fontWeight: 700,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 12px rgba(107, 47, 212, 0.3)',
+        transition: 'all 0.2s',
+        zIndex: 999,
+        transform: isHovered ? 'scale(1.1)' : 'scale(1)'
+      }}
+      title="Keyboard shortcuts (press ?)"
+    >
+      ?
+    </button>
+  );
+}
+
+// Tooltip Component for Quick Actions
+function QuickActionTooltip({ children, text, shortcut }) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <div 
+      style={{ position: 'relative', display: 'inline-block' }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div style={{
+          position: 'absolute',
+          bottom: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          marginBottom: 8,
+          padding: '6px 12px',
+          background: COLORS.bg,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 6,
+          fontSize: 12,
+          color: COLORS.text,
+          whiteSpace: 'nowrap',
+          zIndex: 1000,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+        }}>
+          {text}
+          {shortcut && (
+            <kbd style={{
+              marginLeft: 8,
+              padding: '2px 6px',
+              background: COLORS.surface,
+              borderRadius: 4,
+              border: `1px solid ${COLORS.border}`,
+              fontFamily: 'monospace',
+              fontSize: 11
+            }}>
+              {shortcut}
+            </kbd>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // AnalyticsView Component - Insert this into App.jsx
 
 function AnalyticsView({ userId, supabase, COLORS }) {
@@ -4303,7 +5860,41 @@ const loadAdminUsers = async () => {
     saveCustomTags(next);
   }; // null or reason string
   const [selectedLead, setSelectedLead] = useState(null);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const searchInputRef = useRef(null);
+
+  // Keyboard shortcuts hook (Bundle 5.4)
+  useKeyboardShortcuts({
+    onNewLead: () => {
+      if (activeTab === "pipeline") setShowAddLead(true);
+    },
+    onImportCSV: () => {
+      if (activeTab === "pipeline") setShowCSVImport(true);
+    },
+    onSearch: () => {
+      if (activeTab === "pipeline" && searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    },
+    onCloseModal: () => {
+      setShowAddLead(false);
+      setShowCSVImport(false);
+      setShowShortcutsHelp(false);
+      setSelectedLead(null);
+    },
+    searchInputRef
+  });
+
+  // Listen for help shortcut
+  useEffect(() => {
+    function handleShowHelp() {
+      setShowShortcutsHelp(true);
+    }
+    window.addEventListener('showShortcutsHelp', handleShowHelp);
+    return () => window.removeEventListener('showShortcutsHelp', handleShowHelp);
+  }, []);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [reviewNudge, setReviewNudge] = useState(null);
@@ -4484,6 +6075,7 @@ const activeLeads = leads.filter(l => !l.archived);
     { id: "followups", label: "Follow-ups", icon: "⏰", badge: dueCount, group: "main" },
     { id: "bookingdesk",  label: "Reply Hub",  icon: "✉",  badge: unreadCount, group: "main" },
     { id: "calendar",  label: "Calendar",   icon: "📅", group: "main" },
+    { id: "templates", label: "Templates",  icon: "📝", group: "main" },
     { id: "outreach",  label: "Outreach",   icon: "✦",  group: "ref" },
     { id: "bookingkit", label: "Booking Kit", icon: "◇",  group: "ref" },
     { id: "settings",  label: "Settings",   icon: "⚙",  group: "ref" },
@@ -4725,6 +6317,7 @@ const activeLeads = leads.filter(l => !l.archived);
             </>
           )}
           {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} />}
+          {activeTab === "templates" && <TemplatesView supabase={supabase} user={user} />}
           {activeTab === "pipeline"  && (
             <>
               <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} />
