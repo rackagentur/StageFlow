@@ -3632,7 +3632,16 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
               </div>
 
               <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={() => { setFile(null); setPreview(null); setMapping({ name: null, contact: null, tier: null, tag: null, instagram: null, notes: null }); }} style={{ flex: 1, padding: '12px 20px', background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.text, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                <button onClick={() => { setFile(null); setPreview(null); setMapping({ name: null, contact: null, tier: null, tag: null, instagram: null, notes: null }); }} style={{ flex: 1, padding: '12px 20px', background: 'transparent', border: `2px solid ${COLORS.purple}44`, borderRadius: 8, color: COLORS.text, fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = COLORS.purple + '11';
+                    e.currentTarget.style.borderColor = COLORS.purple + '66';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = COLORS.purple + '44';
+                  }}
+                >
                   Cancel
                 </button>
                 <button onClick={handleImport} disabled={!mapping.name || !mapping.contact || importing} style={{ flex: 1, padding: '12px 20px', background: COLORS.purple, border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!mapping.name || !mapping.contact || importing) ? 0.5 : 1 }}>
@@ -6693,6 +6702,38 @@ const activeLeads = leads.filter(l => !l.archived);
           )}
         </div>
       </div>
+      {/* Template Picker Modal - Bundle 5.2-5.4 */}
+      {showTemplatePicker && selectedLead && (
+        <TemplatePickerModal
+          supabase={supabase}
+          user={user}
+          lead={selectedLead}
+          onClose={() => setShowTemplatePicker(false)}
+          onSelectTemplate={(template) => {
+            // Copy to clipboard
+            const textToCopy = template.subject 
+              ? `Subject: ${template.subject}\n\n${template.body}`
+              : template.body;
+            
+            navigator.clipboard.writeText(textToCopy);
+            
+            // Show toast
+            const toast = document.createElement('div');
+            toast.textContent = '✓ Template copied to clipboard';
+            toast.style.cssText = `
+              position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+              background: ${COLORS.purple}; color: white; padding: 12px 24px;
+              border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 10000;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+            
+            setShowTemplatePicker(false);
+          }}
+        />
+      )}
+
+
     </div>
   );
 }
@@ -6797,38 +6838,6 @@ function PublicBookingForm({ supabase }) {
         </div>
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Powered by NoxReach</div>
       </div>
-
-      {/* Template Picker Modal - Bundle 5.2-5.4 */}
-      {showTemplatePicker && selectedLead && (
-        <TemplatePickerModal
-          supabase={supabase}
-          user={user}
-          lead={selectedLead}
-          onClose={() => setShowTemplatePicker(false)}
-          onSelectTemplate={(template) => {
-            // Copy to clipboard
-            const textToCopy = template.subject 
-              ? `Subject: ${template.subject}\n\n${template.body}`
-              : template.body;
-            
-            navigator.clipboard.writeText(textToCopy);
-            
-            // Show toast
-            const toast = document.createElement('div');
-            toast.textContent = '✓ Template copied to clipboard';
-            toast.style.cssText = `
-              position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-              background: ${COLORS.purple}; color: white; padding: 12px 24px;
-              border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 10000;
-            `;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
-            
-            setShowTemplatePicker(false);
-          }}
-        />
-      )}
-
 
     </div>
   );
