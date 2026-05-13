@@ -5452,7 +5452,7 @@ function QuickActionTooltip({ children, text, shortcut }) {
 
 // AnalyticsView Component - Insert this into App.jsx
 
-function AnalyticsView({ userId, supabase, COLORS }) {
+function AnalyticsView({ userId, supabase, COLORS, activeTab }) {
   const [stats, setStats] = useState(null);
   const [tierStats, setTierStats] = useState([]);
   const [tagStats, setTagStats] = useState([]);
@@ -5460,8 +5460,10 @@ function AnalyticsView({ userId, supabase, COLORS }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadAnalytics();
-  }, [userId]);
+    if (activeTab === "analytics") {
+      loadAnalytics();
+    }
+  }, [userId, activeTab]);
 
   const loadAnalytics = async () => {
     setLoading(true);
@@ -6577,7 +6579,7 @@ const activeLeads = leads.filter(l => !l.archived);
               <DashboardView leads={leads} onNavigate={setActiveTab} isPro={isPro} onUpgradeClick={requestUpgrade} TAG_COLORS={TAG_COLORS} />
             </>
           )}
-          {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} />}
+          {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} activeTab={activeTab} />}
           {activeTab === "templates" && <TemplatesView supabase={supabase} user={user} />}
           {activeTab === "pipeline"  && (
             <>
