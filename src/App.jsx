@@ -4499,6 +4499,230 @@ function TemplatePicker({ supabase, user, lead, onInsert }) {
 
 
 // Smart Suggestions Components (Bundle 5.3)
+
+// TemplatePickerModal Component - Bundle 5.2-5.4
+function TemplatePickerModal({ supabase, user, lead, onClose, onSelectTemplate }) {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  async function loadTemplates() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('message_templates')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('use_count', { ascending: false });
+    
+    if (!error && data) {
+      setTemplates(data);
+    }
+    setLoading(false);
+  }
+
+  async function handleSelectTemplate(template) {
+    // Increment use count
+    await supabase.rpc('increment_template_usage', { 
+      template_id: template.id 
+    });
+
+    // Replace placeholders
+    const artistName = user.user_metadata?.full_name || 'GEEZ';
+    const venueName = lead.name || '{venue_name}';
+    const contactName = lead.contact?.split('@')[0] || '{contact_name}';
+    const genre = lead.tag || '{genre}';
+    const instagram = lead.instagram || '{instagram}';
+
+    let message = template.body
+      .replace(/{venue_name}/g, venueName)
+      .replace(/{contact_name}/g, contactName)
+      .replace(/{artist_name}/g, artistName)
+      .replace(/{genre}/g, genre)
+      .replace(/{instagram}/g, instagram);
+
+    // Also handle subject line if present
+    let subject = template.subject || '';
+    if (subject) {
+      subject = subject
+        .replace(/{venue_name}/g, venueName)
+        .replace(/{contact_name}/g, contactName)
+        .replace(/{artist_name}/g, artistName)
+        .replace(/{genre}/g, genre);
+    }
+
+    onSelectTemplate({ body: message, subject });
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: 20
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: COLORS.surface,
+          borderRadius: 12,
+          maxWidth: 600,
+          width: '100%',
+          maxHeight: '80vh',
+          display: 'flex',
+          flexDirection: 'column',
+          border: `1px solid ${COLORS.border}`
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '20px 24px',
+          borderBottom: `1px solid ${COLORS.border}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: COLORS.text, margin: 0 }}>
+              Choose a Template
+            </h2>
+            <p style={{ fontSize: 13, color: COLORS.textMuted, margin: '4px 0 0 0' }}>
+              For {lead.name}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: COLORS.textMuted,
+              cursor: 'pointer',
+              fontSize: 24,
+              lineHeight: 1,
+              padding: '0 4px'
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={{
+          padding: '20px 24px',
+          overflowY: 'auto',
+          flex: 1
+        }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: COLORS.textMuted }}>
+              Loading templates...
+            </div>
+          ) : templates.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40 }}>
+              <div style={{ fontSize: 14, color: COLORS.textMuted, marginBottom: 16 }}>
+                No templates yet
+              </div>
+              <button
+                onClick={() => {
+                  onClose();
+                  // Switch to Templates tab
+                  window.dispatchEvent(new CustomEvent('switchToTemplates'));
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: COLORS.purple,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600
+                }}
+              >
+                Create Your First Template
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {templates.map(template => (
+                <button
+                  key={template.id}
+                  onClick={() => handleSelectTemplate(template)}
+                  style={{
+                    background: COLORS.bg,
+                    border: `1px solid ${COLORS.border}`,
+                    borderRadius: 8,
+                    padding: 16,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = COLORS.purpleBg;
+                    e.currentTarget.style.borderColor = COLORS.purple + '44';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = COLORS.bg;
+                    e.currentTarget.style.borderColor = COLORS.border;
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>
+                      {template.name}
+                    </div>
+                    <div style={{
+                      fontSize: 10,
+                      color: COLORS.textMuted,
+                      background: COLORS.surface,
+                      padding: '2px 8px',
+                      borderRadius: 4
+                    }}>
+                      {template.category}
+                    </div>
+                  </div>
+                  {template.subject && (
+                    <div style={{ fontSize: 11, color: COLORS.textSecondary, marginBottom: 4, fontStyle: 'italic' }}>
+                      Subject: {template.subject}
+                    </div>
+                  )}
+                  <div style={{
+                    fontSize: 12,
+                    color: COLORS.textMuted,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    lineHeight: 1.4
+                  }}>
+                    {template.body}
+                  </div>
+                  {template.use_count > 0 && (
+                    <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 8 }}>
+                      Used {template.use_count} time{template.use_count !== 1 ? 's' : ''}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // SmartSuggestions Component - AI-powered lead suggestions
 // Suggests similar venues based on tier, tag, and existing pipeline
 
@@ -6545,6 +6769,39 @@ function PublicBookingForm({ supabase }) {
         </div>
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Powered by NoxReach</div>
       </div>
+
+      {/* Template Picker Modal - Bundle 5.2-5.4 */}
+      {showTemplatePicker && selectedLead && (
+        <TemplatePickerModal
+          supabase={supabase}
+          user={user}
+          lead={selectedLead}
+          onClose={() => setShowTemplatePicker(false)}
+          onSelectTemplate={(template) => {
+            // Copy to clipboard
+            const textToCopy = template.subject 
+              ? `Subject: ${template.subject}\n\n${template.body}`
+              : template.body;
+            
+            navigator.clipboard.writeText(textToCopy);
+            
+            // Show toast
+            const toast = document.createElement('div');
+            toast.textContent = '✓ Template copied to clipboard';
+            toast.style.cssText = `
+              position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+              background: ${COLORS.purple}; color: white; padding: 12px 24px;
+              border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 10000;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+            
+            setShowTemplatePicker(false);
+          }}
+        />
+      )}
+
+
     </div>
   );
 }
