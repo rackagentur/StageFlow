@@ -5468,21 +5468,25 @@ function AnalyticsView({ userId, supabase, COLORS, activeTab }) {
   const loadAnalytics = async () => {
     setLoading(true);
     try {
-      // Load user pipeline stats
-      const { data: userStats } = await supabase
-        .from("user_pipeline_stats")
+      // Calculate stats directly from leads table
+      const { data: allLeads } = await supabase
+        .from("leads")
         .select("*")
-        .eq("user_id", userId)
-        .single();
+        .eq("user_id", userId);
 
-      setStats(userStats || {
-        total_leads: 0,
-        target_count: 0,
-        contacted_count: 0,
-        replied_count: 0,
-        booked_count: 0,
-        conversion_rate: 0,
-        response_rate: 0,
+      const total = allLeads?.length || 0;
+      const contacted = allLeads?.filter(l => l.stage !== "Target").length || 0;
+      const replied = allLeads?.filter(l => ["Follow-up 1", "Follow-up 2", "Replied", "Booked"].includes(l.stage)).length || 0;
+      const booked = allLeads?.filter(l => l.stage === "Booked").length || 0;
+      
+      setStats({
+        total_leads: total,
+        target_count: allLeads?.filter(l => l.stage === "Target").length || 0,
+        contacted_count: contacted,
+        replied_count: replied,
+        booked_count: booked,
+        conversion_rate: total > 0 ? Math.round((booked / total) * 100) : 0,
+        response_rate: contacted > 0 ? Math.round((replied / contacted) * 100) : 0,
       });
 
       // Load tier performance
