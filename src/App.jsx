@@ -2961,7 +2961,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 
               return (
                 <div key={i} onClick={() => { if (!valid) return; if (hasGig) setSelected(dayGigs[0]); else { setAddForm(f => ({ ...f, date: dateStr })); setShowAdd(true); } }}
-  style={{ padding: "8px 4px", minHeight: 52, borderBottom: `1px solid ${COLORS.border}`, borderRight: `1px solid ${COLORS.border}`, cursor: valid && hasGig ? "pointer" : "default", background: hasGig && selected?.date === dateStr ? COLORS.purpleBg : "transparent", transition: "background 0.15s" }}>
+  style={{ padding: "8px 4px", minHeight: 52, borderBottom: `1px solid ${COLORS.border}`, borderRight: `1px solid ${COLORS.border}`, cursor: valid ? "pointer" : "default", background: hasGig && selected?.date === dateStr ? COLORS.purpleBg : "transparent", transition: "background 0.15s", position: "relative" }}>
                   {valid && (
                     <>
                       <div style={{ textAlign: "center", fontSize: 12, fontWeight: isToday ? 800 : 400, color: isToday ? COLORS.purple : COLORS.text, width: isToday ? 22 : "auto", height: isToday ? 22 : "auto", borderRadius: isToday ? "50%" : 0, background: isToday ? COLORS.purpleBg : "transparent", border: isToday ? `1px solid ${COLORS.purple}` : "none", margin: isToday ? "0 auto" : 0, display: isToday ? "flex" : "block", alignItems: "center", justifyContent: "center" }}>{dayNum}</div>
@@ -2971,6 +2971,10 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
                             <div key={gi} style={{ width: 6, height: 6, borderRadius: "50%", background: g.status === "confirmed" ? COLORS.gold : COLORS.textSecondary, boxShadow: g.status === "confirmed" ? `0 0 4px ${COLORS.gold}88` : "none" }} />
                           ))}
                         </div>
+                      )}
+                      {hasGig && (
+                        <div onClick={e => { e.stopPropagation(); setSelected(null); setAddForm(f => ({ ...f, date: dateStr })); setShowAdd(true); }}
+                          style={{ position: "absolute", top: 2, right: 2, width: 14, height: 14, borderRadius: "50%", background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: COLORS.purpleLight, cursor: "pointer", lineHeight: 1 }}>+</div>
                       )}
                     </>
                   )}
@@ -3136,7 +3140,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
               </button>
               <button onClick={() => deleteGig(selected.id)} style={{ padding: "8px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.red + "AA", fontSize: 11, cursor: "pointer" }}>✕</button>
             </div>
-            <button onClick={() => { setSelected(null); setAddForm(f => ({ ...f, date: selected.date })); setShowAdd(true); }}
+            <button onClick={() => { const d = selected.date; setSelected(null); setAddForm(f => ({ ...f, date: d })); setShowAdd(true); }}
               style={{ width: "100%", marginTop: 8, padding: "7px", background: "transparent", border: `1px dashed ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 11, cursor: "pointer", transition: "all 0.15s" }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.purple; e.currentTarget.style.color = COLORS.purpleLight; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.textMuted; }}
