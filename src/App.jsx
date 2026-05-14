@@ -130,15 +130,25 @@ WebkitTextFillColor: C.text,
               background: "#0a0a10", borderRadius: 10, padding: 3,
             }}>
               {[["login", "Log in"], ["signup", "Sign up"]].map(([m, label]) => (
-                <label 
-  onClick={(e) => { 
-    e.stopPropagation(); 
-    toggleLeadSelection(lead.id); 
-  }}
-  style={{
-    position: 'absolute',
-    top: 8,
-    left: 8,
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  style={{
+                    flex: 1,
+                    padding: "10px 0",
+                    background: mode === m ? COLORS.purple : "transparent",
+                    color: mode === m ? "white" : COLORS.text,
+                    border: "none",
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {label}
+                </button>
               ))}
             </div>
           )}
