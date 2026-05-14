@@ -6741,7 +6741,7 @@ const activeLeads = leads.filter(l => !l.archived);
             <img src="/nr-wordmark.png" alt="NoxReach" style={{ height: 17, objectFit: "contain", opacity: 0.8 }} />
           </a>
         </div>
-        <nav style={{ padding: "16px 12px", flex: 1 }}>
+        <nav style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}>
           {TABS.filter(t => t.group === "main").map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: activeTab === tab.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeTab === tab.id ? COLORS.purpleDim : "transparent"}`, color: activeTab === tab.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeTab === tab.id ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
               <span style={{ fontSize: 14 }}>{tab.icon}</span>
@@ -6758,7 +6758,7 @@ const activeLeads = leads.filter(l => !l.archived);
             </button>
           ))}
         </nav>
-        <div style={{ padding: "16px 20px", borderTop: `1px solid ${COLORS.border}` }}>
+        <div style={{ padding: "16px 20px", borderTop: `1px solid ${COLORS.border}`, flexShrink: 0 }}>
           {/* Plan chip */}
           {!isPro ? (
             <div style={{ marginBottom: 12 }}>
