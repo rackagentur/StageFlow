@@ -139,24 +139,6 @@ WebkitTextFillColor: C.text,
     position: 'absolute',
     top: 8,
     left: 8,
-    cursor: 'pointer',
-    width: 20,
-    height: 20,
-    border: `2px solid ${isBulkSelected ? COLORS.purple : COLORS.border}`,
-    borderRadius: 4,
-    backgroundColor: isBulkSelected ? COLORS.purple : 'transparent',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white',
-    transition: 'all 0.15s ease',
-    zIndex: 10,
-  }}
->
-  {isBulkSelected ? '✓' : ''}
-</label>
               ))}
             </div>
           )}
