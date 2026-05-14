@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-// ── Supabase client ──────────────────────────────────────────────────────────
-const SUPABASE_URL  = "https://ckttttvgvpvflgjzkbmy.supabase.co";
-const SUPABASE_ANON = "sb_publishable_77AjzPzfXgMSvku0fRFD9w_l4hHVMvo";
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+import { COLORS, STAGES } from './lib/constants.js';
+import { formatShortDate } from './lib/formatters.js';
+import { showToast as showDomToast } from './lib/toast.js';
+import { supabase } from './lib/supabaseClient.js';
 
 
 // ── Auth Styles (injected once) ───────────────────────────────────────────────
@@ -302,23 +300,6 @@ function AuthGate({ children }) {
 }
 
 
-const COLORS = {
-  bg: "#0A0A0A", surface: "#111111", surfaceHover: "#181818",
-  border: "#1E1E1E", borderBright: "#2A2A2A",
-  purple: "#6B2FD4", purpleLight: "#8B4FFF", purpleDim: "#3A1A80", purpleBg: "#0F0820",
-  gold: "#D4AF37", goldDim: "#8A7020",
-  text: "#F0F0F0", textSecondary: "#a0a0b8", textMuted: "#6a6a8a",
-  green: "#22C55E", greenDim: "#0F4A25", red: "#EF4444",
-};
-
-const STAGES = [
-  { id: "target",    label: "Target",      color: "#444444" },
-  { id: "contacted", label: "Contacted",   color: "#7B3FE4" },
-  { id: "followup1", label: "Follow-up 1", color: "#9B5FFF" },
-  { id: "followup2", label: "Follow-up 2", color: "#D4AF37" },
-  { id: "replied",   label: "Replied",     color: "#22C55E" },
-  { id: "booked",    label: "Booked",      color: "#22C55E" },
-];
 
 const getTemplates = (artistName) => [
   { id: "berlin",   label: "Berlin",   tone: "Underground / Tech-House", icon: "◼", text: `Hey [Name],\n\nI've been building a sound around peak-hour Tech House — tribal-driven, energetic but controlled. Been playing [venue/night] lately and the response has been strong.\n\nWould love to get on your radar. Happy to send a recent mix + EPK.\n\n— ${artistName}` },
@@ -359,13 +340,6 @@ function saveCustomTags(t) { try { localStorage.setItem(STORAGE_KEY_TAGS, JSON.s
 const relDate = (daysFromNow) => { const d = new Date(); d.setDate(d.getDate() + daysFromNow); return d.toISOString().split("T")[0]; };
 
 const INITIAL_GIGS = []; // New users start with empty calendar
-
-const formatShortDate = (isoStr) => {
-  if (!isoStr) return "—";
-  const d = new Date(isoStr);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-};
-
 
 
 // ─── Primitives ──────────────────────────────────────────────────────────────
@@ -592,6 +566,73 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
 
 // ─── Lead Card ────────────────────────────────────────────────────────────────
 
+
+// === Bulk Actions Bar - Bundle 5.5 ===
+function BulkActionsBar({ count, onMoveTo, onArchive, onClear }) {
+  const [showMenu, setShowMenu] = useState(false);
+  return (
+    <div style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0,
+      background: COLORS.surface, borderTop: `2px solid ${COLORS.purple}`,
+      padding: '16px 24px', display: 'flex', gap: 12, alignItems: 'center',
+      zIndex: 10000, boxShadow: '0 -4px 12px rgba(0,0,0,0.3)'
+    }}>
+      <span style={{ fontWeight: 600, fontSize: 14 }}>{count} selected</span>
+      
+      <div style={{ position: 'relative' }}>
+        <button 
+          onClick={() => setShowMenu(!showMenu)}
+          style={{
+            padding: '8px 16px', background: COLORS.purple, border: 'none',
+            borderRadius: 6, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer'
+          }}>
+          Move to...
+        </button>
+        
+        {showMenu && (
+          <div style={{
+            position: 'absolute', bottom: '100%', left: 0, marginBottom: 8,
+            background: COLORS.surface, border: `1px solid ${COLORS.border}`,
+            borderRadius: 8, padding: 8, minWidth: 160, boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          }}>
+            {STAGES.map(s => (
+              <button key={s.id} onClick={() => { onMoveTo(s.id); setShowMenu(false); }}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  padding: '8px 12px', background: 'transparent', border: 'none',
+                  color: COLORS.text, fontSize: 13, cursor: 'pointer', borderRadius: 4
+                }}
+                onMouseEnter={(e) => e.target.style.background = COLORS.bgHover}
+                onMouseLeave={(e) => e.target.style.background = 'transparent'}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      <button onClick={onArchive}
+        style={{
+          padding: '8px 16px', background: 'transparent',
+          border: `1px solid ${COLORS.border}`, borderRadius: 6,
+          color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: 'pointer'
+        }}>
+        Archive
+      </button>
+      
+      <div style={{ flex: 1 }} />
+      
+      <button onClick={onClear}
+        style={{
+          padding: '8px 16px', background: 'transparent', border: 'none',
+          color: COLORS.text3, fontSize: 13, cursor: 'pointer'
+        }}>
+        Cancel
+      </button>
+    </div>
+  );
+}
+
 function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, TAG_COLORS, onUpdateLead }) {
   const showInline = !lead.archived && ["contacted","followup1","followup2"].includes(lead.stage);
   const [contactLog, setContactLog] = useState(lead.contactLog || "");
@@ -702,7 +743,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
 
-function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead }) {
+function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, selectedLeads, onSelectAll }) {
   const [showArchived, setShowArchived] = useState(false);
 
   const applyFilters = (list) => list.filter(l => {
@@ -1183,7 +1224,6 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {!lead.archived && ['target', 'contacted', 'followup1', 'followup2'].includes(lead.stage) && (
         <button
           onClick={() => {
-            console.log('Template Picker button clicked, setShowTemplatePicker:', typeof setShowTemplatePicker);
             setShowTemplatePicker(true);
           }}
           style={{
@@ -4816,16 +4856,7 @@ function SmartSuggestionsModal({ supabase, user, currentLead, onClose, onAdd }) 
       // Remove from suggestions
       setSuggestions(suggestions.filter(s => s.id !== suggestion.id));
       
-      // Show toast
-      const toast = document.createElement('div');
-      toast.textContent = `✓ ${suggestion.name} added to pipeline`;
-      toast.style.cssText = `
-        position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-        background: ${COLORS.purple}; color: white; padding: 12px 24px;
-        border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 10000;
-      `;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2000);
+      showDomToast(`✓ ${suggestion.name} added to pipeline`);
 
       // Call onAdd callback
       if (onAdd) onAdd();
@@ -6102,6 +6133,44 @@ const loadAdminUsers = async () => {
   }
 };
   
+  const toggleLeadSelection = (leadId) => {
+    setSelectedLeads(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(leadId)) newSet.delete(leadId); else newSet.add(leadId);
+      setShowBulkBar(newSet.size > 0);
+      return newSet;
+    });
+  };
+  
+  const selectAllInStage = (stage) => {
+    const stageLeads = leads.filter(l => l.stage === stage && !l.archived);
+    setSelectedLeads(prev => {
+      const newSet = new Set(prev);
+      const allSelected = stageLeads.every(l => newSet.has(l.id));
+      if (allSelected) stageLeads.forEach(l => newSet.delete(l.id));
+      else stageLeads.forEach(l => newSet.add(l.id));
+      setShowBulkBar(newSet.size > 0);
+      return newSet;
+    });
+  };
+  
+  const bulkMoveTo = async (stage) => {
+    const ids = Array.from(selectedLeads);
+    await supabase.from('leads').update({ stage }).in('id', ids);
+    await loadData();
+    setSelectedLeads(new Set());
+    setShowBulkBar(false);
+  };
+  
+  const bulkArchive = async () => {
+    const ids = Array.from(selectedLeads);
+    if (ids.length > 2 && !confirm(`Archive ${ids.length} leads?`)) return;
+    await supabase.from('leads').update({ archived: true }).in('id', ids);
+    await loadData();
+    setSelectedLeads(new Set());
+    setShowBulkBar(false);
+  };
+  
   // Derived — always up to date with customTags
   const TAG_COLORS = Object.fromEntries(customTags.map(t => [t, tagColor(t)]));
 
@@ -6124,6 +6193,8 @@ const loadAdminUsers = async () => {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [selectedLeads, setSelectedLeads] = useState(new Set());
+  const [showBulkBar, setShowBulkBar] = useState(false);
   const searchInputRef = useRef(null);
 
   // Keyboard shortcuts hook (Bundle 5.4)
@@ -6717,16 +6788,7 @@ const activeLeads = leads.filter(l => !l.archived);
             
             navigator.clipboard.writeText(textToCopy);
             
-            // Show toast
-            const toast = document.createElement('div');
-            toast.textContent = '✓ Template copied to clipboard';
-            toast.style.cssText = `
-              position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-              background: ${COLORS.purple}; color: white; padding: 12px 24px;
-              border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 10000;
-            `;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
+            showDomToast('✓ Template copied to clipboard');
             
             setShowTemplatePicker(false);
           }}
