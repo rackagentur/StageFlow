@@ -6758,7 +6758,7 @@ const activeLeads = leads.filter(l => !l.archived);
             </button>
           ))}
         </nav>
-        <div style={{ padding: "16px 20px", borderTop: `1px solid ${COLORS.border}`, flexShrink: 0 }}>
+        <div style={{ padding: "16px 20px 12px", borderTop: `1px solid ${COLORS.border}`, overflow: "hidden" }}>
           {/* Plan chip */}
           {!isPro ? (
             <div style={{ marginBottom: 12 }}>
@@ -6797,22 +6797,22 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ fontSize: 11, color: COLORS.textSecondary }}>{activeLeads.filter(l => l.stage !== "target").length} / {activeLeads.length} contacted</div>
             <button onClick={() => setShowResetConfirm(true)} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 10, cursor: "pointer", padding: 0 }}>reset</button>
           </div>
-        {/* User info + sign out */}
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${COLORS.border}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: COLORS.purpleBg, border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, flexShrink: 0 }}>
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</div>
-                <div style={{ fontSize: 9, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</div>
-              </div>
+        </div>
+        {/* User info + sign out — own flex child so it's always visible */}
+        <div style={{ padding: "12px 20px", borderTop: `1px solid ${COLORS.border}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: COLORS.purpleBg, border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, flexShrink: 0 }}>
+              {userName.charAt(0).toUpperCase()}
             </div>
-            <button onClick={handleSignOut} style={{ width: "100%", padding: "7px 10px", borderRadius: 7, background: "transparent", border: `1px solid ${COLORS.border}`, color: COLORS.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", textAlign: "center", transition: "all 0.15s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.red; e.currentTarget.style.color = COLORS.red; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.textSecondary; }}
-            >Sign out</button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</div>
+              <div style={{ fontSize: 9, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</div>
+            </div>
           </div>
+          <button onClick={handleSignOut} style={{ width: "100%", padding: "7px 10px", borderRadius: 7, background: "transparent", border: `1px solid ${COLORS.border}`, color: COLORS.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", textAlign: "center", transition: "all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.red; e.currentTarget.style.color = COLORS.red; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.textSecondary; }}
+          >Sign out</button>
         </div>
       </div>
 
