@@ -633,7 +633,7 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear }) {
   );
 }
 
-function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, TAG_COLORS, onUpdateLead }) {
+function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, TAG_COLORS, onUpdateLead , isBulkSelected = false, onBulkSelect }) {
   const showInline = !lead.archived && ["contacted","followup1","followup2"].includes(lead.stage);
   const [contactLog, setContactLog] = useState(lead.contactLog || "");
   const [logSaved, setLogSaved] = useState(false);
@@ -676,8 +676,8 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
   return (
         <div onClick={(e) => { if (e.target === e.currentTarget || !e.target.closest('button')) { onSelect(isSelected ? null : lead); } }} style={{
 
-      background: isSelected ? COLORS.purpleBg : COLORS.surface,
-      border: `1px solid ${isSelected ? COLORS.purple : lead.is_inbound && !lead.archived ? "#00D4FF" : isOverdue && !lead.archived ? COLORS.gold : lead.archived ? COLORS.border : stageBorder + "99"}`,
+      background: isBulkSelected ? COLORS.purple + "22" : isSelected ? COLORS.purpleBg : COLORS.surface,
+      border: `1px solid ${isBulkSelected ? COLORS.purpleLight : isSelected ? COLORS.purple : lead.is_inbound && !lead.archived ? "#00D4FF" : isOverdue && !lead.archived ? COLORS.gold : lead.archived ? COLORS.border : stageBorder + "99"}`,
       borderRadius: 10, padding: "14px 16px", cursor: "pointer",
       transition: "all 0.15s ease", position: "relative", overflow: "hidden",
       opacity: lead.archived ? 0.45 : 1,
@@ -689,7 +689,34 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
         <div style={{ position: "absolute", top: 0, right: 0, background: COLORS.textMuted, color: COLORS.bg, fontSize: 9, fontWeight: 800, padding: "2px 8px", borderBottomLeftRadius: 6, letterSpacing: "0.1em" }}>ARCHIVED</div>
       )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, paddingRight: (isOverdue && !lead.archived) ? 72 : 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{highlight(lead.name)}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onBulkSelect?.(lead.id);
+            }}
+            title={isBulkSelected ? "Deselect lead" : "Select lead"}
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: 5,
+              border: `1px solid ${isBulkSelected ? COLORS.purpleLight : COLORS.border}`,
+              background: isBulkSelected ? COLORS.purple : "transparent",
+              color: isBulkSelected ? "#fff" : COLORS.textMuted,
+              fontSize: 11,
+              fontWeight: 800,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            {isBulkSelected ? "✓" : ""}
+          </button>
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, minWidth: 0 }}>{highlight(lead.name)}</div>
+        </div>
         {lead.stage === "followup1" && <Badge color="#9B5FFF">F1</Badge>}
         {lead.stage === "followup2" && <Badge color={COLORS.gold}>F2</Badge>}
         <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
@@ -743,7 +770,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
 
-function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, selectedLeads, onSelectAll }) {
+function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, selectedLeads, onSelectAll, onToggleLeadSelection }) {
   const [showArchived, setShowArchived] = useState(false);
 
   const applyFilters = (list) => list.filter(l => {
@@ -791,7 +818,19 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
               {archivedLeads.map(lead => (
-                <LeadCard key={lead.id} lead={lead} onMove={onMove} onSelect={onSelect} isSelected={selectedLead?.id === lead.id} onArchive={onArchive} searchQuery={search} TAG_COLORS={TAG_COLORS} onUpdateLead={onUpdateLead} />
+                <LeadCard
+                      key={lead.id}
+                      lead={lead}
+                      onMove={onMove}
+                      onSelect={onSelect}
+                      isSelected={selectedLead?.id === lead.id}
+                      isBulkSelected={selectedLeads?.includes?.(lead.id) || selectedLeads?.has?.(lead.id)}
+                      onBulkSelect={onToggleLeadSelection}
+                      onArchive={onArchive}
+                      searchQuery={search}
+                      TAG_COLORS={TAG_COLORS}
+                      onUpdateLead={onUpdateLead}
+                    />
               ))}
             </div>
           )}
@@ -814,7 +853,32 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: col.color }} />
                     <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>{col.label}</span>
                   </div>
-                  <span style={{ fontSize: 11, color: colLeads.length > 0 ? COLORS.textSecondary : COLORS.textMuted, fontFamily: "'DM Mono', monospace" }}>{colLeads.length}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {colLeads.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectAll?.(col.id);
+                        }}
+                        style={{
+                          padding: "3px 7px",
+                          background: "transparent",
+                          border: `1px solid ${COLORS.border}`,
+                          borderRadius: 6,
+                          color: COLORS.textSecondary,
+                          fontSize: 9,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        Select All
+                      </button>
+                    )}
+                    <span style={{ fontSize: 11, color: colLeads.length > 0 ? COLORS.textSecondary : COLORS.textMuted, fontFamily: "'DM Mono', monospace" }}>{colLeads.length}</span>
+                  </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 100 }}>
                   {colLeads.map(lead => (
