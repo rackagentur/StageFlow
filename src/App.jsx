@@ -6741,7 +6741,7 @@ const activeLeads = leads.filter(l => !l.archived);
             <img src="/nr-wordmark.png" alt="NoxReach" style={{ height: 17, objectFit: "contain", opacity: 0.8 }} />
           </a>
         </div>
-        <nav style={{ padding: "16px 12px", flex: 1 }}>
+        <nav style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}>
           {TABS.filter(t => t.group === "main").map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: activeTab === tab.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeTab === tab.id ? COLORS.purpleDim : "transparent"}`, color: activeTab === tab.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeTab === tab.id ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
               <span style={{ fontSize: 14 }}>{tab.icon}</span>
@@ -6758,7 +6758,7 @@ const activeLeads = leads.filter(l => !l.archived);
             </button>
           ))}
         </nav>
-        <div style={{ padding: "16px 20px", borderTop: `1px solid ${COLORS.border}` }}>
+        <div style={{ padding: "16px 20px", borderTop: `1px solid ${COLORS.border}`, flexShrink: 0 }}>
           {/* Plan chip */}
           {!isPro ? (
             <div style={{ marginBottom: 12 }}>
@@ -6798,18 +6798,20 @@ const activeLeads = leads.filter(l => !l.archived);
             <button onClick={() => setShowResetConfirm(true)} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 10, cursor: "pointer", padding: 0 }}>reset</button>
           </div>
         {/* User info + sign out */}
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: COLORS.purpleBg, border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, flexShrink: 0 }}>
-              {userName.charAt(0).toUpperCase()}
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${COLORS.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: COLORS.purpleBg, border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, flexShrink: 0 }}>
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</div>
+                <div style={{ fontSize: 9, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</div>
+              </div>
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</div>
-              <div style={{ fontSize: 9, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</div>
-            </div>
-            <button onClick={handleSignOut} title="Sign out" style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, fontSize: 14, padding: 4, borderRadius: 6, transition: "color 0.15s" }}
-              onMouseEnter={e => e.target.style.color = COLORS.red}
-              onMouseLeave={e => e.target.style.color = COLORS.textMuted}
-            >⏻</button>
+            <button onClick={handleSignOut} style={{ width: "100%", padding: "7px 10px", borderRadius: 7, background: "transparent", border: `1px solid ${COLORS.border}`, color: COLORS.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", textAlign: "center", transition: "all 0.15s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.red; e.currentTarget.style.color = COLORS.red; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.textSecondary; }}
+            >Sign out</button>
           </div>
         </div>
       </div>
