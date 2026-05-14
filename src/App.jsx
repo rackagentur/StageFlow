@@ -130,16 +130,33 @@ WebkitTextFillColor: C.text,
               background: "#0a0a10", borderRadius: 10, padding: 3,
             }}>
               {[["login", "Log in"], ["signup", "Sign up"]].map(([m, label]) => (
-                <button key={m} onClick={() => { setMode(m); setError(""); setSuccess(""); }}
-                  style={{
-                    flex: 1, padding: "9px 0", borderRadius: 8, border: "none",
-                    cursor: "pointer", fontSize: 13, fontWeight: 600,
-                    fontFamily: "'DM Sans', sans-serif",
-                    background: mode === m ? C.purple : "transparent",
-                    color: mode === m ? "#fff" : C.text2,
-                    transition: "all 0.15s",
-                  }}
-                >{label}</button>
+                <label 
+  onClick={(e) => { 
+    e.stopPropagation(); 
+    toggleLeadSelection(lead.id); 
+  }}
+  style={{
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    cursor: 'pointer',
+    width: 20,
+    height: 20,
+    border: `2px solid ${isBulkSelected ? COLORS.purple : COLORS.border}`,
+    borderRadius: 4,
+    backgroundColor: isBulkSelected ? COLORS.purple : 'transparent',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+    transition: 'all 0.15s ease',
+    zIndex: 10,
+  }}
+>
+  {isBulkSelected ? '✓' : ''}
+</label>
               ))}
             </div>
           )}
@@ -634,6 +651,7 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear }) {
 }
 
 function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, TAG_COLORS, onUpdateLead , isBulkSelected = false, onBulkSelect }) {
+  isBulkSelected = Boolean(isBulkSelected);
   const showInline = !lead.archived && ["contacted","followup1","followup2"].includes(lead.stage);
   const [contactLog, setContactLog] = useState(lead.contactLog || "");
   const [logSaved, setLogSaved] = useState(false);
@@ -674,7 +692,10 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
   };
 
   return (
-        <div onClick={(e) => { if (e.target === e.currentTarget || !e.target.closest('button')) { onSelect(isSelected ? null : lead); } }} style={{
+        <div onClick={(e) => {
+          if (e.target.closest('input, button, select, textarea, label, a')) return;
+          onSelect(isSelected ? null : lead);
+        }} style={{
 
       background: isBulkSelected ? COLORS.purple + "22" : isSelected ? COLORS.purpleBg : COLORS.surface,
       border: `1px solid ${isBulkSelected ? COLORS.purpleLight : isSelected ? COLORS.purple : lead.is_inbound && !lead.archived ? "#00D4FF" : isOverdue && !lead.archived ? COLORS.gold : lead.archived ? COLORS.border : stageBorder + "99"}`,
@@ -688,32 +709,67 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
       {lead.archived && (
         <div style={{ position: "absolute", top: 0, right: 0, background: COLORS.textMuted, color: COLORS.bg, fontSize: 9, fontWeight: 800, padding: "2px 8px", borderBottomLeftRadius: 6, letterSpacing: "0.1em" }}>ARCHIVED</div>
       )}
+      {isBulkSelected && !lead.archived && (
+        <div style={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          background: COLORS.purpleLight,
+          color: "#FFFFFF",
+          fontSize: 10,
+          fontWeight: 800,
+          padding: "4px 8px",
+          borderRadius: 999,
+          letterSpacing: "0.04em",
+          boxShadow: "0 4px 12px rgba(139,79,228,0.28)",
+          zIndex: 2
+        }}>
+          Selected
+        </div>
+      )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, paddingRight: (isOverdue && !lead.archived) ? 72 : 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
           <button
             type="button"
+            data-bulk-checkbox="true"
+            data-bulk-selected={isBulkSelected ? "true" : "false"}
+            aria-label={isBulkSelected ? "Deselect lead" : "Select lead"}
+            title={isBulkSelected ? "Deselect lead" : "Select lead"}
             onClick={(e) => {
               e.stopPropagation();
-              onBulkSelect?.(lead.id);
+              window.toggleLeadSelection?.(lead.id);
             }}
-            title={isBulkSelected ? "Deselect lead" : "Select lead"}
             style={{
-              width: 18,
-              height: 18,
-              borderRadius: 5,
-              border: `1px solid ${isBulkSelected ? COLORS.purpleLight : COLORS.border}`,
-              background: isBulkSelected ? COLORS.purple : "transparent",
-              color: isBulkSelected ? "#fff" : COLORS.textMuted,
-              fontSize: 11,
-              fontWeight: 800,
-              cursor: "pointer",
-              display: "flex",
+              width: 22,
+              height: 22,
+              minWidth: 22,
+              minHeight: 22,
+              borderRadius: 6,
+              border: isBulkSelected ? "2px solid #A970FF" : "2px solid #6E6E86",
+              background: isBulkSelected ? "#8B4FE4" : "#141421",
+              boxShadow: isBulkSelected
+                ? "0 0 0 2px rgba(169,112,255,0.22), inset 0 0 0 1px rgba(255,255,255,0.12), 0 4px 12px rgba(139,79,228,0.32)"
+                : "inset 0 0 0 1px rgba(255,255,255,0.04)",
+              display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
+              cursor: "pointer",
               flexShrink: 0,
+              padding: 0,
+              transition: "all 160ms ease",
             }}
           >
-            {isBulkSelected ? "✓" : ""}
+            {isBulkSelected ? (
+              <span style={{ 
+                color: "white", 
+                fontSize: 14, 
+                fontWeight: "bold", 
+                lineHeight: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>✓</span>
+            ) : null}
           </button>
           <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, minWidth: 0 }}>{highlight(lead.name)}</div>
         </div>
@@ -770,8 +826,13 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
 
-function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, selectedLeads, onSelectAll, onToggleLeadSelection }) {
+function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, selectedLeads = new Set(), onSelectAll, onToggleLeadSelection }) {
   const [showArchived, setShowArchived] = useState(false);
+
+  const isLeadBulkSelected = (leadId) => {
+    if (!selectedLeads) return false;
+    return Array.from(selectedLeads).some(id => String(id) === String(leadId));
+  };
 
   const applyFilters = (list) => list.filter(l => {
     if (search) {
@@ -824,8 +885,8 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                       onMove={onMove}
                       onSelect={onSelect}
                       isSelected={selectedLead?.id === lead.id}
-                      isBulkSelected={selectedLeads?.includes?.(lead.id) || selectedLeads?.has?.(lead.id)}
-                      onBulkSelect={onToggleLeadSelection}
+                      isBulkSelected={isLeadBulkSelected(lead.id)}
+                      onBulkSelect={() => onToggleLeadSelection?.(lead.id)}
                       onArchive={onArchive}
                       searchQuery={search}
                       TAG_COLORS={TAG_COLORS}
@@ -882,7 +943,19 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 100 }}>
                   {colLeads.map(lead => (
-                    <LeadCard key={lead.id} lead={lead} onMove={onMove} onSelect={onSelect} isSelected={selectedLead?.id === lead.id} onArchive={onArchive} searchQuery={search} TAG_COLORS={TAG_COLORS} onUpdateLead={onUpdateLead} />
+                    <LeadCard
+                      key={lead.id}
+                      lead={lead}
+                      onMove={onMove}
+                      onSelect={onSelect}
+                      isSelected={selectedLead?.id === lead.id}
+                      isBulkSelected={isLeadBulkSelected(lead.id)}
+                      onBulkSelect={() => onToggleLeadSelection?.(lead.id)}
+                      onArchive={onArchive}
+                      searchQuery={search}
+                      TAG_COLORS={TAG_COLORS}
+                      onUpdateLead={onUpdateLead}
+                    />
                   ))}
                   {colLeads.length === 0 && (
                     <div style={{ border: `1px dashed ${COLORS.border}`, borderRadius: 10, padding: "20px 14px", textAlign: "center" }}>
@@ -5558,45 +5631,74 @@ function AnalyticsView({ userId, supabase, COLORS }) {
     loadAnalytics();
   }, [userId]);
 
+  const normalizeStage = (stage) => String(stage || "").toLowerCase();
+
   const loadAnalytics = async () => {
     setLoading(true);
     try {
-      // Load user pipeline stats
-      const { data: userStats } = await supabase
-        .from("user_pipeline_stats")
+      const { data: allLeads, error } = await supabase
+        .from("leads")
         .select("*")
-        .eq("user_id", userId)
-        .single();
+        .eq("user_id", userId);
 
-      setStats(userStats || {
-        total_leads: 0,
-        target_count: 0,
-        contacted_count: 0,
-        replied_count: 0,
-        booked_count: 0,
-        conversion_rate: 0,
-        response_rate: 0,
+      if (error) throw error;
+
+      const leads = allLeads || [];
+      const activeLeads = leads.filter(l => !l.archived);
+
+      const total = activeLeads.length;
+      const target = activeLeads.filter(l => normalizeStage(l.stage) === "target").length;
+      const contacted = activeLeads.filter(l => normalizeStage(l.stage) !== "target").length;
+      const replied = activeLeads.filter(l => ["replied", "booked"].includes(normalizeStage(l.stage))).length;
+      const booked = activeLeads.filter(l => normalizeStage(l.stage) === "booked").length;
+
+      setStats({
+        total_leads: total,
+        target_count: target,
+        contacted_count: contacted,
+        replied_count: replied,
+        booked_count: booked,
+        conversion_rate: total > 0 ? Math.round((booked / total) * 100) : 0,
+        response_rate: contacted > 0 ? Math.round((replied / contacted) * 100) : 0,
       });
 
-      // Load tier performance
-      const { data: tiers } = await supabase
-        .from("tier_stats")
-        .select("*")
-        .order("response_rate", { ascending: false });
-      setTierStats(tiers || []);
+      const tiers = ["A1", "A2", "A3"].map(tier => {
+        const tierLeads = activeLeads.filter(l => l.tier === tier);
+        const tierContacted = tierLeads.filter(l => normalizeStage(l.stage) !== "target").length;
+        const tierReplied = tierLeads.filter(l => ["replied", "booked"].includes(normalizeStage(l.stage))).length;
 
-      // Load tag performance
-      const { data: tags } = await supabase
-        .from("tag_stats")
-        .select("*")
-        .order("response_rate", { ascending: false });
-      setTagStats(tags || []);
+        return {
+          tier,
+          total_leads: tierLeads.length,
+          response_rate: tierContacted > 0 ? Math.round((tierReplied / tierContacted) * 100) : 0,
+        };
+      }).filter(t => t.total_leads > 0);
 
-      // Load weekly activity
+      setTierStats(tiers);
+
+      const tagMap = {};
+      activeLeads.forEach(lead => {
+        const tag = lead.tag || "Untagged";
+        if (!tagMap[tag]) tagMap[tag] = { tag, total_leads: 0, contacted: 0, replied: 0 };
+        tagMap[tag].total_leads += 1;
+        if (normalizeStage(lead.stage) !== "target") tagMap[tag].contacted += 1;
+        if (["replied", "booked"].includes(normalizeStage(lead.stage))) tagMap[tag].replied += 1;
+      });
+
+      const tags = Object.values(tagMap)
+        .map(tag => ({
+          tag: tag.tag,
+          total_leads: tag.total_leads,
+          response_rate: tag.contacted > 0 ? Math.round((tag.replied / tag.contacted) * 100) : 0,
+        }))
+        .sort((a, b) => b.response_rate - a.response_rate);
+
+      setTagStats(tags);
+
       const { data: activity } = await supabase
         .rpc("get_user_weekly_activity", { p_user_id: userId, p_weeks: 8 });
-      setWeeklyActivity(activity || []);
 
+      setWeeklyActivity(activity || []);
     } catch (error) {
       console.error("Failed to load analytics:", error);
     } finally {
@@ -6197,33 +6299,48 @@ const loadAdminUsers = async () => {
   }
 };
   
+  const [selectedLeads, setSelectedLeads] = useState(new Set());
+  const [showBulkBar, setShowBulkBar] = useState(false);
+
+  useEffect(() => {
+    window.__selectedLeads = selectedLeads;
+    setShowBulkBar(selectedLeads.size > 0);
+  }, [selectedLeads]);
+
   const toggleLeadSelection = (leadId) => {
+    const id = String(leadId);
     setSelectedLeads(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(leadId)) newSet.delete(leadId); else newSet.add(leadId);
-      setShowBulkBar(newSet.size > 0);
-      return newSet;
-    });
-  };
-  
-  const selectAllInStage = (stage) => {
-    const stageLeads = leads.filter(l => l.stage === stage && !l.archived);
-    setSelectedLeads(prev => {
-      const newSet = new Set(prev);
-      const allSelected = stageLeads.every(l => newSet.has(l.id));
-      if (allSelected) stageLeads.forEach(l => newSet.delete(l.id));
-      else stageLeads.forEach(l => newSet.add(l.id));
-      setShowBulkBar(newSet.size > 0);
-      return newSet;
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   };
 
-  // Debug helpers for deployment verification
-  if (typeof window !== "undefined") {
+  const selectAllInStage = (stage) => {
+    const stageIds = leads
+      .filter(l => l.stage === stage && !l.archived)
+      .map(l => String(l.id));
+
+    setSelectedLeads(prev => {
+      const next = new Set(prev);
+      const allSelected = stageIds.length > 0 && stageIds.every(id => next.has(id));
+
+      if (allSelected) {
+        stageIds.forEach(id => next.delete(id));
+      } else {
+        stageIds.forEach(id => next.add(id));
+      }
+
+      return next;
+    });
+  };
+
+  if (typeof window !== 'undefined') {
     window.toggleLeadSelection = toggleLeadSelection;
     window.selectAllInStage = selectAllInStage;
   }
-  
+
   const bulkMoveTo = async (stage) => {
     const ids = Array.from(selectedLeads);
     await supabase.from('leads').update({ stage }).in('id', ids);
@@ -6263,8 +6380,6 @@ const loadAdminUsers = async () => {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
-  const [selectedLeads, setSelectedLeads] = useState(new Set());
-  const [showBulkBar, setShowBulkBar] = useState(false);
   const searchInputRef = useRef(null);
 
   // Keyboard shortcuts hook (Bundle 5.4)
@@ -6722,7 +6837,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "templates" && <TemplatesView supabase={supabase} user={user} />}
           {activeTab === "pipeline"  && (
             <>
-              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} />
+              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
               {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} />}
             </>
           )}
@@ -6843,6 +6958,18 @@ const activeLeads = leads.filter(l => !l.archived);
           )}
         </div>
       </div>
+      {showBulkBar && selectedLeads.size > 0 && (
+        <BulkActionsBar
+          count={selectedLeads.size}
+          onMoveTo={bulkMoveTo}
+          onArchive={bulkArchive}
+          onClear={() => {
+            setSelectedLeads(new Set());
+            setShowBulkBar(false);
+          }}
+        />
+      )}
+
       {/* Template Picker Modal - Bundle 5.2-5.4 */}
       {showTemplatePicker && selectedLead && (
         <TemplatePickerModal
