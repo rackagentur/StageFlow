@@ -3099,9 +3099,17 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
           /* Gig detail */
           <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 20, position: "sticky", top: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>{selected.venue}</div>
                 <div style={{ fontSize: 12, color: COLORS.textSecondary }}>{selected.city}</div>
+                {(gigsByDate[selected.date]?.length > 1) && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
+                    {gigsByDate[selected.date].map((g, i) => (
+                      <button key={g.id} onClick={() => setSelected(g)} style={{ width: 7, height: 7, borderRadius: "50%", background: g.id === selected.id ? COLORS.purple : COLORS.border, border: "none", cursor: "pointer", padding: 0 }} />
+                    ))}
+                    <span style={{ fontSize: 10, color: COLORS.textMuted }}>{gigsByDate[selected.date].findIndex(g => g.id === selected.id) + 1}/{gigsByDate[selected.date].length} on this date</span>
+                  </div>
+                )}
               </div>
               <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", color: COLORS.textSecondary, cursor: "pointer", fontSize: 18 }}>×</button>
             </div>
@@ -3128,6 +3136,11 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
               </button>
               <button onClick={() => deleteGig(selected.id)} style={{ padding: "8px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.red + "AA", fontSize: 11, cursor: "pointer" }}>✕</button>
             </div>
+            <button onClick={() => { setSelected(null); setAddForm(f => ({ ...f, date: selected.date })); setShowAdd(true); }}
+              style={{ width: "100%", marginTop: 8, padding: "7px", background: "transparent", border: `1px dashed ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 11, cursor: "pointer", transition: "all 0.15s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.purple; e.currentTarget.style.color = COLORS.purpleLight; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.textMuted; }}
+            >+ Add another gig on this date</button>
           </div>
         ) : (
           <div style={{ background: COLORS.surface, border: `1px dashed ${COLORS.border}`, borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
