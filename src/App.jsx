@@ -788,11 +788,31 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
       )}
       {!lead.archived ? (
         <div style={{ display: "flex", gap: 6 }}>
-          {stageIndex > 0 && (
-            <button onClick={e => { e.stopPropagation(); onMove(lead.id, STAGES[stageIndex - 1].id); }} style={{ flex: 1, padding: "5px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textSecondary, fontSize: 11, cursor: "pointer" }}>← Back</button>
+          {(stageIndex > 0 || lead.stage === 'followup1' || lead.stage === 'followup2') && (
+            <button onClick={e => { 
+              e.stopPropagation(); 
+              // Determine previous stage based on current stage
+              let prevStage;
+              if (lead.stage === 'booked') prevStage = 'replied';
+              else if (lead.stage === 'replied') prevStage = 'followup2';
+              else if (lead.stage === 'followup1' || lead.stage === 'followup2') prevStage = 'contacted';
+              else if (lead.stage === 'contacted') prevStage = 'target';
+              else prevStage = STAGES[stageIndex - 1]?.id || 'target';
+              onMove(lead.id, prevStage); 
+            }} style={{ flex: 1, padding: "5px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textSecondary, fontSize: 11, cursor: "pointer" }}>← Back</button>
           )}
           {stageIndex < STAGES.length - 1 && (
-            <button onClick={e => { e.stopPropagation(); onMove(lead.id, STAGES[stageIndex + 1].id); }} style={{ flex: 2, padding: "5px", background: stageIndex === STAGES.length - 2 ? "rgba(0,212,255,0.15)" : COLORS.purple + "33", border: `1px solid ${stageIndex === STAGES.length - 2 ? "rgba(0,212,255,0.5)" : COLORS.purple + "66"}`, borderRadius: 6, color: stageIndex === STAGES.length - 2 ? "#00D4FF" : COLORS.purpleLight, fontSize: 11, cursor: "pointer", fontWeight: 700 }}>
+            <button onClick={e => { 
+              e.stopPropagation(); 
+              // Determine next stage based on current stage
+              let nextStage;
+              if (lead.stage === 'target') nextStage = 'contacted';
+              else if (lead.stage === 'contacted') nextStage = 'followup1';
+              else if (lead.stage === 'followup1' || lead.stage === 'followup2') nextStage = 'replied';
+              else if (lead.stage === 'replied') nextStage = 'booked';
+              else nextStage = STAGES[stageIndex + 1]?.id || 'contacted';
+              onMove(lead.id, nextStage); 
+            }} style={{ flex: 2, padding: "5px", background: stageIndex === STAGES.length - 2 ? "rgba(0,212,255,0.15)" : COLORS.purple + "33", border: `1px solid ${stageIndex === STAGES.length - 2 ? "rgba(0,212,255,0.5)" : COLORS.purple + "66"}`, borderRadius: 6, color: stageIndex === STAGES.length - 2 ? "#00D4FF" : COLORS.purpleLight, fontSize: 11, cursor: "pointer", fontWeight: 700 }}>
               {stageIndex === STAGES.length - 2 ? "✓ Book" : "Advance →"}
             </button>
           )}
@@ -1035,6 +1055,8 @@ function AssetCopyRow({ label, value }) {
 
 function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets, setShowTemplatePicker }) {
   const [editing, setEditing] = useState(false);
+  const [activity, setActivity] = useState([]);
+  const [loadingActivity, setLoadingActivity] = useState(true);
   const [form, setForm] = useState({
     name: lead.name || "",
     contact: lead.contact || "",
@@ -1054,7 +1076,22 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       follow_up_date: lead.follow_up_date || "",
     });
     setEditing(false);
+    loadActivity();
   }, [lead.id]);
+  
+  async function loadActivity() {
+    setLoadingActivity(true);
+    const { data, error } = await supabase
+      .from('lead_history')
+      .select('*')
+      .eq('lead_id', lead.id)
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      setActivity(data);
+    }
+    setLoadingActivity(false);
+  }
 
   const stageIndex = STAGES.findIndex(s => s.id === lead.stage);
   const isOverdue = lead.followUpDate && new Date(lead.followUpDate) <= new Date();
@@ -1423,6 +1460,35 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           >
             × Delete permanently
           </button>
+        </div>
+      )}
+      
+      {/* Activity Timeline */}
+      {!loadingActivity && activity && activity.length > 0 && (
+        <div style={{ marginTop: 24, padding: 16, background: COLORS.surface, borderRadius: 8, border: `1px solid ${COLORS.border}` }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text, marginBottom: 12 }}>
+            Activity Timeline
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {activity.map(event => (
+                <div key={event.id} style={{ display: 'flex', gap: 12, fontSize: 13 }}>
+                  <div style={{ color: COLORS.text3, minWidth: 120, fontSize: 12 }}>
+                    {new Date(event.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  <div style={{ color: COLORS.text2 }}>
+                    {event.event_type === 'stage_change' && (
+                      <span>Moved from <strong style={{ color: COLORS.text }}>{event.old_value}</strong> to <strong style={{ color: COLORS.text }}>{event.new_value}</strong></span>
+                    )}
+                    {event.event_type === 'created' && <span>Lead created</span>}
+                    {event.event_type === 'archived' && <span>Archived</span>}
+                    {event.event_type === 'restored' && <span>Restored from archive</span>}
+                    {!['stage_change', 'created', 'archived', 'restored'].includes(event.event_type) && (
+                      <span>{event.event_type}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
         </div>
       )}
     </div>
@@ -6783,7 +6849,7 @@ const activeLeads = leads.filter(l => !l.archived);
               )}
               <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Lead
               </button>
-              <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.purple}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
                 <span>📊</span> Import CSV
               </button>
             </div>
