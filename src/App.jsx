@@ -6153,6 +6153,12 @@ const loadAdminUsers = async () => {
       return newSet;
     });
   };
+
+  // Debug helpers for deployment verification
+  if (typeof window !== "undefined") {
+    window.toggleLeadSelection = toggleLeadSelection;
+    window.selectAllInStage = selectAllInStage;
+  }
   
   const bulkMoveTo = async (stage) => {
     const ids = Array.from(selectedLeads);
