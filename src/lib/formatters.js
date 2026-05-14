@@ -1,7 +1,8 @@
-export const formatShortDate = (isoStr) => {
-  if (!isoStr) return "—";
-  const d = new Date(isoStr);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+export const formatShortDate = (dateString) => {
+  if (!dateString) return "";
+  const d = new Date(dateString);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${d.getDate()} ${months[d.getMonth()]}`;
 };
 
 export const formatDate = (dateString) => {

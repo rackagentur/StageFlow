@@ -130,33 +130,16 @@ WebkitTextFillColor: C.text,
               background: "#0a0a10", borderRadius: 10, padding: 3,
             }}>
               {[["login", "Log in"], ["signup", "Sign up"]].map(([m, label]) => (
-                <label 
-  onClick={(e) => { 
-    e.stopPropagation(); 
-    toggleLeadSelection(lead.id); 
-  }}
-  style={{
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    cursor: 'pointer',
-    width: 20,
-    height: 20,
-    border: `2px solid ${isBulkSelected ? COLORS.purple : COLORS.border}`,
-    borderRadius: 4,
-    backgroundColor: isBulkSelected ? COLORS.purple : 'transparent',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white',
-    transition: 'all 0.15s ease',
-    zIndex: 10,
-  }}
->
-  {isBulkSelected ? '✓' : ''}
-</label>
+                <button key={m} onClick={() => { setMode(m); setError(""); setSuccess(""); }}
+                  style={{
+                    flex: 1, padding: "9px 0", borderRadius: 8, border: "none",
+                    cursor: "pointer", fontSize: 13, fontWeight: 600,
+                    fontFamily: "'DM Sans', sans-serif",
+                    background: mode === m ? C.purple : "transparent",
+                    color: mode === m ? "#fff" : C.text2,
+                    transition: "all 0.15s",
+                  }}
+                >{label}</button>
               ))}
             </div>
           )}
@@ -651,7 +634,7 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear }) {
 }
 
 function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, TAG_COLORS, onUpdateLead , isBulkSelected = false, onBulkSelect }) {
-  isBulkSelected = Boolean(isBulkSelected);
+  isBulkSelected = Boolean(isBulkSelected || lead.__bulkSelected);
   const showInline = !lead.archived && ["contacted","followup1","followup2"].includes(lead.stage);
   const [contactLog, setContactLog] = useState(lead.contactLog || "");
   const [logSaved, setLogSaved] = useState(false);
@@ -692,10 +675,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
   };
 
   return (
-        <div onClick={(e) => {
-          if (e.target.closest('input, button, select, textarea, label, a')) return;
-          onSelect(isSelected ? null : lead);
-        }} style={{
+        <div onClick={(e) => { if (e.target === e.currentTarget || !e.target.closest('button')) { onSelect(isSelected ? null : lead); } }} style={{
 
       background: isBulkSelected ? COLORS.purple + "22" : isSelected ? COLORS.purpleBg : COLORS.surface,
       border: `1px solid ${isBulkSelected ? COLORS.purpleLight : isSelected ? COLORS.purple : lead.is_inbound && !lead.archived ? "#00D4FF" : isOverdue && !lead.archived ? COLORS.gold : lead.archived ? COLORS.border : stageBorder + "99"}`,
@@ -709,54 +689,28 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
       {lead.archived && (
         <div style={{ position: "absolute", top: 0, right: 0, background: COLORS.textMuted, color: COLORS.bg, fontSize: 9, fontWeight: 800, padding: "2px 8px", borderBottomLeftRadius: 6, letterSpacing: "0.1em" }}>ARCHIVED</div>
       )}
-      {isBulkSelected && !lead.archived && (
-        <div style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          background: COLORS.purpleLight,
-          color: "#FFFFFF",
-          fontSize: 10,
-          fontWeight: 800,
-          padding: "4px 8px",
-          borderRadius: 999,
-          letterSpacing: "0.04em",
-          boxShadow: "0 4px 12px rgba(139,79,228,0.28)",
-          zIndex: 2
-        }}>
-          Selected
-        </div>
-      )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, paddingRight: (isOverdue && !lead.archived) ? 72 : 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          <button
-            type="button"
+          <input
+            type="checkbox"
             data-bulk-checkbox="true"
             data-bulk-selected={isBulkSelected ? "true" : "false"}
+            checked={isBulkSelected}
             aria-label={isBulkSelected ? "Deselect lead" : "Select lead"}
             title={isBulkSelected ? "Deselect lead" : "Select lead"}
             onClick={(e) => {
               e.stopPropagation();
-              window.toggleLeadSelection?.(lead.id);
+            }}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleLeadSelection?.(lead.id);
             }}
             style={{
-              width: 22,
-              height: 22,
-              minWidth: 22,
-              minHeight: 22,
-              borderRadius: 6,
-              border: isBulkSelected ? "2px solid #A970FF" : "2px solid #6E6E86",
-              background: isBulkSelected ? "#8B4FE4" : "#141421",
-              boxShadow: isBulkSelected
-                ? "0 0 0 2px rgba(169,112,255,0.22), inset 0 0 0 1px rgba(255,255,255,0.12), 0 4px 12px rgba(139,79,228,0.32)"
-                : "inset 0 0 0 1px rgba(255,255,255,0.04)",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
+              width: 18,
+              height: 18,
+              accentColor: COLORS.purpleLight,
               cursor: "pointer",
               flexShrink: 0,
-              padding: 0,
-              transition: "all 160ms ease",
             }}
           />
           <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, minWidth: 0 }}>{highlight(lead.name)}</div>
@@ -931,19 +885,7 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 100 }}>
                   {colLeads.map(lead => (
-                    <LeadCard
-                      key={lead.id}
-                      lead={lead}
-                      onMove={onMove}
-                      onSelect={onSelect}
-                      isSelected={selectedLead?.id === lead.id}
-                      isBulkSelected={isLeadBulkSelected(lead.id)}
-                      onBulkSelect={() => onToggleLeadSelection?.(lead.id)}
-                      onArchive={onArchive}
-                      searchQuery={search}
-                      TAG_COLORS={TAG_COLORS}
-                      onUpdateLead={onUpdateLead}
-                    />
+                    <LeadCard key={lead.id} lead={lead} onMove={onMove} onSelect={onSelect} isSelected={selectedLead?.id === lead.id} onArchive={onArchive} searchQuery={search} TAG_COLORS={TAG_COLORS} onUpdateLead={onUpdateLead} />
                   ))}
                   {colLeads.length === 0 && (
                     <div style={{ border: `1px dashed ${COLORS.border}`, borderRadius: 10, padding: "20px 14px", textAlign: "center" }}>
@@ -6290,45 +6232,33 @@ const loadAdminUsers = async () => {
   const [selectedLeads, setSelectedLeads] = useState(new Set());
   const [showBulkBar, setShowBulkBar] = useState(false);
 
-  useEffect(() => {
-    window.__selectedLeads = selectedLeads;
-    setShowBulkBar(selectedLeads.size > 0);
-  }, [selectedLeads]);
-
   const toggleLeadSelection = (leadId) => {
-    const id = String(leadId);
     setSelectedLeads(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+      const newSet = new Set(prev);
+      if (newSet.has(leadId)) newSet.delete(leadId); else newSet.add(leadId);
+      setShowBulkBar(newSet.size > 0);
+      return newSet;
     });
   };
-
+  
   const selectAllInStage = (stage) => {
-    const stageIds = leads
-      .filter(l => l.stage === stage && !l.archived)
-      .map(l => String(l.id));
-
+    const stageLeads = leads.filter(l => l.stage === stage && !l.archived);
     setSelectedLeads(prev => {
-      const next = new Set(prev);
-      const allSelected = stageIds.length > 0 && stageIds.every(id => next.has(id));
-
-      if (allSelected) {
-        stageIds.forEach(id => next.delete(id));
-      } else {
-        stageIds.forEach(id => next.add(id));
-      }
-
-      return next;
+      const newSet = new Set(prev);
+      const allSelected = stageLeads.every(l => newSet.has(l.id));
+      if (allSelected) stageLeads.forEach(l => newSet.delete(l.id));
+      else stageLeads.forEach(l => newSet.add(l.id));
+      setShowBulkBar(newSet.size > 0);
+      return newSet;
     });
   };
 
-  if (typeof window !== 'undefined') {
+  // Debug helpers for deployment verification
+  if (typeof window !== "undefined") {
     window.toggleLeadSelection = toggleLeadSelection;
     window.selectAllInStage = selectAllInStage;
   }
-
+  
   const bulkMoveTo = async (stage) => {
     const ids = Array.from(selectedLeads);
     await supabase.from('leads').update({ stage }).in('id', ids);

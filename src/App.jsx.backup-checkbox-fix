@@ -130,33 +130,16 @@ WebkitTextFillColor: C.text,
               background: "#0a0a10", borderRadius: 10, padding: 3,
             }}>
               {[["login", "Log in"], ["signup", "Sign up"]].map(([m, label]) => (
-                <label 
-  onClick={(e) => { 
-    e.stopPropagation(); 
-    toggleLeadSelection(lead.id); 
-  }}
-  style={{
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    cursor: 'pointer',
-    width: 20,
-    height: 20,
-    border: `2px solid ${isBulkSelected ? COLORS.purple : COLORS.border}`,
-    borderRadius: 4,
-    backgroundColor: isBulkSelected ? COLORS.purple : 'transparent',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white',
-    transition: 'all 0.15s ease',
-    zIndex: 10,
-  }}
->
-  {isBulkSelected ? '✓' : ''}
-</label>
+                <button key={m} onClick={() => { setMode(m); setError(""); setSuccess(""); }}
+                  style={{
+                    flex: 1, padding: "9px 0", borderRadius: 8, border: "none",
+                    cursor: "pointer", fontSize: 13, fontWeight: 600,
+                    fontFamily: "'DM Sans', sans-serif",
+                    background: mode === m ? C.purple : "transparent",
+                    color: mode === m ? "#fff" : C.text2,
+                    transition: "all 0.15s",
+                  }}
+                >{label}</button>
               ))}
             </div>
           )}

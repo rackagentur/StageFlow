@@ -1,0 +1,22 @@
+export const COLORS = {
+  bg: "#060608",
+  surface: "#0f0f18",
+  border: "#1c1c2e",
+  purple: "#6B2FD4",
+  purpleLight: "#8B4FE4",
+  cyan: "#00D4FF",
+  gold: "#FFAB00",
+  green: "#22C55E",
+  red: "#EF4444",
+  text: "#E0E0E0",
+  text2: "#A8A8A8",
+  text3: "#707070",
+};
+
+export const STAGES = [
+  { id: "target", label: "Target" },
+  { id: "contacted", label: "Contacted" },
+  { id: "followup", label: "Follow-up" },
+  { id: "replied", label: "Replied" },
+  { id: "booked", label: "Booked" },
+];

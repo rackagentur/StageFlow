@@ -130,33 +130,16 @@ WebkitTextFillColor: C.text,
               background: "#0a0a10", borderRadius: 10, padding: 3,
             }}>
               {[["login", "Log in"], ["signup", "Sign up"]].map(([m, label]) => (
-                <label 
-  onClick={(e) => { 
-    e.stopPropagation(); 
-    toggleLeadSelection(lead.id); 
-  }}
-  style={{
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    cursor: 'pointer',
-    width: 20,
-    height: 20,
-    border: `2px solid ${isBulkSelected ? COLORS.purple : COLORS.border}`,
-    borderRadius: 4,
-    backgroundColor: isBulkSelected ? COLORS.purple : 'transparent',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white',
-    transition: 'all 0.15s ease',
-    zIndex: 10,
-  }}
->
-  {isBulkSelected ? '✓' : ''}
-</label>
+                <button key={m} onClick={() => { setMode(m); setError(""); setSuccess(""); }}
+                  style={{
+                    flex: 1, padding: "9px 0", borderRadius: 8, border: "none",
+                    cursor: "pointer", fontSize: 13, fontWeight: 600,
+                    fontFamily: "'DM Sans', sans-serif",
+                    background: mode === m ? C.purple : "transparent",
+                    color: mode === m ? "#fff" : C.text2,
+                    transition: "all 0.15s",
+                  }}
+                >{label}</button>
               ))}
             </div>
           )}
@@ -709,24 +692,6 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
       {lead.archived && (
         <div style={{ position: "absolute", top: 0, right: 0, background: COLORS.textMuted, color: COLORS.bg, fontSize: 9, fontWeight: 800, padding: "2px 8px", borderBottomLeftRadius: 6, letterSpacing: "0.1em" }}>ARCHIVED</div>
       )}
-      {isBulkSelected && !lead.archived && (
-        <div style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          background: COLORS.purpleLight,
-          color: "#FFFFFF",
-          fontSize: 10,
-          fontWeight: 800,
-          padding: "4px 8px",
-          borderRadius: 999,
-          letterSpacing: "0.04em",
-          boxShadow: "0 4px 12px rgba(139,79,228,0.28)",
-          zIndex: 2
-        }}>
-          Selected
-        </div>
-      )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, paddingRight: (isOverdue && !lead.archived) ? 72 : 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
           <button
@@ -737,6 +702,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
             title={isBulkSelected ? "Deselect lead" : "Select lead"}
             onClick={(e) => {
               e.stopPropagation();
+              console.log('BULK_CHECKBOX_BUTTON', lead.id, Boolean(isBulkSelected));
               window.toggleLeadSelection?.(lead.id);
             }}
             style={{
@@ -746,9 +712,9 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
               minHeight: 22,
               borderRadius: 6,
               border: isBulkSelected ? "2px solid #A970FF" : "2px solid #6E6E86",
-              background: isBulkSelected ? "#8B4FE4" : "#141421",
+              background: isBulkSelected ? "linear-gradient(180deg, #A970FF 0%, #8B4FE4 100%)" : "#141421",
               boxShadow: isBulkSelected
-                ? "0 0 0 2px rgba(169,112,255,0.22), inset 0 0 0 1px rgba(255,255,255,0.12), 0 4px 12px rgba(139,79,228,0.32)"
+                ? "0 0 0 2px rgba(169,112,255,0.22), 0 4px 12px rgba(139,79,228,0.28)"
                 : "inset 0 0 0 1px rgba(255,255,255,0.04)",
               display: "inline-flex",
               alignItems: "center",
@@ -756,9 +722,21 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
               cursor: "pointer",
               flexShrink: 0,
               padding: 0,
-              transition: "all 160ms ease",
             }}
-          />
+          >
+            {isBulkSelected ? (
+              <span style={{
+                color: "#FFFFFF",
+                fontSize: 15,
+                fontWeight: 900,
+                lineHeight: 1,
+                transform: "translateY(-0.5px)",
+                textShadow: "0 1px 2px rgba(0,0,0,0.25)"
+              }}>
+                ✓
+              </span>
+            ) : null}
+          </button>
           <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, minWidth: 0 }}>{highlight(lead.name)}</div>
         </div>
         {lead.stage === "followup1" && <Badge color="#9B5FFF">F1</Badge>}
@@ -6293,6 +6271,7 @@ const loadAdminUsers = async () => {
   useEffect(() => {
     window.__selectedLeads = selectedLeads;
     setShowBulkBar(selectedLeads.size > 0);
+    console.log('SELECTED_LEADS_UPDATED', Array.from(selectedLeads));
   }, [selectedLeads]);
 
   const toggleLeadSelection = (leadId) => {
