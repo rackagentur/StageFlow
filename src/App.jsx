@@ -2434,7 +2434,7 @@ function InboundView({ leads, user, supabase }) {
         <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Your booking link</div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 14px", fontSize: 13, color: COLORS.textSecondary, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{bookingLink}</div>
-          <button onClick={copy} style={{ background: copied ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${copied ? "rgba(74,222,128,0.3)" : COLORS.purpleDim}`, borderRadius: 8, padding: "10px 16px", color: copied ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={copy} style={{ background: copied ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${copied ? "rgba(74,222,128,0.3)" : COLORS.purple}`, borderRadius: 8, padding: "10px 16px", color: copied ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
             {copied ? "Copied ✓" : "Copy link"}
           </button>
         </div>
@@ -2726,7 +2726,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
             <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{label}</div>
             <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 3 }}>{desc}</div>
           </div>
-          <div style={{ padding: "4px 12px", background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, fontSize: 13, fontWeight: 800, color: COLORS.purpleLight, fontFamily: "'DM Mono', monospace", flexShrink: 0, marginLeft: 12 }}>
+          <div style={{ padding: "4px 12px", background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, borderRadius: 20, fontSize: 13, fontWeight: 800, color: COLORS.purpleLight, fontFamily: "'DM Mono', monospace", flexShrink: 0, marginLeft: 12 }}>
             {val} {unit}
           </div>
         </div>
@@ -2763,7 +2763,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
               style={{ flex: 1, background: "transparent", border: "none", outline: "none", padding: "10px 12px", fontSize: 13, color: COLORS.text, colorScheme: "dark" }}
             />
           </div>
-          <button onClick={saveUsername} style={{ background: usernameSaved ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${usernameSaved ? "rgba(74,222,128,0.3)" : COLORS.purpleDim}`, borderRadius: 8, padding: "10px 16px", color: usernameSaved ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={saveUsername} style={{ background: usernameSaved ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${usernameSaved ? "rgba(74,222,128,0.3)" : COLORS.purple}`, borderRadius: 8, padding: "10px 16px", color: usernameSaved ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
             {usernameSaved ? "Saved ✓" : "Save"}
           </button>
         </div>
@@ -2779,7 +2779,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
               placeholder="e.g. DJ GEEZ"
               style={{ flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 13, color: COLORS.text, outline: "none", colorScheme: "dark" }}
             />
-            <button onClick={saveDisplayName} style={{ background: displayNameSaved ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${displayNameSaved ? "rgba(74,222,128,0.3)" : COLORS.purpleDim}`, borderRadius: 8, padding: "10px 16px", color: displayNameSaved ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+            <button onClick={saveDisplayName} style={{ background: displayNameSaved ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${displayNameSaved ? "rgba(74,222,128,0.3)" : COLORS.purple}`, borderRadius: 8, padding: "10px 16px", color: displayNameSaved ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
               {displayNameSaved ? "Saved ✓" : "Save"}
             </button>
           </div>
