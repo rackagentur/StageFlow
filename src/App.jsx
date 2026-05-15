@@ -737,29 +737,32 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           onSelect(isSelected ? null : lead);
         }} style={{
 
-      background: lead.stage === "booked" && !lead.archived ? "rgba(34,197,94,0.04)" : lead.stage === "replied" && !lead.archived ? `${COLORS.purpleLight}08` : (isBulkSelected || isSelected) ? COLORS.purpleBg : COLORS.surface,
+      background: (isBulkSelected || isSelected) ? COLORS.purpleBg :
+        lead.stage === "booked"  && !lead.archived ? "rgba(34,197,94,0.04)" :
+        lead.stage === "replied" && !lead.archived ? `${COLORS.purpleLight}08` :
+        COLORS.surface,
       border: `1px solid ${
-        lead.archived ? COLORS.purpleDim :
-        isOverdue ? COLORS.amber :
-        (isBulkSelected || isSelected) ? COLORS.purple :
-        lead.stage === "booked"    ? "rgba(34,197,94,0.5)" :
-        lead.stage === "replied"   ? COLORS.purpleLight :
+        (isBulkSelected || isSelected)   ? COLORS.purple :
+        lead.archived                     ? COLORS.purpleDim :
+        isOverdue                         ? COLORS.amber :
+        lead.stage === "booked"           ? "rgba(34,197,94,0.5)" :
+        lead.stage === "replied"          ? COLORS.purpleLight :
         lead.stage === "followup1" || lead.stage === "followup2" ? COLORS.purple :
-        lead.stage === "contacted" ? "rgba(255,255,255,0.22)" :
+        lead.stage === "contacted"        ? "rgba(255,255,255,0.22)" :
         COLORS.purpleDim
       }`,
-      borderLeft:
+      borderLeft: (isBulkSelected || isSelected) ? undefined :
         lead.stage === "booked"    && !lead.archived ? "3px solid rgba(34,197,94,0.6)" :
         lead.stage === "replied"   && !lead.archived ? `3px solid ${COLORS.purpleLight}` :
-        lead.stage === "followup1" || lead.stage === "followup2" && !lead.archived ? `3px solid ${COLORS.purple}` :
+        (lead.stage === "followup1" || lead.stage === "followup2") && !lead.archived ? `3px solid ${COLORS.purple}` :
         lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" :
         undefined,
-      boxShadow: lead.stage === "booked" && !lead.archived
+      boxShadow: (isBulkSelected || isSelected)
+        ? `inset 3px 0 0 ${COLORS.purple}, 0 4px 16px rgba(0,0,0,0.5)`
+        : lead.stage === "booked" && !lead.archived
         ? `0 0 8px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.35)`
         : lead.stage === "replied" && !lead.archived
         ? `0 0 10px rgba(34,211,238,0.10), 0 2px 12px rgba(0,0,0,0.35)`
-        : isSelected
-        ? `inset 3px 0 0 ${COLORS.purple}, 0 4px 16px rgba(0,0,0,0.5)`
         : `0 2px 12px rgba(0,0,0,0.35)`,
       borderRadius: 10, padding: "14px 16px", cursor: "pointer",
       transition: "all 0.15s ease", position: "relative", overflow: "hidden",
