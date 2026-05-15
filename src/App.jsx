@@ -1994,7 +1994,7 @@ function FollowUpsView({ leads, onNavigate }) {
           <Badge color={COLORS.amber}>{due.length}</Badge>
         </div>
         {due.length === 0 ? (
-          <div style={{ padding: "20px", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, color: COLORS.textMuted, fontSize: 12, textAlign: "center" }}>All caught up ✓</div>
+          <div style={{ padding: "20px", background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${COLORS.green}`, borderRadius: 10, color: COLORS.green, fontSize: 12, textAlign: "center", fontWeight: 600 }}>All caught up ✓</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {due.map(lead => (
@@ -2050,9 +2050,9 @@ function FollowUpsView({ leads, onNavigate }) {
         </div>
       )}      <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.textSecondary }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Upcoming</span>
-          <Badge color={COLORS.textSecondary}>{upcoming.length}</Badge>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.purple, boxShadow: `0 0 8px ${COLORS.purple}` }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.purpleLight, letterSpacing: "0.08em", textTransform: "uppercase" }}>Upcoming</span>
+          <Badge color={COLORS.purple}>{upcoming.length}</Badge>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {upcoming.map(lead => {
@@ -2063,7 +2063,7 @@ function FollowUpsView({ leads, onNavigate }) {
               ? { text: "Coming up soon", color: COLORS.textSecondary }
               : { text: "On track", color: COLORS.textMuted };
             return (
-              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${nudge.color}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
