@@ -2430,7 +2430,7 @@ function InboundView({ leads, user, supabase }) {
         <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Booking requests from your public form</div>
       </div>
 
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 20, marginBottom: 24 }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 24 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Your booking link</div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 14px", fontSize: 13, color: COLORS.textSecondary, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{bookingLink}</div>
@@ -2442,7 +2442,7 @@ function InboundView({ leads, user, supabase }) {
       </div>
 
       {inbound.length === 0 ? (
-        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: "48px 24px", textAlign: "center" }}>
+        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: "48px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>⬇</div>
           <div style={{ fontSize: 15, fontWeight: 600, color: COLORS.text, marginBottom: 6 }}>No inbound requests yet</div>
           <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Share your booking link to start receiving requests from promoters.</div>
@@ -2450,7 +2450,7 @@ function InboundView({ leads, user, supabase }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {inbound.map(lead => (
-            <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "14px 18px" }}>
+            <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: "14px 18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>{lead.name}</div>
@@ -2720,7 +2720,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     const val = local[stateKey];
     const pct = ((val - min) / (max - min)) * 100;
     return (
-      <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px" }}>
+      <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: "18px 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{label}</div>
@@ -2750,7 +2750,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
       <style>{`input[type=range]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: ${COLORS.purple}; border: 2px solid ${COLORS.purpleLight}; box-shadow: 0 0 8px rgba(14,116,144,0.40); cursor: pointer; }`}</style>
 
       {/* Booking Link */}
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Your booking link</div>
         <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
           <div style={{ display: "flex", flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, overflow: "hidden" }}>
@@ -2793,7 +2793,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         <div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Follow-up Intervals</div>
           <ProGate isPro={isPro} reason="settings" onUpgradeClick={onUpgradeClick} label="Custom intervals — Pro feature">
-            <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, overflow: "hidden" }}>
               <div style={{ padding: "14px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
                 <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6 }}>
                   When you mark a lead as <strong style={{ color: COLORS.text }}>Contacted</strong> or advance through follow-up stages, reminders are automatically scheduled. Set how many days out each reminder fires.
@@ -2810,7 +2810,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         {/* Preview */}
         <div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Schedule Preview</div>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "16px 20px" }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: "16px 20px" }}>
             <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
               {[
                 { label: "Outreach sent", day: "Day 0", color: COLORS.textSecondary },
@@ -2835,7 +2835,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         {/* Pipeline stages (read-only info) */}
         <div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Pipeline Stages</div>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, overflow: "hidden" }}>
             {STAGES.map((s, i) => (
               <div key={s.id} style={{ padding: "12px 18px", borderBottom: i < STAGES.length - 1 ? `1px solid ${COLORS.border}` : "none", display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
@@ -2856,7 +2856,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         {/* Genre Management */}
         <div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Genres & Scenes</div>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, overflow: "hidden" }}>
             <div style={{ padding: "14px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
               <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6 }}>
                 These genres appear in lead and gig forms, and as filter pills in your pipeline. Add any scene that fits your sound.
