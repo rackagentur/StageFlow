@@ -6074,42 +6074,32 @@ function AnalyticsView({ userId, supabase, COLORS }) {
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto" }}>
       {/* Key Metrics Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
         {[
-          { label: "Total Leads", value: stats.total_leads, icon: "📊", color: COLORS.purple },
-          { label: "Total Gigs", value: stats.booked_count, icon: "🎵", color: COLORS.green },
-          { label: "Conversion Rate", value: `${stats.conversion_rate}%`, icon: "📈", color: COLORS.green },
-          { label: "Response Rate", value: `${stats.response_rate}%`, icon: "💬", color: COLORS.purple },
+          { label: "Total Leads",     value: stats.total_leads,           color: COLORS.purpleLight },
+          { label: "Total Gigs",      value: stats.booked_count,          color: COLORS.green       },
+          { label: "Conversion Rate", value: `${stats.conversion_rate}%`, color: COLORS.purpleLight },
+          { label: "Response Rate",   value: `${stats.response_rate}%`,   color: COLORS.purpleLight },
         ].map(card => (
           <div key={card.label} style={{
             background: COLORS.surface,
-            border: `1px solid ${COLORS.border}`,
+            border: `1px solid ${COLORS.borderHover}`,
+            borderTop: `3px solid ${card.color}`,
             borderRadius: 12,
-            padding: 20,
-            position: "relative",
-            overflow: "hidden",
+            padding: "20px 24px",
           }}>
-            <div style={{
-              position: "absolute",
-              top: -10,
-              right: -10,
-              fontSize: 60,
-              opacity: 0.08,
-            }}>{card.icon}</div>
-            <div style={{ position: "relative" }}>
-              <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 8, fontWeight: 500 }}>
-                {card.label}
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 700, color: card.color }}>
-                {card.value}
-              </div>
+            <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              {card.label}
+            </div>
+            <div style={{ fontSize: 34, fontWeight: 800, color: card.color, fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>
+              {card.value}
             </div>
           </div>
         ))}
       </div>
 
       {/* Conversion Funnel */}
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Pipeline Conversion Funnel</div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {[
@@ -6147,7 +6137,7 @@ function AnalyticsView({ userId, supabase, COLORS }) {
 
       {/* Weekly Activity Chart */}
       {weeklyActivity.length > 0 && (
-        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
+        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
           <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Activity Timeline (Last 8 Weeks)</div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 200 }}>
             {weeklyActivity.map(week => {
