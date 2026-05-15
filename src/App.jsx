@@ -1731,13 +1731,24 @@ function StatCard({ label, value, sub, accent }) {
   );
 }
 
-function DashboardView({ leads, onNavigate, isPro, onUpgradeClick }) {
+function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) {
   const today    = new Date();
   const active   = leads.filter(l => !l.archived);
   const booked   = active.filter(l => l.stage === "booked").length;
   const bookedLeadsAll = active.filter(l => l.stage === "booked");
   const totalRevenue = bookedLeadsAll.reduce((sum, l) => sum + (l.fee || 0), 0);
   const unpaidCount  = bookedLeadsAll.filter(l => l.fee && !l.deposit_paid).length;
+
+  // ── Gig Revenue ──────────────────────────────────────────────────────────
+  const parseFee = (f) => { const n = parseFloat(String(f || "").replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : n; };
+  const gigsWithFee    = gigs.filter(g => parseFee(g.fee) > 0);
+  const thisMonth      = gigsWithFee.filter(g => { const d = new Date(g.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && new Date(g.date) <= today; });
+  const upcomingGigs   = gigsWithFee.filter(g => new Date(g.date) > today);
+  const gigRevTotal    = gigsWithFee.filter(g => new Date(g.date) <= today).reduce((s, g) => s + parseFee(g.fee), 0);
+  const gigRevMonth    = thisMonth.reduce((s, g) => s + parseFee(g.fee), 0);
+  const gigRevUpcoming = upcomingGigs.reduce((s, g) => s + parseFee(g.fee), 0);
+  const avgFee         = gigsWithFee.length > 0 ? Math.round(gigRevTotal / gigsWithFee.filter(g => new Date(g.date) <= today).length) : 0;
+  const showRevenue    = gigs.length > 0;
   const replied  = active.filter(l => l.stage === "replied" || l.stage === "booked").length;
   const contacted = active.filter(l => l.stage !== "target").length;
   const replyRate = contacted > 0 ? Math.round((replied / contacted) * 100) : 0;
@@ -1788,6 +1799,33 @@ function DashboardView({ leads, onNavigate, isPro, onUpgradeClick }) {
         {totalRevenue > 0 && <StatCard label="Total Fees" value={`€${totalRevenue.toLocaleString()}`} sub="booked gigs" accent={COLORS.gold} />}
         {unpaidCount > 0 && <StatCard label="Deposit Due" value={unpaidCount} sub="awaiting deposit" accent={COLORS.red} />}
       </div>
+
+      {/* ── Revenue Panel ── */}
+      {showRevenue && (
+        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Revenue Tracker</div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>Based on gig fees</div>
+            </div>
+            <button onClick={() => onNavigate("calendar")} style={{ fontSize: 11, color: COLORS.purple, background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>View calendar →</button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
+            {[
+              { label: "This Month", value: gigRevMonth > 0 ? `€${gigRevMonth.toLocaleString()}` : "—", sub: `${thisMonth.length} gig${thisMonth.length !== 1 ? "s" : ""}`, color: COLORS.gold },
+              { label: "All Time",   value: gigRevTotal > 0 ? `€${gigRevTotal.toLocaleString()}` : "—",  sub: `${gigsWithFee.filter(g => new Date(g.date) <= today).length} paid gig${gigsWithFee.filter(g => new Date(g.date) <= today).length !== 1 ? "s" : ""}`, color: COLORS.text },
+              { label: "Upcoming",   value: gigRevUpcoming > 0 ? `€${gigRevUpcoming.toLocaleString()}` : "—", sub: `${upcomingGigs.length} booked ahead`, color: COLORS.purpleLight },
+              { label: "Avg per Gig",value: avgFee > 0 ? `€${avgFee.toLocaleString()}` : "—", sub: "across all gigs", color: COLORS.textSecondary },
+            ].map((card, i) => (
+              <div key={card.label} style={{ padding: "18px 20px", borderRight: i < 3 ? `1px solid ${COLORS.border}` : "none" }}>
+                <div style={{ fontSize: 10, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{card.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: card.color, fontFamily: "'DM Mono', monospace", marginBottom: 4 }}>{card.value}</div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted }}>{card.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <ProGate isPro={isPro} reason="funnel" onUpgradeClick={onUpgradeClick} label="Next Actions — Pro feature">
@@ -1899,6 +1937,16 @@ function FollowUpsView({ leads, onNavigate }) {
   const due      = active.filter(l => l.followUpDate && new Date(l.followUpDate) <= today);
   const upcoming = active.filter(l => l.followUpDate && new Date(l.followUpDate) > today);
 
+  // Stale = in an active outreach stage but no follow-up date set at all
+  const OUTREACH_STAGES = ["contacted", "followup1", "followup2", "replied"];
+  const stale = active.filter(l =>
+    OUTREACH_STAGES.includes(l.stage) && !l.followUpDate
+  ).sort((a, b) => {
+    // Most urgent first: replied > followup2 > followup1 > contacted
+    const urgency = { replied: 0, followup2: 1, followup1: 2, contacted: 3 };
+    return (urgency[a.stage] ?? 9) - (urgency[b.stage] ?? 9);
+  });
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
@@ -1929,6 +1977,41 @@ function FollowUpsView({ leads, onNavigate }) {
           </div>
         )}
       </div>
+      {/* ── Needs Attention ── */}
+      {stale.length > 0 && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.red, boxShadow: `0 0 8px ${COLORS.red}` }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.red, letterSpacing: "0.08em", textTransform: "uppercase" }}>Needs Attention</span>
+            <Badge color={COLORS.red}>{stale.length}</Badge>
+            <span style={{ fontSize: 11, color: COLORS.textMuted }}>No follow-up scheduled</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {stale.map(lead => {
+              const stageLabel = { contacted: "Contacted", followup1: "Follow-up 1", followup2: "Follow-up 2", replied: "Replied" }[lead.stage] || lead.stage;
+              const isReplied = lead.stage === "replied";
+              return (
+                <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${isReplied ? COLORS.gold + "55" : COLORS.red + "44"}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
+                      <Badge color={isReplied ? COLORS.gold : COLORS.red}>{stageLabel}</Badge>
+                      <span style={{ fontSize: 11, color: COLORS.textMuted }}>
+                        {isReplied ? "⚠ They replied — schedule your next move" : "No date set — don't let this go cold"}
+                      </span>
+                    </div>
+                  </div>
+                  <button onClick={() => onNavigate("pipeline")} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${isReplied ? COLORS.gold : COLORS.red}`, borderRadius: 7, color: isReplied ? COLORS.gold : COLORS.red, fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+                    Set Follow-Up →
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.textSecondary }} />
@@ -6938,7 +7021,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   }}
                 />
               )}
-              <DashboardView leads={leads} onNavigate={setActiveTab} isPro={isPro} onUpgradeClick={requestUpgrade} TAG_COLORS={TAG_COLORS} />
+              <DashboardView leads={leads} gigs={gigs} onNavigate={setActiveTab} isPro={isPro} onUpgradeClick={requestUpgrade} TAG_COLORS={TAG_COLORS} />
             </>
           )}
           {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} />}
@@ -7100,44 +7183,117 @@ const activeLeads = leads.filter(l => !l.archived);
                 );
               })()}
 
-              {!loadingAdminData && selectedUser && (
-                <div>
-                  <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
-                    ← Back to dashboard
-                  </button>
-                  <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                      <div>
-                        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4, margin: "0 0 4px 0" }}>{selectedUser.display_name || selectedUser.username}</h2>
-                        <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 12 }}>{selectedUser.email || selectedUser.username}</div>
-                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              {!loadingAdminData && selectedUser && (() => {
+                const [adminDetailTab, setAdminDetailTab] = [
+                  selectedUser._tab || "pipeline",
+                  (tab) => setSelectedUser(u => ({ ...u, _tab: tab }))
+                ];
+                // Stats computed from selectedUserLeads
+                const ul = selectedUserLeads;
+                const uActive   = ul.filter(l => !l.archived);
+                const uContacted = uActive.filter(l => l.stage !== "target").length;
+                const uReplied   = uActive.filter(l => ["replied","booked"].includes(l.stage)).length;
+                const uBooked    = uActive.filter(l => l.stage === "booked").length;
+                const uReplyRate = uContacted > 0 ? Math.round(uReplied / uContacted * 100) : 0;
+                const uBookRate  = uReplied  > 0 ? Math.round(uBooked  / uReplied  * 100) : 0;
+                const stageBreakdown = ["target","contacted","followup1","followup2","replied","booked"]
+                  .map(id => ({ id, label: { target:"Target", contacted:"Contacted", followup1:"Follow-up 1", followup2:"Follow-up 2", replied:"Replied", booked:"Booked" }[id], count: uActive.filter(l => l.stage === id).length }))
+                  .filter(s => s.count > 0);
+
+                return (
+                  <div>
+                    <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
+                      ← Back to dashboard
+                    </button>
+
+                    {/* User header */}
+                    <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 20 }}>
+                      <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px 0" }}>{selectedUser.display_name || selectedUser.username}</h2>
+                      <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 12 }}>{selectedUser.email || selectedUser.username}</div>
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                        {[
+                          { label: "Leads",  value: selectedUser.leadCount },
+                          { label: "Gigs",   value: selectedUser.gigCount  },
+                          { label: "Plan",   value: selectedUser.is_pro ? "Pro" : "Free" },
+                          { label: "Health", value: selectedUser.health_status || "active" },
+                          { label: "Joined", value: selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" }) : "—" },
+                        ].map(s => (
+                          <div key={s.label} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "5px 12px", fontSize: 12 }}>
+                            <span style={{ color: COLORS.textMuted }}>{s.label}: </span>
+                            <span style={{ fontWeight: 600 }}>{s.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Tabs */}
+                    <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
+                      {["pipeline","stats"].map(tab => (
+                        <button key={tab} onClick={() => setAdminDetailTab(tab)}
+                          style={{ padding: "7px 16px", background: adminDetailTab === tab ? COLORS.purple : "transparent", border: `1px solid ${adminDetailTab === tab ? COLORS.purple : COLORS.border}`, borderRadius: 8, color: adminDetailTab === tab ? "#fff" : COLORS.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", textTransform: "capitalize" }}>
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Pipeline tab */}
+                    {adminDetailTab === "pipeline" && (
+                      <div style={{ opacity: 0.7, pointerEvents: "none" }}>
+                        <PipelineView
+                          leads={selectedUserLeads}
+                          onMove={() => {}} onSelect={() => {}} selectedLead={null} onArchive={() => {}}
+                          search="" filters={{}} TAG_COLORS={TAG_COLORS} customTags={customTags}
+                          onUpdateLead={() => {}} isMobile={isMobile} onOpenNewLead={() => {}}
+                        />
+                      </div>
+                    )}
+
+                    {/* Stats tab */}
+                    {adminDetailTab === "stats" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        {/* KPI row */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                           {[
-                            { label: "Leads", value: selectedUser.leadCount },
-                            { label: "Gigs",  value: selectedUser.gigCount  },
-                            { label: "Plan",  value: selectedUser.is_pro ? "Pro" : "Free" },
-                            { label: "Health",value: selectedUser.health_status || "active" },
-                            { label: "Joined",value: selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" }) : "—" },
-                          ].map(s => (
-                            <div key={s.label} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12 }}>
-                              <span style={{ color: COLORS.textMuted }}>{s.label}: </span>
-                              <span style={{ fontWeight: 600 }}>{s.value}</span>
+                            { label: "Total Leads",    value: uActive.length, color: COLORS.text },
+                            { label: "Reply Rate",     value: `${uReplyRate}%`, color: COLORS.purpleLight },
+                            { label: "Booking Rate",   value: uReplied > 0 ? `${uBookRate}%` : "—", color: COLORS.gold },
+                            { label: "Booked",         value: uBooked, color: COLORS.gold },
+                          ].map(c => (
+                            <div key={c.label} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "14px 16px" }}>
+                              <div style={{ fontSize: 10, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{c.label}</div>
+                              <div style={{ fontSize: 24, fontWeight: 800, color: c.color }}>{c.value}</div>
                             </div>
                           ))}
                         </div>
+                        {/* Stage breakdown */}
+                        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: 20 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.textSecondary, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16 }}>Stage Breakdown</div>
+                          {stageBreakdown.length === 0 ? (
+                            <div style={{ color: COLORS.textMuted, fontSize: 13 }}>No active leads</div>
+                          ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                              {stageBreakdown.map(s => {
+                                const stageColor = { target: COLORS.textSecondary, contacted: COLORS.purple, followup1: COLORS.purpleLight, followup2: "#a78bfa", replied: "#00D4FF", booked: COLORS.gold }[s.id] || COLORS.textSecondary;
+                                return (
+                                  <div key={s.id}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
+                                      <span style={{ color: COLORS.textSecondary }}>{s.label}</span>
+                                      <span style={{ fontWeight: 700, color: stageColor }}>{s.count}</span>
+                                    </div>
+                                    <div style={{ height: 5, background: COLORS.border, borderRadius: 3 }}>
+                                      <div style={{ height: "100%", width: `${uActive.length > 0 ? (s.count / uActive.length) * 100 : 0}%`, background: stageColor, borderRadius: 3 }} />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: COLORS.text }}>Pipeline — Read Only</div>
-                  <div style={{ opacity: 0.7, pointerEvents: "none" }}>
-                    <PipelineView
-                      leads={selectedUserLeads}
-                      onMove={() => {}} onSelect={() => {}} selectedLead={null} onArchive={() => {}}
-                      search="" filters={{}} TAG_COLORS={TAG_COLORS} customTags={customTags}
-                      onUpdateLead={() => {}} isMobile={isMobile} onOpenNewLead={() => {}}
-                    />
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </div>
