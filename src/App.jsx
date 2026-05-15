@@ -1213,7 +1213,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   return (
     <div style={{
       width: 280,
-      borderLeft: `2px solid ${COLORS.purple}`,
+      borderLeft: `3px solid ${COLORS.purpleLight}`,
       background: COLORS.surface,
       display: "flex",
       flexDirection: "column",
@@ -1339,10 +1339,10 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                 width: "100%",
                 marginTop: 12,
                 padding: "10px 14px",
-                background: COLORS.gold,
-                border: "none",
+                background: COLORS.purpleBg,
+                border: `1px solid ${COLORS.purple}`,
                 borderRadius: 8,
-                color: COLORS.bg,
+                color: COLORS.purpleLight,
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: "pointer",
