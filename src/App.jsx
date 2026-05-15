@@ -5963,7 +5963,7 @@ function QuickActionTooltip({ children, text, shortcut }) {
 
 // AnalyticsView Component - Insert this into App.jsx
 
-function AnalyticsView({ userId, supabase, COLORS }) {
+function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {} }) {
   const [stats, setStats] = useState(null);
   const [tierStats, setTierStats] = useState([]);
   const [tagStats, setTagStats] = useState([]);
@@ -6193,7 +6193,7 @@ function AnalyticsView({ userId, supabase, COLORS }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
         {/* Tier Performance */}
         {tierStats.length > 0 && (
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24 }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: 24 }}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Performance by Tier</div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -6204,15 +6204,23 @@ function AnalyticsView({ userId, supabase, COLORS }) {
                 </tr>
               </thead>
               <tbody>
-                {tierStats.map(tier => (
-                  <tr key={tier.tier} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                    <td style={{ padding: "10px 0", fontSize: 14, fontWeight: 500 }}>{tier.tier}</td>
-                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tier.total_leads}</td>
-                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tier.response_rate > 0 ? COLORS.green : COLORS.text3 }}>
-                      {tier.response_rate}%
-                    </td>
-                  </tr>
-                ))}
+                {tierStats.map(tier => {
+                  const tierColor = { A1: COLORS.purpleLight, A2: COLORS.purple, A3: COLORS.textSecondary }[tier.tier] || COLORS.textSecondary;
+                  return (
+                    <tr key={tier.tier} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                      <td style={{ padding: "10px 0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: tierColor, flexShrink: 0, boxShadow: `0 0 6px ${tierColor}88` }} />
+                          <span style={{ fontSize: 14, fontWeight: 700, color: tierColor }}>{tier.tier}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tier.total_leads}</td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tier.response_rate > 0 ? COLORS.green : COLORS.text3 }}>
+                        {tier.response_rate}%
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -6220,7 +6228,7 @@ function AnalyticsView({ userId, supabase, COLORS }) {
 
         {/* Tag Performance */}
         {tagStats.length > 0 && (
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24 }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: 24 }}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Performance by Tag</div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -6231,15 +6239,23 @@ function AnalyticsView({ userId, supabase, COLORS }) {
                 </tr>
               </thead>
               <tbody>
-                {tagStats.slice(0, 10).map(tag => (
-                  <tr key={tag.tag} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                    <td style={{ padding: "10px 0", fontSize: 14, fontWeight: 500 }}>{tag.tag}</td>
-                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tag.total_leads}</td>
-                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tag.response_rate > 0 ? COLORS.green : COLORS.text3 }}>
-                      {tag.response_rate}%
-                    </td>
-                  </tr>
-                ))}
+                {tagStats.slice(0, 10).map(tag => {
+                  const tagColor = TAG_COLORS[tag.tag] || COLORS.textSecondary;
+                  return (
+                    <tr key={tag.tag} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                      <td style={{ padding: "10px 0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: tagColor, flexShrink: 0, boxShadow: `0 0 5px ${tagColor}77` }} />
+                          <span style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{tag.tag}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tag.total_leads}</td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tag.response_rate > 0 ? COLORS.green : COLORS.text3 }}>
+                        {tag.response_rate}%
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -7205,7 +7221,7 @@ const activeLeads = leads.filter(l => !l.archived);
               <DashboardView leads={leads} gigs={gigs} onNavigate={setActiveTab} isPro={isPro} onUpgradeClick={requestUpgrade} TAG_COLORS={TAG_COLORS} />
             </>
           )}
-          {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} />}
+          {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} TAG_COLORS={TAG_COLORS} />}
           {activeTab === "templates" && <TemplatesView supabase={supabase} user={user} />}
           {activeTab === "pipeline"  && (
             <>
