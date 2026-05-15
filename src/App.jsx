@@ -3,7 +3,7 @@ import { COLORS, STAGES } from './lib/constants.js';
 import { formatShortDate } from './lib/formatters.js';
 import { showToast as showDomToast } from './lib/toast.js';
 import { supabase } from './lib/supabaseClient.js';
-import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload } from './icons/index.jsx';
+import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload, IconDashboard, IconPipeline, IconFollowUps, IconReplyHub, IconInbound } from './icons/index.jsx';
 
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
@@ -6241,11 +6241,11 @@ function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {} }) {
 
 function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inboundCount }) {
   const NAV_ITEMS = [
-    { id: 'dashboard', icon: String.fromCharCode(9635), label: 'Home' },
-    { id: 'pipeline',  icon: String.fromCharCode(11035), label: 'Pipeline' },
-    { id: 'followups', icon: String.fromCharCode(9200), label: 'Follow-ups', badge: dueCount },
-    { id: 'bookingdesk',  icon: String.fromCharCode(9993), label: 'Reply', badge: unreadCount },
-    { id: 'inbound',   icon: '⬇', label: 'Inbound', badge: inboundCount },
+    { id: 'dashboard',   Icon: IconDashboard,  label: 'Home' },
+    { id: 'pipeline',    Icon: IconPipeline,   label: 'Pipeline' },
+    { id: 'followups',   Icon: IconFollowUps,  label: 'Follow-ups', badge: dueCount },
+    { id: 'bookingdesk', Icon: IconReplyHub,   label: 'Reply', badge: unreadCount },
+    { id: 'inbound',     Icon: IconInbound,    label: 'Inbound', badge: inboundCount },
   ];
   return (
     <div style={{
@@ -6271,7 +6271,7 @@ function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inbou
                 minWidth: 14, textAlign: 'center',
               }}>{item.badge}</div>
             )}
-            <span style={{ fontSize: 18, lineHeight: 1, opacity: active ? 1 : 0.4 }}>{item.icon}</span>
+            <item.Icon size={20} color={active ? COLORS.purple : COLORS.textMuted} />
             <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? COLORS.purple : COLORS.text3 }}>{item.label}</span>
             {active && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: COLORS.purple, borderRadius: 2 }} />}
           </button>
@@ -7117,13 +7117,13 @@ const activeLeads = leads.filter(l => !l.archived);
       </div>
 
       {/* Main */}
-      <div style={{ marginLeft: isMobile ? 0 : 220, display: "flex", flexDirection: "column", minHeight: "100vh", paddingBottom: isMobile ? 64 : 0 }}>
+      <div style={{ marginLeft: isMobile ? 0 : 220, display: "flex", flexDirection: "column", minHeight: "100vh", paddingBottom: isMobile ? 72 : 0 }}>
         {/* Header */}
-        <div style={{ padding: "20px 28px", borderBottom: `1px solid ${COLORS.border}`, background: COLORS.surface, position: "sticky", top: 0, zIndex: 50 }}>
+        <div style={{ padding: isMobile ? "14px 16px" : "20px 28px", borderBottom: `1px solid ${COLORS.border}`, background: COLORS.surface, position: "sticky", top: 0, zIndex: 50 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: activeTab === "pipeline" ? 14 : 0 }}>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.02em" }}>{TABS.find(t => t.id === activeTab)?.label}</div>
-              <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 2 }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.02em" }}>{TABS.find(t => t.id === activeTab)?.label}</div>
+              <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: isMobile ? "60vw" : undefined }}>
                 {activeTab === "pipeline"  && `${activeLeads.length} leads${hasFilter ? ` · filtered` : ""}`}
                 {activeTab === "followups" && `${dueCount} due today`}
                 {activeTab === "outreach"  && (isPro ? "4 templates ready" : "2 / 4 templates · Upgrade for all")}
@@ -7135,16 +7135,16 @@ const activeLeads = leads.filter(l => !l.archived);
                 {activeTab === "settings"  && `Follow-up 1: ${settings.followup1Days}d · Follow-up 2: ${settings.followup2Days}d`}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
               {dueCount > 0 && (
-                <div style={{ padding: "6px 12px", background: COLORS.amber + "22", border: `1px solid ${COLORS.amber}44`, borderRadius: 8, fontSize: 11, color: COLORS.amber, fontWeight: 700 }}>
+                <div style={{ padding: "6px 12px", background: COLORS.amber + "22", border: `1px solid ${COLORS.amber}44`, borderRadius: 8, fontSize: 11, color: COLORS.amber, fontWeight: 700, display: isMobile ? "none" : "block" }}>
                   ⏰ {dueCount} follow-up{dueCount > 1 ? "s" : ""} due
                 </div>
               )}
-              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
-                <IconPlus size={14} color="#fff" /> Add Lead
+              <button onClick={() => setShowAddModal(true)} style={{ padding: isMobile ? "8px 10px" : "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
+                <IconPlus size={14} color="#fff" />{isMobile ? null : " Add Lead"}
               </button>
-              <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.purple}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.purple}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: isMobile ? "none" : "flex", alignItems: "center", gap: 8 }}>
                 <IconUpload size={14} color={COLORS.purpleLight} /> Import CSV
               </button>
             </div>
@@ -7177,7 +7177,7 @@ const activeLeads = leads.filter(l => !l.archived);
         {isMobile && <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} dueCount={dueCount} unreadCount={unreadCount} inboundCount={inboundCount} />}
 
         {/* Content */}
-        <div style={{ padding: isMobile ? 16 : 28, flex: 1, display: activeTab === "pipeline" && selectedLead ? "grid" : "block", gridTemplateColumns: activeTab === "pipeline" && selectedLead ? "1fr 280px" : undefined, gap: 20 }}>
+        <div style={{ padding: isMobile ? 16 : 28, flex: 1, display: !isMobile && activeTab === "pipeline" && selectedLead ? "grid" : "block", gridTemplateColumns: !isMobile && activeTab === "pipeline" && selectedLead ? "1fr 280px" : undefined, gap: 20 }}>
           {activeTab === "dashboard" && (
             <>
               {!onboardingDismissed && (
@@ -7199,7 +7199,13 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pipeline"  && (
             <>
               <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
-              {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} />}
+              {selectedLead && isMobile && (
+                <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
+                  <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
+                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} />
+                </div>
+              )}
+              {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} />}
             </>
           )}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
