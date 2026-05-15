@@ -362,7 +362,7 @@ const getTemplates = (artistName) => [
 
 const INITIAL_LEADS = []; // New users start with empty pipeline
 
-const TIER_COLORS = { A1: COLORS.amber, A2: COLORS.purple, A3: COLORS.textSecondary };
+const TIER_COLORS = { A1: COLORS.purpleLight, A2: COLORS.purple, A3: COLORS.textSecondary };
 
 // Leads + Gigs now live in Supabase (per user), not localStorage
 // localStorage kept only for settings, pro status, tags
@@ -1731,7 +1731,7 @@ function AddLeadModal({ onClose, onAdd, customTags, TAG_COLORS, onAddTag }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Priority Tier <span style={{ color: COLORS.purple }}>*</span></label>
               <div style={{ display: "flex", gap: 10 }}>
-                {[{ tier: "A1", desc: "Dream venues", color: COLORS.amber }, { tier: "A2", desc: "Strong targets", color: COLORS.purple }, { tier: "A3", desc: "Long shots", color: COLORS.textSecondary }].map(({ tier, desc, color }) => (
+                {[{ tier: "A1", desc: "Dream venues", color: COLORS.purpleLight }, { tier: "A2", desc: "Strong targets", color: COLORS.purple }, { tier: "A3", desc: "Long shots", color: COLORS.textSecondary }].map(({ tier, desc, color }) => (
                   <button key={tier} onClick={() => set("tier")(tier)} style={{ flex: 1, padding: "12px 10px", borderRadius: 10, cursor: "pointer", background: form.tier === tier ? color + "22" : COLORS.bg, border: `1px solid ${form.tier === tier ? color : COLORS.border}`, transition: "all 0.15s", textAlign: "center" }}>
                     <div style={{ fontSize: 16, fontWeight: 800, color: form.tier === tier ? color : COLORS.textSecondary }}>{tier}</div>
                     <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 3 }}>{desc}</div>
