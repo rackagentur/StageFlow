@@ -741,8 +741,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
         lead.stage === "booked"  && !lead.archived ? "rgba(34,197,94,0.04)" :
         lead.stage === "replied" && !lead.archived ? `${COLORS.purpleLight}08` :
         COLORS.surface,
-      border: `1px solid ${
-        (isBulkSelected || isSelected)   ? COLORS.purple :
+      border: (isBulkSelected || isSelected) ? `2px solid rgba(255,255,255,0.75)` : `1px solid ${
         lead.archived                     ? COLORS.purpleDim :
         isOverdue                         ? COLORS.amber :
         lead.stage === "booked"           ? "rgba(34,197,94,0.5)" :
