@@ -1989,16 +1989,16 @@ function FollowUpsView({ leads, onNavigate }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.amber, boxShadow: `0 0 8px ${COLORS.amber}` }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.amber, letterSpacing: "0.08em", textTransform: "uppercase" }}>Due Now</span>
-          <Badge color={COLORS.amber}>{due.length}</Badge>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.red, boxShadow: `0 0 8px ${COLORS.red}` }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.red, letterSpacing: "0.08em", textTransform: "uppercase" }}>Due Now</span>
+          <Badge color={COLORS.red}>{due.length}</Badge>
         </div>
         {due.length === 0 ? (
           <div style={{ padding: "20px", background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${COLORS.green}`, borderRadius: 10, color: COLORS.green, fontSize: 12, textAlign: "center", fontWeight: 600 }}>All caught up ✓</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {due.map(lead => (
-              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.amber}44`, borderRadius: 10, padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${COLORS.red}`, borderRadius: 10, padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
                   <div style={{ display: "flex", gap: 6 }}>
@@ -2007,7 +2007,7 @@ function FollowUpsView({ leads, onNavigate }) {
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 11, color: COLORS.amber, fontWeight: 700, marginBottom: 6 }}>Follow up today</div>
+                  <div style={{ fontSize: 11, color: COLORS.red, fontWeight: 700, marginBottom: 6 }}>Follow up today</div>
                   <button onClick={() => onNavigate("outreach")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Get Template →</button>
                 </div>
               </div>
