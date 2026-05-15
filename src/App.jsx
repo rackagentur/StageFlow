@@ -1848,7 +1848,7 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
         <StatCard label="Reply Rate"    value={`${replyRate}%`} sub={`${replied} replies`}                                accent={COLORS.purpleLight} />
         <StatCard label="Booked"        value={booked}          sub="confirmed gigs"                                      accent={COLORS.green} />
         {totalRevenue > 0 && <StatCard label="Total Fees" value={`€${totalRevenue.toLocaleString()}`} sub="booked gigs" accent={COLORS.green} />}
-        {unpaidCount > 0 && <StatCard label="Deposit Due" value={unpaidCount} sub="awaiting deposit" accent={COLORS.red} />}
+        {unpaidCount > 0 && <StatCard label="Deposit Due" value={unpaidCount} sub="awaiting deposit" accent={COLORS.amber} />}
       </div>
 
       {/* ── Revenue Panel ── */}
