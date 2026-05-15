@@ -1186,13 +1186,14 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   return (
     <div style={{
       width: 280,
-      borderLeft: `1px solid ${COLORS.border}`,
+      borderLeft: `2px solid ${COLORS.purple}`,
       background: COLORS.surface,
       display: "flex",
       flexDirection: "column",
       padding: "14px 16px",
       overflowY: "auto",
       flexShrink: 0,
+      boxShadow: `-4px 0 24px rgba(14,116,144,0.12)`,
     }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
