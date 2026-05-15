@@ -2205,7 +2205,7 @@ function AssetsView({ supabase, userId }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 24 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6, padding: "0 2px" }}>Sections</div>
+          <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6, paddingLeft: 14 }}>Sections</div>
           {SECTIONS.map(s => (
             <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ padding: "10px 14px", borderRadius: 9, textAlign: "left", cursor: "pointer", background: activeSection === s.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeSection === s.id ? COLORS.purple : "transparent"}`, color: activeSection === s.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeSection === s.id ? 700 : 500, display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s", width: "100%" }}>
               <span style={{ fontSize: 14 }}>{s.icon}</span>{s.label}
@@ -2241,7 +2241,6 @@ function AssetsView({ supabase, userId }) {
               <input style={inputStyle} value={assets.press_photos_url || ""} onChange={set("press_photos_url")} placeholder="https://yoursite.com/press_photos.zip" />
               <label style={labelStyle}>Booking Email</label>
               <input style={inputStyle} value={assets.booking_email || ""} onChange={set("booking_email")} placeholder="booking@yoursite.com" />
-              {assets.epk_url && <div style={{ marginTop: 12 }}><CopyBlock label="EPK PDF URL" value={assets.epk_url} /></div>}
             </div>
           )}
           {activeSection === "mixes" && (
