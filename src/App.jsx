@@ -3329,16 +3329,9 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, readIds, markRead 
                   </div>
                   <button
                     onClick={() => {
-                      setActiveTab("calendar");
-                      // Small delay to let tab switch complete, then trigger add form
-                      setTimeout(() => {
-                        const calendarSection = document.querySelector('[data-calendar-view]');
-                        if (calendarSection) {
-                          window.dispatchEvent(new CustomEvent('addGigFromBooked', { 
-                            detail: { venue: selected.name, tag: selected.tag } 
-                          }));
-                        }
-                      }, 100);
+                      window.dispatchEvent(new CustomEvent('switchToCalendar', {
+                        detail: { venue: selected.name, tag: selected.tag }
+                      }));
                     }}
                     style={{
                       width: "100%",
