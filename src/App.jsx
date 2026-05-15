@@ -1765,9 +1765,19 @@ function StatCard({ label, value, sub, accent }) {
   );
 }
 
-function DashboardView({ leads, onNavigate, isPro, onUpgradeClick }) {
+function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) {
   const today    = new Date();
   const active   = leads.filter(l => !l.archived);
+
+  // Revenue panel — gigs with a fee
+  const gigsWithFee    = gigs.filter(g => g.fee && parseFloat(g.fee) > 0);
+  const thisMonth      = gigsWithFee.filter(g => { const d = new Date(g.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); });
+  const upcomingGigs   = gigsWithFee.filter(g => new Date(g.date) > today);
+  const gigRevMonth    = thisMonth.reduce((s, g) => s + (parseFloat(g.fee) || 0), 0);
+  const gigRevTotal    = gigsWithFee.reduce((s, g) => s + (parseFloat(g.fee) || 0), 0);
+  const gigRevUpcoming = upcomingGigs.reduce((s, g) => s + (parseFloat(g.fee) || 0), 0);
+  const avgFee         = gigsWithFee.length > 0 ? Math.round(gigRevTotal / gigsWithFee.length) : 0;
+  const showRevenue    = gigsWithFee.length > 0;
   const booked   = active.filter(l => l.stage === "booked").length;
   const bookedLeadsAll = active.filter(l => l.stage === "booked");
   const totalRevenue = bookedLeadsAll.reduce((sum, l) => sum + (l.fee || 0), 0);
@@ -1958,6 +1968,7 @@ function FollowUpsView({ leads, onNavigate }) {
   const active   = leads.filter(l => !l.archived);
   const due      = active.filter(l => l.followUpDate && new Date(l.followUpDate) <= today);
   const upcoming = active.filter(l => l.followUpDate && new Date(l.followUpDate) > today);
+  const stale    = active.filter(l => ["contacted","followup1","followup2","replied"].includes(l.stage) && !l.followUpDate);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -2983,6 +2994,53 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
     window.addEventListener('addGigFromBooked', handleAddFromBooked);
     return () => window.removeEventListener('addGigFromBooked', handleAddFromBooked);
   }, []);
+
+  const [shareUsername, setShareUsername] = useState(null);
+  const [shareCopied, setShareCopied]     = useState(false);
+  const confirmedUpcoming = gigs.filter(g => g.status === "confirmed" && new Date(g.date) >= today).length;
+  const copyGigListLink = () => {
+    if (!shareUsername) return;
+    navigator.clipboard.writeText(`https://app.noxreach.com/gigs/${shareUsername}`);
+    setShareCopied(true); setTimeout(() => setShareCopied(false), 2000);
+  };
+  const [logbook, setLogbook]           = useState({ recap: "", setlist_url: "", recording_url: "", crowd_rating: null, promoter_rating: null });
+  const [logbookSaving, setLogbookSaving] = useState(false);
+
+  useEffect(() => {
+    if (!userId || !supabase) return;
+    supabase.from("profiles").select("username").eq("id", userId).single()
+      .then(({ data }) => { if (data?.username) setShareUsername(data.username); });
+  }, [userId]);
+
+  useEffect(() => {
+    if (!selected) return;
+    setLogbook({
+      recap: selected.logbook_recap || "",
+      setlist_url: selected.logbook_setlist_url || "",
+      recording_url: selected.logbook_recording_url || "",
+      crowd_rating: selected.logbook_crowd_rating || null,
+      promoter_rating: selected.logbook_promoter_rating || null,
+    });
+  }, [selected?.id]);
+
+  const saveLogbook = async () => {
+    if (!selected?.id) return;
+    setLogbookSaving(true);
+    try {
+      await supabase.from("gigs").update({
+        logbook_recap: logbook.recap,
+        logbook_setlist_url: logbook.setlist_url,
+        logbook_recording_url: logbook.recording_url,
+        logbook_crowd_rating: logbook.crowd_rating,
+        logbook_promoter_rating: logbook.promoter_rating,
+      }).eq("id", selected.id);
+      showToast("Logbook saved", "success");
+    } catch {
+      showToast("Failed to save logbook", "info");
+    } finally {
+      setLogbookSaving(false);
+    }
+  };
 
   const monthStart  = new Date(viewYear, viewMonth, 1);
   const monthEnd    = new Date(viewYear, viewMonth + 1, 0);
@@ -6408,6 +6466,8 @@ function NoxReachApp({ user, session, supabase }) {
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedUserLeads, setSelectedUserLeads] = useState([]);
   const [loadingAdminData, setLoadingAdminData] = useState(false);
+  const [adminEmailSends, setAdminEmailSends]   = useState([]);
+  const emailTotal = adminEmailSends.reduce((s, x) => s + (x.count || 0), 0);
 
   const [showWelcomeNew, setShowWelcomeNew] = useState(() => {
     try { return !localStorage.getItem("nr_welcomed_" + user.id); } catch { return true; }
@@ -7076,7 +7136,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   }}
                 />
               )}
-              <DashboardView leads={leads} onNavigate={setActiveTab} isPro={isPro} onUpgradeClick={requestUpgrade} TAG_COLORS={TAG_COLORS} />
+              <DashboardView leads={leads} gigs={gigs} onNavigate={setActiveTab} isPro={isPro} onUpgradeClick={requestUpgrade} TAG_COLORS={TAG_COLORS} />
             </>
           )}
           {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} />}
