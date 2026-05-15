@@ -68,8 +68,9 @@ serve(async (req) => {
 
       const leadCount = leads?.length || 0;
       const gigCount = gigs?.length || 0;
-      const contactedCount = leads?.filter(l => l.status !== "Target").length || 0;
-      const repliedCount = leads?.filter(l => l.status === "Replied").length || 0;
+      // stage values in DB: "target", "contacted", "followup1", "followup2", "replied", "booked"
+      const contactedCount = leads?.filter(l => l.stage !== "target").length || 0;
+      const repliedCount = leads?.filter(l => l.stage === "replied" || l.stage === "booked").length || 0;
 
       // Calculate days since last activity
       const latestLeadDate = leads?.length 
@@ -85,6 +86,22 @@ serve(async (req) => {
       console.log(`   Days since registration: ${daysSinceRegistration}`);
       console.log(`   Days since activity: ${daysSinceActivity}`);
       console.log(`   Leads: ${leadCount}, Contacted: ${contactedCount}, Replied: ${repliedCount}, Gigs: ${gigCount}`);
+
+      // TRIGGER 0: First booking celebration — fires as soon as they have a gig
+      if (gigCount > 0) {
+        console.log(`   ✉️  Checking: First Booking`);
+        const gigName = gigs?.[0]?.venue || "Your First Gig";
+        const result = await callEmailFunction("email-first-booking", {
+          userId,
+          email,
+          name,
+          gigName,
+        });
+        if (result.success) {
+          results.push({ trigger: "first_booking", userId, email, ...result });
+        }
+        // Don't else-if here — first booking can coexist with other triggers
+      }
 
       // TRIGGER 1: Day 2 - No leads added
       if (daysSinceRegistration >= 2 && leadCount === 0) {

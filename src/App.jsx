@@ -6246,8 +6246,10 @@ function NoxReachApp({ user, session, supabase }) {
   const [dataLoading, setDataLoading]   = useState(true);
   const [settings, setSettings]         = useState(() => loadSettings());
   const [isPro, setIsPro]               = useState(() => loadIsPro(user.id));
-  const [adminUsers, setAdminUsers]     = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [adminUsers, setAdminUsers]         = useState([]);
+  const [adminSignupsByDay, setAdminSignupsByDay] = useState([]);
+  const [adminEmailSends, setAdminEmailSends]   = useState([]);
+  const [selectedUser, setSelectedUser]     = useState(null);
   const [selectedUserLeads, setSelectedUserLeads] = useState([]);
   const [loadingAdminData, setLoadingAdminData] = useState(false);
 
@@ -6346,8 +6348,8 @@ const loadAdminUsers = async () => {
     try {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, display_name, is_pro, health_status, last_health_check, created_at, email");
-
+        .select("id, username, display_name, is_pro, health_status, last_health_check, created_at, email")
+        .order("created_at", { ascending: false });
 
       const enriched = await Promise.all(
         (profiles || []).map(async (p) => {
@@ -6355,15 +6357,37 @@ const loadAdminUsers = async () => {
             supabase.from("leads").select("*", { count: "exact", head: true }).eq("user_id", p.id).eq("archived", false),
             supabase.from("gigs").select("*",  { count: "exact", head: true }).eq("user_id", p.id),
           ]);
-          
-          
           return { ...p, leadCount: leadsRes.count || 0, gigCount: gigsRes.count || 0 };
         })
       );
-
       setAdminUsers(enriched);
+
+      // Signups by day — last 14 days
+      const now = new Date();
+      const days = Array.from({ length: 14 }, (_, i) => {
+        const d = new Date(now);
+        d.setDate(d.getDate() - (13 - i));
+        return d.toISOString().split("T")[0];
+      });
+      setAdminSignupsByDay(days.map(day => ({
+        day,
+        label: new Date(day + "T12:00:00").toLocaleDateString("en", { month: "short", day: "numeric" }),
+        count: (profiles || []).filter(p => p.created_at?.startsWith(day)).length,
+      })));
+
+      // Email sends breakdown
+      const { data: emailSends } = await supabase.from("email_sends").select("email_type");
+      const sendCounts = (emailSends || []).reduce((acc, s) => {
+        acc[s.email_type] = (acc[s.email_type] || 0) + 1;
+        return acc;
+      }, {});
+      setAdminEmailSends(
+        Object.entries(sendCounts)
+          .map(([type, count]) => ({ type, count }))
+          .sort((a, b) => b.count - a.count)
+      );
     } catch (err) {
-      console.error("Failed to load admin users:", err);
+      console.error("Failed to load admin data:", err);
     }
     setLoadingAdminData(false);
   };
@@ -6943,108 +6967,184 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "admin" && isAdmin && (
             <div>
               {loadingAdminData && (
-                <div style={{ padding: 40, textAlign: "center", color: COLORS.textSecondary }}>Loading users…</div>
+                <div style={{ padding: 40, textAlign: "center", color: COLORS.textSecondary }}>Loading dashboard…</div>
               )}
 
-              {!loadingAdminData && !selectedUser && (
-                <>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
-                    {[
-                      { label: "Total Users",     value: adminUsers.length },
-                      { label: "Pro Subscribers", value: adminUsers.filter(u => u.is_pro).length },
-                      { label: "Active",          value: adminUsers.filter(u => u.health_status === "active").length },
-                      { label: "Avg Leads/User",  value: adminUsers.length > 0 ? (adminUsers.reduce((s, u) => s + u.leadCount, 0) / adminUsers.length).toFixed(1) : 0 },
-                    ].map(card => (
-                      <div key={card.label} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 16 }}>
-                        <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 8 }}>{card.label}</div>
-                        <div style={{ fontSize: 24, fontWeight: 500 }}>{card.value}</div>
-                      </div>
-                    ))}
-                  </div>
+              {!loadingAdminData && !selectedUser && (() => {
+                const proCount   = adminUsers.filter(u => u.is_pro).length;
+                const newThisWeek = adminUsers.filter(u => u.created_at && (Date.now() - new Date(u.created_at).getTime()) < 7 * 86400000).length;
+                const totalLeads = adminUsers.reduce((s, u) => s + u.leadCount, 0);
+                const totalGigs  = adminUsers.reduce((s, u) => s + u.gigCount, 0);
+                const avgLeads   = adminUsers.length > 0 ? (totalLeads / adminUsers.length).toFixed(1) : "0";
+                const emailTotal = adminEmailSends.reduce((s, e) => s + e.count, 0);
+                const chartMax   = Math.max(...adminSignupsByDay.map(d => d.count), 1);
 
-                  <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                          {["User", "Status", "Health", "Leads", "Gigs", ""].map(h => (
-                            <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 12, fontWeight: 500, color: COLORS.textSecondary, textTransform: "uppercase" }}>{h}</th>
+                return (
+                  <>
+                    {/* ── Stats row ── */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 20 }}>
+                      {[
+                        { label: "Total Users",   value: adminUsers.length, accent: false },
+                        { label: "New (7d)",      value: newThisWeek,       accent: true  },
+                        { label: "Pro",           value: proCount,          accent: false },
+                        { label: "MRR est.",      value: `€${proCount * 9}`,accent: true  },
+                        { label: "Total Leads",   value: totalLeads,        accent: false },
+                        { label: "Total Gigs",    value: totalGigs,         accent: false },
+                      ].map(card => (
+                        <div key={card.label} style={{ background: COLORS.surface, border: `1px solid ${card.accent ? COLORS.purpleDim : COLORS.border}`, borderRadius: 12, padding: "14px 16px" }}>
+                          <div style={{ fontSize: 10, color: COLORS.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>{card.label}</div>
+                          <div style={{ fontSize: 22, fontWeight: 700, color: card.accent ? COLORS.purpleLight : COLORS.text }}>{card.value}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* ── Charts row ── */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+
+                      {/* Signup trend */}
+                      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: COLORS.text }}>Signups — Last 14 Days</div>
+                        <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 16 }}>{adminUsers.length} total users</div>
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 72 }}>
+                          {adminSignupsByDay.map(d => (
+                            <div key={d.day} title={`${d.label}: ${d.count}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 3, height: "100%" }}>
+                              <div style={{ width: "100%", background: d.count > 0 ? COLORS.purple : COLORS.border, borderRadius: "2px 2px 0 0", height: `${Math.max((d.count / chartMax) * 64, d.count > 0 ? 4 : 2)}px` }} />
+                            </div>
                           ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {adminUsers.map(u => {
-                          const healthColor = {
-                            active:              { bg: "rgba(0,212,170,0.15)",  fg: "#00D4AA" },
-                            no_leads_added:      { bg: "rgba(255,165,0,0.15)",  fg: "#FFA500" },
-                            leads_not_contacted: { bg: "rgba(255,215,0,0.15)",  fg: "#FFD700" },
-                            replies_no_bookings: { bg: "rgba(0,212,255,0.15)",  fg: "#00D4FF" },
-                          }[u.health_status] || { bg: "rgba(255,68,68,0.15)", fg: "#FF4444" };
-                          return (
-                            <tr key={u.id} style={{ borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer" }} onClick={() => setSelectedUser(u)}>
-                              <td style={{ padding: "14px 16px" }}>
-                                <div style={{ fontWeight: 500, marginBottom: 2 }}>{u.display_name || u.username || u.id}</div>
-                                <div style={{ fontSize: 12, color: COLORS.textSecondary }}>{u.username}</div>
-                              </td>
-                              <td style={{ padding: "14px 16px" }}>
-                                <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 500, textTransform: "uppercase", background: u.is_pro ? "linear-gradient(135deg,#D4AF37,#F4D03F)" : COLORS.border, color: u.is_pro ? "#2C2C2A" : COLORS.textSecondary }}>
-                                  {u.is_pro ? "Pro" : "Free"}
-                                </span>
-                              </td>
-                              <td style={{ padding: "14px 16px" }}>
-                                <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 500, background: healthColor.bg, color: healthColor.fg }}>
-                                  {u.health_status || "active"}
-                                </span>
-                              </td>
-                              <td style={{ padding: "14px 16px", fontWeight: 500 }}>{u.leadCount}</td>
-                              <td style={{ padding: "14px 16px", fontWeight: 500 }}>{u.gigCount}</td>
-                              <td style={{ padding: "14px 16px" }}>
-                               <button style={{ padding: "6px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.purple, fontSize: 13, cursor: "pointer" }} onClick={() => { setSelectedUser(u); loadUserLeads(u.id); }}>
-                                  View →
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 10, color: COLORS.textMuted }}>
+                          <span>{adminSignupsByDay[0]?.label}</span>
+                          <span>{adminSignupsByDay[adminSignupsByDay.length - 1]?.label}</span>
+                        </div>
+                      </div>
 
-             {!loadingAdminData && selectedUser && (
-  <div>
-    <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
-      ← Back to user list
-    </button>
-    <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>{selectedUser.display_name || selectedUser.username}</h2>
-      <div style={{ fontSize: 13, color: COLORS.textSecondary }}>@{selectedUser.username}</div>
-      <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 13, color: COLORS.textSecondary }}>
-        <span>{selectedUser.leadCount} leads</span>
-        <span>{selectedUser.gigCount} gigs</span>
-        <span>{selectedUser.is_pro ? "Pro" : "Free"}</span>
-        <span>Health: {selectedUser.health_status || "active"}</span>
-      </div>
-    </div>
-    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>User's Pipeline (Read-Only)</div>
-    <div style={{ opacity: 0.7, pointerEvents: "none" }}>
-      <PipelineView 
-        leads={selectedUserLeads} 
-        onMove={() => {}} 
-        onSelect={() => {}} 
-        selectedLead={null} 
-        onArchive={() => {}} 
-        search="" 
-        filters={{}} 
-        TAG_COLORS={TAG_COLORS} 
-        customTags={customTags} 
-        onUpdateLead={() => {}} 
-        isMobile={isMobile} 
-        onOpenNewLead={() => {}} 
-      />
-    </div>
-  </div>
-)}
+                      {/* Email sends */}
+                      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: COLORS.text }}>Behavioral Emails Sent</div>
+                        <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 16 }}>{emailTotal} total</div>
+                        {adminEmailSends.length === 0 ? (
+                          <div style={{ color: COLORS.textMuted, fontSize: 13, marginTop: 24 }}>No emails sent yet</div>
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                            {adminEmailSends.map(({ type, count }) => {
+                              const label = {
+                                day2_no_leads:      "Day 2 — No Leads Added",
+                                day5_not_contacted: "Day 5 — Not Contacted",
+                                day7_inactive:      "Day 7 — Inactive",
+                                day10_no_bookings:  "Day 10 — No Bookings",
+                                first_booking:      "First Booking 🎉",
+                              }[type] || type;
+                              return (
+                                <div key={type}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
+                                    <span style={{ color: COLORS.textSecondary }}>{label}</span>
+                                    <span style={{ fontWeight: 600, color: COLORS.text }}>{count}</span>
+                                  </div>
+                                  <div style={{ height: 4, background: COLORS.border, borderRadius: 2 }}>
+                                    <div style={{ height: "100%", width: `${(count / emailTotal) * 100}%`, background: COLORS.purple, borderRadius: 2 }} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* ── User table ── */}
+                    <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
+                      <div style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>All Users <span style={{ color: COLORS.textMuted, fontWeight: 400 }}>({adminUsers.length})</span></div>
+                        <button onClick={loadAdminUsers} style={{ background: "none", border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "5px 12px", fontSize: 12, color: COLORS.textSecondary, cursor: "pointer" }}>↻ Refresh</button>
+                      </div>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                            {["User", "Joined", "Plan", "Health", "Leads", "Gigs", ""].map(h => (
+                              <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 500, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {adminUsers.map(u => {
+                            const healthColor = {
+                              active:              { bg: "rgba(0,212,170,0.15)",  fg: "#00D4AA" },
+                              no_leads_added:      { bg: "rgba(255,165,0,0.15)",  fg: "#FFA500" },
+                              leads_not_contacted: { bg: "rgba(255,215,0,0.15)",  fg: "#FFD700" },
+                              replies_no_bookings: { bg: "rgba(0,212,255,0.15)",  fg: "#00D4FF" },
+                            }[u.health_status] || { bg: "rgba(113,113,122,0.15)", fg: "#71717a" };
+                            const joined = u.created_at ? new Date(u.created_at).toLocaleDateString("en", { month: "short", day: "numeric" }) : "—";
+                            return (
+                              <tr key={u.id} style={{ borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer" }}
+                                onClick={() => { setSelectedUser(u); loadUserLeads(u.id); }}>
+                                <td style={{ padding: "12px 16px" }}>
+                                  <div style={{ fontWeight: 500, fontSize: 13 }}>{u.display_name || u.username || "—"}</div>
+                                  <div style={{ fontSize: 11, color: COLORS.textMuted }}>{u.email || u.username}</div>
+                                </td>
+                                <td style={{ padding: "12px 16px", fontSize: 12, color: COLORS.textSecondary }}>{joined}</td>
+                                <td style={{ padding: "12px 16px" }}>
+                                  <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: u.is_pro ? "linear-gradient(135deg,#D4AF37,#F4D03F)" : COLORS.border, color: u.is_pro ? "#2C2C2A" : COLORS.textSecondary }}>
+                                    {u.is_pro ? "Pro" : "Free"}
+                                  </span>
+                                </td>
+                                <td style={{ padding: "12px 16px" }}>
+                                  <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 500, background: healthColor.bg, color: healthColor.fg }}>
+                                    {u.health_status || "active"}
+                                  </span>
+                                </td>
+                                <td style={{ padding: "12px 16px", fontWeight: 600, fontSize: 13 }}>{u.leadCount}</td>
+                                <td style={{ padding: "12px 16px", fontWeight: 600, fontSize: 13 }}>{u.gigCount}</td>
+                                <td style={{ padding: "12px 16px" }}>
+                                  <button style={{ padding: "5px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.purple, fontSize: 12, cursor: "pointer" }}>View →</button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
+
+              {!loadingAdminData && selectedUser && (
+                <div>
+                  <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
+                    ← Back to dashboard
+                  </button>
+                  <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                      <div>
+                        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4, margin: "0 0 4px 0" }}>{selectedUser.display_name || selectedUser.username}</h2>
+                        <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 12 }}>{selectedUser.email || selectedUser.username}</div>
+                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                          {[
+                            { label: "Leads", value: selectedUser.leadCount },
+                            { label: "Gigs",  value: selectedUser.gigCount  },
+                            { label: "Plan",  value: selectedUser.is_pro ? "Pro" : "Free" },
+                            { label: "Health",value: selectedUser.health_status || "active" },
+                            { label: "Joined",value: selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" }) : "—" },
+                          ].map(s => (
+                            <div key={s.label} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "6px 12px", fontSize: 12 }}>
+                              <span style={{ color: COLORS.textMuted }}>{s.label}: </span>
+                              <span style={{ fontWeight: 600 }}>{s.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: COLORS.text }}>Pipeline — Read Only</div>
+                  <div style={{ opacity: 0.7, pointerEvents: "none" }}>
+                    <PipelineView
+                      leads={selectedUserLeads}
+                      onMove={() => {}} onSelect={() => {}} selectedLead={null} onArchive={() => {}}
+                      search="" filters={{}} TAG_COLORS={TAG_COLORS} customTags={customTags}
+                      onUpdateLead={() => {}} isMobile={isMobile} onOpenNewLead={() => {}}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
