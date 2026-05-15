@@ -377,16 +377,22 @@ function loadIsPro(userId) { try { return localStorage.getItem(STORAGE_KEY_PRO +
 function saveIsPro(v, userId) { try { localStorage.setItem(STORAGE_KEY_PRO + "_" + userId, String(v)); } catch {} }
 const FREE_LIMITS = { leads: 15, gigs: 10, templates: 2 };
 
-const STORAGE_KEY_TAGS = "noxreach_tags_v1";
+const STORAGE_KEY_TAGS        = "noxreach_tags_v1";
+const STORAGE_KEY_TAG_COLORS  = "noxreach_tag_colors_v1";
 const DEFAULT_TAGS = ["Tech-House", "Disco", "Festival"];
-const TAG_PALETTE   = ["#F59E0B","#3B82F6","#EC4899","#22C55E","#F97316","#14B8A6","#EAB308","#F43F5E","#06B6D4","#A78BFA","#84CC16","#FB923C"];
-function tagColor(tag) {
-  let hash = 0;
-  for (let i = 0; i < tag.length; i++) hash = tag.charCodeAt(i) + ((hash << 5) - hash);
-  return TAG_PALETTE[Math.abs(hash) % TAG_PALETTE.length];
+const TAG_PALETTE  = ["#F59E0B","#3B82F6","#EC4899","#22C55E","#F97316","#14B8A6","#EAB308","#F43F5E","#06B6D4","#A78BFA","#84CC16","#FB923C"];
+
+// Pick the next palette color least used by existing tags
+function pickNextColor(usedColors) {
+  const counts = Object.fromEntries(TAG_PALETTE.map(c => [c, 0]));
+  usedColors.forEach(c => { if (counts[c] !== undefined) counts[c]++; });
+  return TAG_PALETTE.reduce((a, b) => counts[a] <= counts[b] ? a : b);
 }
-function loadCustomTags() { try { const r = localStorage.getItem(STORAGE_KEY_TAGS); if (r) return JSON.parse(r); } catch {} return [...DEFAULT_TAGS]; }
-function saveCustomTags(t) { try { localStorage.setItem(STORAGE_KEY_TAGS, JSON.stringify(t)); } catch {} }
+
+function loadCustomTags()   { try { const r = localStorage.getItem(STORAGE_KEY_TAGS);       if (r) return JSON.parse(r); } catch {} return [...DEFAULT_TAGS]; }
+function saveCustomTags(t)  { try { localStorage.setItem(STORAGE_KEY_TAGS, JSON.stringify(t)); } catch {} }
+function loadTagColors()    { try { const r = localStorage.getItem(STORAGE_KEY_TAG_COLORS);  if (r) return JSON.parse(r); } catch {} return {}; }
+function saveTagColors(m)   { try { localStorage.setItem(STORAGE_KEY_TAG_COLORS, JSON.stringify(m)); } catch {} }
 
 // Build a date string relative to today for sample data
 const relDate = (daysFromNow) => { const d = new Date(); d.setDate(d.getDate() + daysFromNow); return d.toISOString().split("T")[0]; };
@@ -2670,7 +2676,40 @@ function ProWelcomeModal({ onClose }) {
   );
 }
 
-function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, defaultTags, onAddTag, onRemoveTag, supabase, user }) {
+function GenreRow({ tag, color, onRemove, onSetColor }) {
+  const [showPicker, setShowPicker] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: color + "12", border: `1px solid ${color}40`, borderLeft: `3px solid ${color}`, borderRadius: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Clickable color dot */}
+          <button
+            onClick={() => setShowPicker(p => !p)}
+            title="Change color"
+            style={{ width: 16, height: 16, borderRadius: "50%", background: color, border: `2px solid ${color}99`, flexShrink: 0, cursor: "pointer", boxShadow: `0 0 6px ${color}88`, padding: 0 }}
+          />
+          <span style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>{tag}</span>
+        </div>
+        <button onClick={onRemove} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 14, lineHeight: 1, padding: "0 4px" }}
+          onMouseEnter={e => e.target.style.color = COLORS.red}
+          onMouseLeave={e => e.target.style.color = COLORS.textMuted}>✕</button>
+      </div>
+      {showPicker && (
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 100, background: COLORS.surface2, border: `1px solid ${COLORS.borderHover}`, borderRadius: 10, padding: 10, display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6, boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+          {TAG_PALETTE.map(c => (
+            <button key={c} onClick={() => { onSetColor(c); setShowPicker(false); }}
+              style={{ width: 24, height: 24, borderRadius: "50%", background: c, border: c === color ? `2px solid #fff` : "2px solid transparent", cursor: "pointer", padding: 0, boxShadow: c === color ? `0 0 8px ${c}` : "none", transition: "transform 0.1s" }}
+              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
+              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, defaultTags, onAddTag, onRemoveTag, TAG_COLORS, onSetTagColor, supabase, user }) {
   const [local, setLocal] = useState({ ...settings });
   const [saved,  setSaved]  = useState(false);
   const [username, setUsername] = useState("");
@@ -2868,21 +2907,9 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
             </div>
             <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
               {customTags.map(tag => {
-                const isDefault = defaultTags.includes(tag);
-                const color = tagColor(tag);
+                const color = TAG_COLORS[tag] || TAG_PALETTE[0];
                 return (
-                  <div key={tag} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: color + "12", border: `1px solid ${color}40`, borderLeft: `3px solid ${color}`, borderRadius: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0, boxShadow: `0 0 6px ${color}88` }} />
-                      <span style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>{tag}</span>
-                      {isDefault && <span style={{ fontSize: 9, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", background: COLORS.border, padding: "1px 6px", borderRadius: 3 }}>default</span>}
-                    </div>
-                    {!isDefault && (
-                      <button onClick={() => onRemoveTag(tag)} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 14, lineHeight: 1, padding: "0 4px" }}
-                        onMouseEnter={e => e.target.style.color = COLORS.red}
-                        onMouseLeave={e => e.target.style.color = COLORS.textMuted}>✕</button>
-                    )}
-                  </div>
+                  <GenreRow key={tag} tag={tag} color={color} onRemove={() => onRemoveTag(tag)} onSetColor={c => onSetTagColor(tag, c)} />
                 );
               })}
 
@@ -6673,8 +6700,18 @@ const loadAdminUsers = async () => {
     setShowBulkBar(false);
   };
   
-  // Derived — always up to date with customTags
-  const TAG_COLORS = Object.fromEntries(customTags.map(t => [t, tagColor(t)]));
+  // Per-tag color overrides (user-picked or auto-assigned)
+  const [tagColorMap, setTagColorMap] = useState(() => {
+    const stored = loadTagColors();
+    // Seed any missing tags with unique colors on first load
+    const tags = loadCustomTags();
+    const used = Object.values(stored);
+    tags.forEach(t => { if (!stored[t]) { stored[t] = pickNextColor([...used]); used.push(stored[t]); } });
+    return stored;
+  });
+
+  // Derived TAG_COLORS: override map first, fallback to auto-pick
+  const TAG_COLORS = Object.fromEntries(customTags.map(t => [t, tagColorMap[t] || TAG_PALETTE[0]]));
 
   const addCustomTag = (tag) => {
     const clean = tag.trim();
@@ -6682,14 +6719,25 @@ const loadAdminUsers = async () => {
     const next = [...customTags, clean];
     setCustomTags(next);
     saveCustomTags(next);
+    // Assign a unique color for the new tag
+    const usedColors = Object.values(tagColorMap);
+    const newColor = pickNextColor(usedColors);
+    const nextMap = { ...tagColorMap, [clean]: newColor };
+    setTagColorMap(nextMap);
+    saveTagColors(nextMap);
     return true;
   };
 
   const removeCustomTag = (tag) => {
-    if (DEFAULT_TAGS.includes(tag)) return; // can't remove built-ins
     const next = customTags.filter(t => t !== tag);
     setCustomTags(next);
     saveCustomTags(next);
+  };
+
+  const setTagColor = (tag, color) => {
+    const nextMap = { ...tagColorMap, [tag]: color };
+    setTagColorMap(nextMap);
+    saveTagColors(nextMap);
   }; // null or reason string
   const [selectedLead, setSelectedLead] = useState(null);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
@@ -7172,7 +7220,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} />}
           {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} />}
-          {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} supabase={supabase} user={user} />}
+          {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
             <div>
