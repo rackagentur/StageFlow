@@ -8,16 +8,19 @@ export const COLORS = {
   // Borders — one token for each state
   border:      "rgba(255,255,255,0.07)",
   borderHover: "rgba(255,255,255,0.14)",
-  borderActive:"#0E7490",
+  borderActive:"#155E75",
 
   // Cyan — brand accent (matches NoxReach logo)
-  // purple = solid button/interactive background (white text at 5.3:1 contrast)
-  // purpleLight = text/icon highlight on dark backgrounds
-  purple:      "#0E7490",
-  purpleHover: "#0891B2",
+  // purple     = solid button bg — one step darker for depth
+  // purpleHover= lightens on hover (previous base value)
+  // purpleLight= text/icon highlight on dark surfaces
+  // btnText    = dark indigo from logo bg — replaces white on cyan buttons
+  purple:      "#155E75",
+  purpleHover: "#0E7490",
   purpleLight: "#22D3EE",
-  purpleDim:   "rgba(14,116,144,0.30)",
-  purpleBg:    "rgba(14,116,144,0.10)",
+  purpleDim:   "rgba(21,94,117,0.35)",
+  purpleBg:    "rgba(21,94,117,0.10)",
+  btnText:     "#0E0B1F",
 
   // Text — 3 levels only
   text:          "#ffffff",

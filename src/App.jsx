@@ -1215,7 +1215,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
               <button
                 onClick={handleSave}
                 disabled={saving}
-                style={{ fontSize: 11, padding: "4px 10px", background: COLORS.purple, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}
+                style={{ fontSize: 11, padding: "4px 10px", background: COLORS.purple, color: COLORS.btnText, border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}
               >
                 {saving ? "…" : "Save"}
               </button>
@@ -1275,7 +1275,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                   detail: { venue: lead.name, tag: lead.tag }
                 }));
               }}
-              style={{ width: "100%", marginBottom: 12, padding: "10px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+              style={{ width: "100%", marginBottom: 12, padding: "10px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
             >
               <span>📅</span>
               <span>Create Gig in Calendar</span>
@@ -1334,7 +1334,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {!lead.archived && lead.stage === "target" && (
         <button
           onClick={() => onMove(lead.id, "contacted")}
-          style={{ width: "100%", padding: "8px 0", background: COLORS.purple, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, marginBottom: 12 }}
+          style={{ width: "100%", padding: "8px 0", background: COLORS.purple, color: COLORS.btnText, border: "none", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, marginBottom: 12 }}
         >
           Mark as Contacted
           <div style={{ fontSize: 10, fontWeight: 400, opacity: 0.8 }}>Follow-up reminder in 5 days</div>
@@ -1606,7 +1606,7 @@ function AddGenreRow({ onAdd }) {
           placeholder="e.g. Afrobeats, Reggaeton…"
           style={{ flex: 1, padding: "9px 12px", background: COLORS.bg, border: `1px solid ${error ? COLORS.red : COLORS.purple}`, borderRadius: 8, color: COLORS.text, fontSize: 13, outline: "none", fontFamily: "inherit" }}
         />
-        <button onClick={handle} style={{ padding: "9px 16px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>Add</button>
+        <button onClick={handle} style={{ padding: "9px 16px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>Add</button>
         <button onClick={() => { setAdding(false); setInput(""); setError(""); }} style={{ padding: "9px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textSecondary, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>✕</button>
       </div>
       {error && <div style={{ fontSize: 11, color: COLORS.red, marginTop: 5 }}>{error}</div>}
@@ -1654,7 +1654,7 @@ function GenreSelector({ tags, value, onChange, TAG_COLORS, onAddTag }) {
             placeholder="e.g. Afrobeats"
             style={{ padding: "5px 10px", background: COLORS.bg, border: `1px solid ${COLORS.purple}`, borderRadius: 20, color: COLORS.text, fontSize: 12, outline: "none", width: 110, fontFamily: "inherit" }}
           />
-          <button onClick={handleAdd} style={{ padding: "5px 10px", background: COLORS.purple, border: "none", borderRadius: 20, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Add</button>
+          <button onClick={handleAdd} style={{ padding: "5px 10px", background: COLORS.purple, border: "none", borderRadius: 20, color: COLORS.btnText, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Add</button>
           <button onClick={() => { setAdding(false); setInput(""); }} style={{ padding: "5px 8px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 20, color: COLORS.textSecondary, fontSize: 11, cursor: "pointer" }}>✕</button>
         </div>
       ) : (
@@ -1747,8 +1747,8 @@ function AddLeadModal({ onClose, onAdd, customTags, TAG_COLORS, onAddTag }) {
             ? <button onClick={onClose}      style={{ padding: "10px 20px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 13, cursor: "pointer" }}>Cancel</button>
             : <button onClick={() => setStep(1)} style={{ padding: "10px 20px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 13, cursor: "pointer" }}>← Back</button>}
           {step === 1
-            ? <button onClick={handleNext}   style={{ padding: "10px 28px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Next →</button>
-            : <button onClick={handleSubmit} style={{ padding: "10px 28px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>Add to Pipeline ✓</button>}
+            ? <button onClick={handleNext}   style={{ padding: "10px 28px", background: COLORS.purple, border: "none", borderRadius: 9, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Next →</button>
+            : <button onClick={handleSubmit} style={{ padding: "10px 28px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 9, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>Add to Pipeline ✓</button>}
         </div>
       </div>
     </div>
@@ -1996,7 +1996,7 @@ function FollowUpsView({ leads, onNavigate }) {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 11, color: COLORS.amber, fontWeight: 700, marginBottom: 6 }}>Follow up today</div>
-                  <button onClick={() => onNavigate("outreach")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Get Template →</button>
+                  <button onClick={() => onNavigate("outreach")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 7, color: COLORS.btnText, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Get Template →</button>
                 </div>
               </div>
             ))}
@@ -2215,7 +2215,7 @@ function AssetsView({ supabase, userId }) {
             <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>Complete your asset kit</div>
             <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5 }}>Venues will ask for your EPK, mix link, and booking email. Fill these in once and they're ready to paste into any outreach.</div>
           </div>
-          <button onClick={() => setActiveSection("epk")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Fill in now →</button>
+          <button onClick={() => setActiveSection("epk")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Fill in now →</button>
         </div>
       )}
 
@@ -2375,7 +2375,7 @@ function UpgradeModal({ onClose, onUpgrade, reason }) {
 
         {/* Actions */}
         <div style={{ padding: "0 28px 28px", display: "flex", flexDirection: "column", gap: 10 }}>
-          <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "14px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 24px rgba(123,63,228,0.45)", letterSpacing: "0.01em" }}>
+          <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "14px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: COLORS.btnText, fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 24px rgba(123,63,228,0.45)", letterSpacing: "0.01em" }}>
             Upgrade to Pro →
           </button>
           <button onClick={onClose} style={{ width: "100%", padding: "10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 12, color: COLORS.textMuted, fontSize: 12, cursor: "pointer" }}>
@@ -2612,7 +2612,7 @@ function WelcomeNewUserModal({ onClose }) {
           ))}
         </div>
 
-        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: COLORS.btnText, fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
           Let's go →
         </button>
 
@@ -2656,7 +2656,7 @@ function ProWelcomeModal({ onClose }) {
           ))}
         </div>
 
-        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: COLORS.purple, border: "none", borderRadius: 10, color: COLORS.btnText, fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
           Start using Pro →
         </button>
       </div>
@@ -3114,7 +3114,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
           {shareCopied ? "✓ Copied!" : "🔗 Copy link"}
         </button>
         <a href={`/gigs/${shareUsername}`} target="_blank" rel="noopener noreferrer"
-          style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap" }}>
+          style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap" }}>
           Preview →
         </a>
       </div>
@@ -3287,7 +3287,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
               <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: "9px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textSecondary, fontSize: 12, cursor: "pointer" }}>Cancel</button>
-              <button onClick={addGig} style={{ flex: 2, padding: "9px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Add to Calendar ✓</button>
+              <button onClick={addGig} style={{ flex: 2, padding: "9px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Add to Calendar ✓</button>
             </div>
           </div>
         ) : selected ? (
@@ -3387,7 +3387,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
               </div>
             )}
             <button onClick={() => !isPro && gigs.length >= FREE_LIMITS.gigs ? onUpgradeClick("gigs") : setShowAdd(true)}
-              style={{ padding: "9px 20px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              style={{ padding: "9px 20px", background: COLORS.purple, border: "none", borderRadius: 9, color: COLORS.btnText, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               {!isPro && gigs.length >= FREE_LIMITS.gigs ? "Upgrade to Add More" : "+ Add Gig"}
             </button>
           </div>
@@ -3596,7 +3596,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
                   style={{ width: "100%", padding: "14px 16px", background: "transparent", border: "none", color: COLORS.text, fontSize: 13, outline: "none", fontFamily: "inherit", lineHeight: 1.7, resize: "none" }} />
                 <div style={{ padding: "10px 16px", borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ fontSize: 11, color: COLORS.textMuted }}>Copy to send via email or Instagram</div>
-                  <button onClick={copyReply} style={{ padding: "7px 16px", background: COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Copy Reply</button>
+                  <button onClick={copyReply} style={{ padding: "7px 16px", background: COLORS.purple, border: "none", borderRadius: 7, color: COLORS.btnText, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Copy Reply</button>
                 </div>
               </div>
             </div>
@@ -3692,7 +3692,7 @@ function PricingView({ isPro, onUpgrade }) {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "12px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>
+              <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "12px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: COLORS.btnText, fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>
                 Upgrade to Pro — €19/mo →
               </button>
               <button onClick={() => onUpgrade("yearly")} style={{ width: "100%", padding: "10px", background: "transparent", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 10, color: COLORS.purpleLight, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
@@ -4128,7 +4128,7 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
                 >
                   Cancel
                 </button>
-                <button onClick={handleImport} disabled={!mapping.name || !mapping.contact || importing} style={{ flex: 1, padding: '12px 20px', background: COLORS.purple, border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!mapping.name || !mapping.contact || importing) ? 0.5 : 1 }}>
+                <button onClick={handleImport} disabled={!mapping.name || !mapping.contact || importing} style={{ flex: 1, padding: '12px 20px', background: COLORS.purple, border: 'none', borderRadius: 8, color: COLORS.btnText, fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!mapping.name || !mapping.contact || importing) ? 0.5 : 1 }}>
                   {importing ? 'Importing...' : `Import ${preview.totalRows} Leads`}
                 </button>
               </div>
@@ -4154,7 +4154,7 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
                   <div style={{ fontSize: 48, marginBottom: 16 }}>✕</div>
                   <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: COLORS.red }}>Import Failed</div>
                   <div style={{ fontSize: 14, color: COLORS.textSecondary, marginBottom: 20 }}>{result.error}</div>
-                  <button onClick={onClose} style={{ padding: '12px 24px', background: COLORS.purple, border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  <button onClick={onClose} style={{ padding: '12px 24px', background: COLORS.purple, border: 'none', borderRadius: 8, color: COLORS.btnText, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                     Close
                   </button>
                 </div>
@@ -6956,7 +6956,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   </div>
                 ))}
               </div>
-              <button onClick={() => setShowWelcomePro(false)} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>
+              <button onClick={() => setShowWelcomePro(false)} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: COLORS.btnText, fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>
                 Let's go →
               </button>
             </div>
@@ -7099,7 +7099,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   ⏰ {dueCount} follow-up{dueCount > 1 ? "s" : ""} due
                 </div>
               )}
-              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
+              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
                 <IconPlus size={14} color="#fff" /> Add Lead
               </button>
               <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.purple}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
