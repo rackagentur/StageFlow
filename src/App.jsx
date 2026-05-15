@@ -229,6 +229,33 @@ WebkitTextFillColor: C.text,
             </button>
           </form>
 
+          {/* Try Demo */}
+          {mode === "login" && (
+            <div style={{ marginTop: 12, textAlign: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <div style={{ flex: 1, height: 1, background: C.border }} />
+                <span style={{ fontSize: 11, color: C.text3 }}>or</span>
+                <div style={{ flex: 1, height: 1, background: C.border }} />
+              </div>
+              <button onClick={async () => {
+                setLoading(true); setError("");
+                const { data, error: err } = await supabase.auth.signInWithPassword({ email: "demo@noxreach.com", password: "noxreach_demo_2026" });
+                setLoading(false);
+                if (err) setError("Demo unavailable right now.");
+                else onAuth(data.session, data.user);
+              }} disabled={loading} style={{
+                width: "100%", padding: "12px 0", borderRadius: 10,
+                background: "transparent", border: `1px solid ${C.border2}`,
+                color: C.text2, fontSize: 13, fontWeight: 600,
+                fontFamily: "'DM Sans', sans-serif", cursor: "pointer",
+                transition: "all 0.15s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.purple; e.currentTarget.style.color = C.text; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border2; e.currentTarget.style.color = C.text2; }}
+              >Try Demo →</button>
+            </div>
+          )}
+
           {/* Footer links */}
           <div style={{ marginTop: 20, textAlign: "center", display: "flex", justifyContent: "center", gap: 20 }}>
             {mode === "login" && (
@@ -868,6 +895,15 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
 
   return (
     <div>
+      {/* Mobile empty state — shown when no leads yet */}
+      {isMobile && leads.filter(l => !l.archived).length === 0 && !showArchived && (
+        <div style={{ textAlign: "center", padding: "48px 20px", marginBottom: 16, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14 }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🎛️</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Your pipeline is empty</div>
+          <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 20 }}>Add venues and promoters you want to play. Track every outreach from first DM to booked night.</div>
+          <button onClick={onOpenNewLead} style={{ padding: "12px 28px", background: COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>+ Add your first lead</button>
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
         <button onClick={() => setShowArchived(false)} style={{ padding: "6px 14px", borderRadius: 7, cursor: "pointer", fontSize: 12, fontWeight: 600, background: !showArchived ? COLORS.purpleBg : "transparent", border: `1px solid ${!showArchived ? COLORS.purple : COLORS.border}`, color: !showArchived ? COLORS.purpleLight : COLORS.textSecondary }}>
           Active <span style={{ fontFamily: "'DM Mono', monospace", marginLeft: 4 }}>{leads.filter(l => !l.archived).length}</span>
