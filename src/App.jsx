@@ -7586,7 +7586,7 @@ function PublicGigList({ supabase }) {
   const username = window.location.pathname.split('/gigs/')[1]?.toLowerCase().trim();
   const [djProfile, setDjProfile] = useState(null);
   const [gigs, setGigs]           = useState([]);
-  const [status, setStatus]       = useState('loading'); // loading | ready | notfound
+  const [status, setStatus]       = useState('loading');
 
   useEffect(() => {
     if (!username) { setStatus('notfound'); return; }
@@ -7611,72 +7611,150 @@ function PublicGigList({ supabase }) {
   }, [username]);
 
   const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAY_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // Tag color palette — maps genre → subtle tint
+  const TAG_COLORS_PUBLIC = {
+    'Tech-House': { bg:'rgba(14,116,144,0.18)', border:'rgba(34,211,238,0.30)', color:'#22D3EE' },
+    'Festival':   { bg:'rgba(234,179,8,0.14)',  border:'rgba(234,179,8,0.35)',  color:'#EAB308' },
+    'Disco':      { bg:'rgba(236,72,153,0.14)', border:'rgba(236,72,153,0.35)', color:'#EC4899' },
+    'House':      { bg:'rgba(99,102,241,0.15)', border:'rgba(99,102,241,0.35)', color:'#818CF8' },
+    'Techno':     { bg:'rgba(239,68,68,0.14)',  border:'rgba(239,68,68,0.35)',  color:'#F87171' },
+    'Afro House': { bg:'rgba(249,115,22,0.14)', border:'rgba(249,115,22,0.35)', color:'#FB923C' },
+    'Melodic':    { bg:'rgba(20,184,166,0.14)', border:'rgba(20,184,166,0.35)', color:'#2DD4BF' },
+  };
+  const fallbackTag = { bg:'rgba(255,255,255,0.06)', border:'rgba(255,255,255,0.18)', color:'rgba(255,255,255,0.55)' };
+  const getTagStyle = tag => TAG_COLORS_PUBLIC[tag] || fallbackTag;
+
+  const spinnerStyle = `
+    @keyframes pgSpin { to { transform: rotate(360deg); } }
+    @keyframes pgFadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pgPulse { 0%,100% { opacity:.4; } 50% { opacity:.9; } }
+  `;
 
   if (status === 'loading') return (
-    <div style={{ minHeight:'100vh', background:'#0a0a0a', display:'flex', alignItems:'center', justifyContent:'center' }}>
-      <div style={{ color:'rgba(255,255,255,0.3)', fontSize:14 }}>Loading...</div>
+    <div style={{ minHeight:'100vh', background:'#060608', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'-apple-system, BlinkMacSystemFont, sans-serif' }}>
+      <style>{spinnerStyle}</style>
+      <div style={{ width:28, height:28, border:'2.5px solid rgba(34,211,238,0.15)', borderTopColor:'#22D3EE', borderRadius:'50%', animation:'pgSpin 0.8s linear infinite' }} />
     </div>
   );
 
   if (status === 'notfound') return (
-    <div style={{ minHeight:'100vh', background:'#0a0a0a', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'-apple-system, sans-serif' }}>
+    <div style={{ minHeight:'100vh', background:'#060608', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'-apple-system, BlinkMacSystemFont, sans-serif' }}>
       <div style={{ textAlign:'center' }}>
-        <div style={{ fontSize:48, color:'#fff', marginBottom:16 }}>404</div>
-        <div style={{ color:'rgba(255,255,255,0.4)', fontSize:16 }}>Gig schedule not found</div>
+        <div style={{ fontSize:56, fontWeight:900, color:'rgba(255,255,255,0.08)', letterSpacing:'-0.04em', marginBottom:12 }}>404</div>
+        <div style={{ color:'rgba(255,255,255,0.35)', fontSize:15 }}>Schedule not found</div>
       </div>
     </div>
   );
 
+  const nextGig = gigs[0];
+
   return (
-    <div style={{ minHeight:'100vh', background:'#0a0a0a', fontFamily:'-apple-system, sans-serif', padding:'40px 24px' }}>
-      <div style={{ maxWidth:560, margin:'0 auto' }}>
+    <div style={{ minHeight:'100vh', background:'#060608', fontFamily:'-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif', overflowX:'hidden' }}>
+      <style>{`
+        ${spinnerStyle}
+        .pg-card { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+        .pg-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.10) !important; }
+        .pg-cta { transition: opacity 0.18s ease, transform 0.18s ease; }
+        .pg-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+        * { box-sizing: border-box; }
+      `}</style>
+
+      {/* Atmospheric background glow */}
+      <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0 }}>
+        <div style={{ position:'absolute', top:'-20%', left:'50%', transform:'translateX(-50%)', width:700, height:500, background:'radial-gradient(ellipse, rgba(14,116,144,0.13) 0%, transparent 65%)', borderRadius:'50%' }} />
+        <div style={{ position:'absolute', bottom:'-10%', right:'-15%', width:500, height:400, background:'radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 65%)', borderRadius:'50%' }} />
+      </div>
+
+      <div style={{ position:'relative', zIndex:1, maxWidth:580, margin:'0 auto', padding:'56px 20px 80px' }}>
+
         {/* Header */}
-        <div style={{ textAlign:'center', marginBottom:40 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="44" height="44" style={{ borderRadius:11, marginBottom:16 }} alt="NR" />
-          <div style={{ fontSize:26, fontWeight:800, color:'#fff', marginBottom:6 }}>{djProfile?.display_name}</div>
-          <div style={{ fontSize:13, color:'rgba(255,255,255,0.35)', letterSpacing:'0.05em', textTransform:'uppercase' }}>Upcoming Shows</div>
+        <div style={{ textAlign:'center', marginBottom:52, animation:'pgFadeUp 0.5s ease both' }}>
+          <img src="https://noxreach.com/public/nr-icon.png" width="40" height="40"
+            style={{ borderRadius:10, marginBottom:20, opacity:0.7 }} alt="NR" />
+          <div style={{ fontSize:42, fontWeight:900, color:'#fff', letterSpacing:'-0.03em', lineHeight:1, marginBottom:10 }}>
+            {djProfile?.display_name}
+          </div>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+            <div style={{ width:5, height:5, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 8px #22c55e', animation:'pgPulse 2.2s ease infinite' }} />
+            <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.35)', letterSpacing:'0.14em', textTransform:'uppercase' }}>
+              {gigs.length} Upcoming Show{gigs.length !== 1 ? 's' : ''}
+            </span>
+          </div>
         </div>
 
-        {/* Gig list */}
+        {/* Next show highlight */}
+        {nextGig && (() => {
+          const d = new Date(nextGig.date + 'T00:00:00');
+          const ts = getTagStyle(nextGig.tag);
+          const daysUntil = Math.round((d - new Date()) / 86400000);
+          return (
+            <div style={{ marginBottom:16, animation:'pgFadeUp 0.5s 0.08s ease both', opacity:0 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.3)', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:8, paddingLeft:2 }}>Next show</div>
+              <div className="pg-card" style={{ background:'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:16, padding:'20px 22px', display:'flex', alignItems:'center', gap:20, boxShadow:'0 4px 24px rgba(0,0,0,0.5)' }}>
+                {/* Big date */}
+                <div style={{ flexShrink:0, textAlign:'center', minWidth:52 }}>
+                  <div style={{ fontSize:36, fontWeight:900, color:'#fff', lineHeight:1, letterSpacing:'-0.03em' }}>{String(d.getDate()).padStart(2,'0')}</div>
+                  <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.4)', letterSpacing:'0.1em', textTransform:'uppercase', marginTop:3 }}>{MONTH_SHORT[d.getMonth()]} '{String(d.getFullYear()).slice(2)}</div>
+                  <div style={{ fontSize:9, color:'rgba(255,255,255,0.25)', marginTop:2 }}>{DAY_SHORT[d.getDay()]}</div>
+                </div>
+                <div style={{ width:1, height:52, background:'rgba(255,255,255,0.08)', flexShrink:0 }} />
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:18, fontWeight:800, color:'#fff', marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', letterSpacing:'-0.01em' }}>{nextGig.venue}</div>
+                  {nextGig.city && <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginBottom:8 }}>{nextGig.city}</div>}
+                  {nextGig.tag && (
+                    <span style={{ fontSize:9, fontWeight:800, padding:'3px 8px', borderRadius:5, background:ts.bg, border:`1px solid ${ts.border}`, color:ts.color, letterSpacing:'0.12em', textTransform:'uppercase' }}>{nextGig.tag}</span>
+                  )}
+                </div>
+                <div style={{ flexShrink:0, textAlign:'right' }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'rgba(34,197,94,0.8)', letterSpacing:'0.04em' }}>
+                    {daysUntil === 0 ? 'TODAY' : daysUntil === 1 ? 'TOMORROW' : `IN ${daysUntil}D`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Rest of gig list */}
         {gigs.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.25)', fontSize:15 }}>No upcoming shows scheduled</div>
-        ) : (
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {gigs.map((g, i) => {
+          <div style={{ textAlign:'center', padding:'70px 0', color:'rgba(255,255,255,0.2)', fontSize:14 }}>No upcoming shows scheduled</div>
+        ) : gigs.length > 1 ? (
+          <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:40, animation:'pgFadeUp 0.5s 0.16s ease both', opacity:0 }}>
+            {gigs.slice(1).map((g, i) => {
               const d = new Date(g.date + 'T00:00:00');
+              const ts = getTagStyle(g.tag);
               return (
-                <div key={i} style={{ display:'flex', alignItems:'center', gap:16, background:'#111', border:'1px solid rgba(255,255,255,0.08)', borderLeft:'3px solid rgba(34,197,94,0.6)', borderRadius:12, padding:'14px 18px' }}>
-                  {/* Date badge */}
-                  <div style={{ flexShrink:0, textAlign:'center', minWidth:44 }}>
-                    <div style={{ fontSize:20, fontWeight:800, color:'#fff', lineHeight:1 }}>{String(d.getDate()).padStart(2,'0')}</div>
-                    <div style={{ fontSize:10, fontWeight:700, color:'rgba(34,197,94,0.8)', letterSpacing:'0.1em', textTransform:'uppercase', marginTop:2 }}>{MONTH_SHORT[d.getMonth()]} {d.getFullYear()}</div>
+                <div key={i} className="pg-card" style={{ display:'flex', alignItems:'center', gap:16, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'13px 18px', boxShadow:'0 2px 12px rgba(0,0,0,0.35)' }}>
+                  <div style={{ flexShrink:0, textAlign:'center', minWidth:40 }}>
+                    <div style={{ fontSize:17, fontWeight:800, color:'rgba(255,255,255,0.85)', lineHeight:1, letterSpacing:'-0.02em' }}>{String(d.getDate()).padStart(2,'0')}</div>
+                    <div style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,0.3)', letterSpacing:'0.08em', textTransform:'uppercase', marginTop:2 }}>{MONTH_SHORT[d.getMonth()]} '{String(d.getFullYear()).slice(2)}</div>
                   </div>
-                  {/* Divider */}
-                  <div style={{ width:1, height:36, background:'rgba(255,255,255,0.08)', flexShrink:0 }} />
-                  {/* Details */}
+                  <div style={{ width:1, height:32, background:'rgba(255,255,255,0.06)', flexShrink:0 }} />
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:15, fontWeight:700, color:'#fff', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{g.venue}</div>
-                    {g.city && <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)' }}>{g.city}</div>}
+                    <div style={{ fontSize:14, fontWeight:700, color:'rgba(255,255,255,0.85)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom: g.city ? 1 : 0 }}>{g.venue}</div>
+                    {g.city && <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{g.city}</div>}
                   </div>
-                  {/* Tag */}
                   {g.tag && (
-                    <div style={{ flexShrink:0, fontSize:10, fontWeight:700, padding:'3px 9px', borderRadius:5, background:'rgba(14,116,144,0.15)', border:'1px solid rgba(14,116,144,0.3)', color:'#22D3EE', letterSpacing:'0.06em', textTransform:'uppercase', whiteSpace:'nowrap' }}>{g.tag}</div>
+                    <span style={{ flexShrink:0, fontSize:9, fontWeight:800, padding:'2px 8px', borderRadius:4, background:ts.bg, border:`1px solid ${ts.border}`, color:ts.color, letterSpacing:'0.12em', textTransform:'uppercase', whiteSpace:'nowrap' }}>{g.tag}</span>
                   )}
                 </div>
               );
             })}
           </div>
-        )}
+        ) : <div style={{ marginBottom:40 }} />}
 
-        {/* Book CTA */}
-        <div style={{ textAlign:'center', marginTop:40 }}>
-          <a href={`/book/${username}`}
-            style={{ display:'inline-block', padding:'13px 32px', background:'#D4AF37', color:'#0a0a0a', borderRadius:10, fontSize:14, fontWeight:800, textDecoration:'none', letterSpacing:'0.02em' }}>
+        {/* CTA */}
+        <div style={{ textAlign:'center', animation:'pgFadeUp 0.5s 0.24s ease both', opacity:0 }}>
+          <a href={`/book/${username}`} className="pg-cta"
+            style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'15px 36px', background:'#D4AF37', color:'#0a0a0a', borderRadius:12, fontSize:15, fontWeight:800, textDecoration:'none', letterSpacing:'0.01em', boxShadow:'0 4px 24px rgba(212,175,55,0.30)' }}>
             Book {djProfile?.display_name}
+            <span style={{ fontSize:16 }}>→</span>
           </a>
+          <div style={{ marginTop:20, fontSize:11, color:'rgba(255,255,255,0.15)', letterSpacing:'0.04em' }}>Powered by NoxReach</div>
         </div>
 
-        <div style={{ textAlign:'center', marginTop:24, fontSize:11, color:'rgba(255,255,255,0.18)' }}>Powered by NoxReach</div>
       </div>
     </div>
   );
