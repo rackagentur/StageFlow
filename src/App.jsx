@@ -3672,7 +3672,7 @@ function PricingView({ isPro, onUpgrade }) {
           {!isPro && (
             <div style={{ position: "absolute", top: -10, right: 16, background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 800, color: "#fff", letterSpacing: "0.05em" }}>RECOMMENDED</div>
           )}
-          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Pro</div>
+          <div style={{ display: "inline-block", fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, color: COLORS.purpleLight, letterSpacing: "0.08em", marginBottom: 12 }}>PRO</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
             <span style={{ fontSize: 32, fontWeight: 800, color: COLORS.text, fontFamily: "'DM Mono', monospace" }}>€19</span>
             <span style={{ fontSize: 13, color: COLORS.textSecondary }}>/month</span>
