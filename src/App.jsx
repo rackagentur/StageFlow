@@ -2104,7 +2104,7 @@ function OutreachView({ isPro, onUpgradeClick, supabase, userId }) {
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                 <span style={{ fontSize: 16, color: locked ? COLORS.textMuted : COLORS.purple }}>{t.icon}</span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{t.label}</span>
-                {locked && <span style={{ marginLeft: "auto", fontSize: 9, color: COLORS.purple, background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 4, padding: "1px 6px", fontWeight: 800, letterSpacing: "0.06em" }}>PRO</span>}
+                {locked && <span style={{ marginLeft: "auto", fontSize: 9, color: COLORS.purpleLight, background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, borderRadius: 4, padding: "1px 6px", fontWeight: 700, letterSpacing: "0.06em" }}>PRO</span>}
               </div>
               <div style={{ fontSize: 10, color: COLORS.textSecondary, letterSpacing: "0.04em" }}>{t.tone}</div>
             </button>
@@ -7026,7 +7026,7 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 4, background: COLORS.border, color: COLORS.textSecondary, letterSpacing: "0.1em" }}>FREE</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "transparent", border: `1px solid ${COLORS.borderHover}`, color: COLORS.textSecondary, letterSpacing: "0.08em" }}>FREE</div>
                   <span style={{ fontSize: 10, color: COLORS.textMuted }}>{leads.filter(l => !l.archived).length} / {FREE_LIMITS.leads} leads</span>
                 </div>
                 <button onClick={() => requestUpgrade("leads")} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Upgrade</button>
@@ -7037,7 +7037,7 @@ const activeLeads = leads.filter(l => !l.archived);
             </div>
           ) : (
             <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 4, background: COLORS.purpleBg, color: COLORS.purple, border: `1px solid ${COLORS.purpleDim}`, letterSpacing: "0.1em" }}>PRO</div>
+              <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: COLORS.purpleBg, color: COLORS.purpleLight, border: `1px solid ${COLORS.purple}`, letterSpacing: "0.08em" }}>PRO</div>
               <span style={{ fontSize: 10, color: COLORS.textMuted }}>All features unlocked</span>
               {user?.email === "info@soundofgeez.com" && <button onClick={() => { setIsPro(false); saveIsPro(false, user.id); showToast("Switched to Free (demo)", "info"); }} style={{ marginLeft: "auto", fontSize: 9, color: COLORS.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0 }}>demo</button>}
               <a href="https://instagram.com/noxreach.os" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: COLORS.textMuted, textDecoration: "none", marginTop: 4, display: "block" }}>@noxreach.os</a>
@@ -7259,8 +7259,8 @@ const activeLeads = leads.filter(l => !l.archived);
                                   <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700,
                                     background: u.is_pro ? COLORS.purpleBg : "transparent",
                                     color: u.is_pro ? COLORS.purpleLight : COLORS.textSecondary,
-                                    border: u.is_pro ? `1px solid ${COLORS.purpleDim}` : `1px solid ${COLORS.borderHover}`,
-                                    letterSpacing: "0.04em",
+                                    border: u.is_pro ? `1px solid ${COLORS.purple}` : `1px solid ${COLORS.borderHover}`,
+                                    letterSpacing: "0.06em",
                                   }}>
                                     {u.is_pro ? "Pro" : "Free"}
                                   </span>
