@@ -3647,7 +3647,7 @@ function PricingView({ isPro, onUpgrade }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* Free */}
         <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 16, padding: 24 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Free</div>
+          <div style={{ display: "inline-block", fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.5)", color: COLORS.text, letterSpacing: "0.08em", marginBottom: 12 }}>FREE</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 20 }}>
             <span style={{ fontSize: 32, fontWeight: 800, color: COLORS.text, fontFamily: "'DM Mono', monospace" }}>€0</span>
             <span style={{ fontSize: 13, color: COLORS.textSecondary }}>/month</span>
@@ -3662,7 +3662,7 @@ function PricingView({ isPro, onUpgrade }) {
               </div>
             ))}
           </div>
-          <div style={{ width: "100%", padding: "11px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 10, color: COLORS.textMuted, fontSize: 12, fontWeight: 700, textAlign: "center" }}>
+          <div style={{ width: "100%", padding: "11px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.5)", borderRadius: 10, color: COLORS.text, fontSize: 12, fontWeight: 700, textAlign: "center" }}>
             {isPro ? "Previous plan" : "Current plan"}
           </div>
         </div>
