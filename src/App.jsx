@@ -737,9 +737,12 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           onSelect(isSelected ? null : lead);
         }} style={{
 
-      background: (isBulkSelected || isSelected) ? COLORS.purpleBg : COLORS.surface,
-      border: `1px solid ${isOverdue && !lead.archived ? COLORS.amber : (isBulkSelected || isSelected) ? COLORS.purple : COLORS.purpleDim}`,
-      boxShadow: isSelected
+      background: lead.stage === "booked" && !lead.archived ? "rgba(34,197,94,0.06)" : (isBulkSelected || isSelected) ? COLORS.purpleBg : COLORS.surface,
+      border: `1px solid ${lead.stage === "booked" && !lead.archived ? COLORS.green : isOverdue && !lead.archived ? COLORS.amber : (isBulkSelected || isSelected) ? COLORS.purple : COLORS.purpleDim}`,
+      borderLeft: lead.stage === "booked" && !lead.archived ? `3px solid ${COLORS.green}` : undefined,
+      boxShadow: lead.stage === "booked" && !lead.archived
+        ? `0 0 12px rgba(34,197,94,0.15), 0 2px 12px rgba(0,0,0,0.35)`
+        : isSelected
         ? `inset 3px 0 0 ${COLORS.purple}, 0 4px 16px rgba(0,0,0,0.5)`
         : `0 2px 12px rgba(0,0,0,0.35)`,
       borderRadius: 10, padding: "14px 16px", cursor: "pointer",
