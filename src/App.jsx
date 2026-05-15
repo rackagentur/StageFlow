@@ -3668,7 +3668,7 @@ function PricingView({ isPro, onUpgrade }) {
         </div>
 
         {/* Pro */}
-        <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 16, padding: 24, position: "relative", boxShadow: "0 0 40px rgba(14,116,144,0.10)" }}>
+        <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, borderRadius: 16, padding: 24, position: "relative", boxShadow: "0 0 40px rgba(14,116,144,0.10)" }}>
           {!isPro && (
             <div style={{ position: "absolute", top: -10, right: 16, background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 800, color: "#fff", letterSpacing: "0.05em" }}>RECOMMENDED</div>
           )}
