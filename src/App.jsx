@@ -737,11 +737,27 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           onSelect(isSelected ? null : lead);
         }} style={{
 
-      background: lead.stage === "booked" && !lead.archived ? "rgba(34,197,94,0.04)" : (isBulkSelected || isSelected) ? COLORS.purpleBg : COLORS.surface,
-      border: `1px solid ${lead.stage === "booked" && !lead.archived ? "rgba(34,197,94,0.5)" : lead.stage === "contacted" && !lead.archived ? "rgba(255,255,255,0.22)" : isOverdue && !lead.archived ? COLORS.amber : (isBulkSelected || isSelected) ? COLORS.purple : COLORS.purpleDim}`,
-      borderLeft: lead.stage === "booked" && !lead.archived ? "3px solid rgba(34,197,94,0.6)" : lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" : undefined,
+      background: lead.stage === "booked" && !lead.archived ? "rgba(34,197,94,0.04)" : lead.stage === "replied" && !lead.archived ? `${COLORS.purpleLight}08` : (isBulkSelected || isSelected) ? COLORS.purpleBg : COLORS.surface,
+      border: `1px solid ${
+        lead.archived ? COLORS.purpleDim :
+        isOverdue ? COLORS.amber :
+        (isBulkSelected || isSelected) ? COLORS.purple :
+        lead.stage === "booked"    ? "rgba(34,197,94,0.5)" :
+        lead.stage === "replied"   ? COLORS.purpleLight :
+        lead.stage === "followup1" || lead.stage === "followup2" ? COLORS.purple :
+        lead.stage === "contacted" ? "rgba(255,255,255,0.22)" :
+        COLORS.purpleDim
+      }`,
+      borderLeft:
+        lead.stage === "booked"    && !lead.archived ? "3px solid rgba(34,197,94,0.6)" :
+        lead.stage === "replied"   && !lead.archived ? `3px solid ${COLORS.purpleLight}` :
+        lead.stage === "followup1" || lead.stage === "followup2" && !lead.archived ? `3px solid ${COLORS.purple}` :
+        lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" :
+        undefined,
       boxShadow: lead.stage === "booked" && !lead.archived
         ? `0 0 8px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.35)`
+        : lead.stage === "replied" && !lead.archived
+        ? `0 0 10px rgba(34,211,238,0.10), 0 2px 12px rgba(0,0,0,0.35)`
         : isSelected
         ? `inset 3px 0 0 ${COLORS.purple}, 0 4px 16px rgba(0,0,0,0.5)`
         : `0 2px 12px rgba(0,0,0,0.35)`,
