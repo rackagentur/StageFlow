@@ -3,6 +3,7 @@ import { COLORS, STAGES } from './lib/constants.js';
 import { formatShortDate } from './lib/formatters.js';
 import { showToast as showDomToast } from './lib/toast.js';
 import { supabase } from './lib/supabaseClient.js';
+import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload } from './icons/index.jsx';
 
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
@@ -689,10 +690,10 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
   const [contactLog, setContactLog] = useState(lead.contactLog || "");
   const [logSaved, setLogSaved] = useState(false);
   const METHODS = [
-    { id: "email",     emoji: "📧", label: "Email", color: COLORS.purple },
-    { id: "instagram", emoji: "📸", label: "DM",    color: COLORS.purple },
-    { id: "phone",     emoji: "📞", label: "Phone", color: "#22C55E" },
-    { id: "other",     emoji: "✶", label: "Other", color: COLORS.text2 },
+    { id: "email",     Icon: IconMail,      label: "Email", color: COLORS.purple },
+    { id: "instagram", Icon: IconInstagram, label: "DM",    color: COLORS.purple },
+    { id: "phone",     Icon: IconPhone,     label: "Phone", color: "#22C55E" },
+    { id: "other",     Icon: IconWhatsApp,  label: "Other", color: COLORS.text2 },
   ];
   const handleMethod = (e, methodId) => { e.stopPropagation(); onUpdateLead && onUpdateLead(lead.id, { outreachMethod: methodId }); };
   const handleLogBlur = () => { if (contactLog !== (lead.contactLog || "")) { onUpdateLead && onUpdateLead(lead.id, { contactLog }); setLogSaved(true); setTimeout(() => setLogSaved(false), 1500); } };
@@ -866,7 +867,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
             {METHODS.map(m => {
               const active = lead.outreachMethod === m.id;
               return (
-                <button key={m.id} onClick={e => handleMethod(e, m.id)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 20, cursor: "pointer", background: active ? m.color + "33" : COLORS.bg, border: `1px solid ${active ? m.color : COLORS.border}`, color: active ? m.color : COLORS.textSecondary, fontSize: 11, fontWeight: active ? 700 : 500, transition: "all 0.15s" }}><span style={{ fontSize: 13 }}>{m.emoji}</span><span>{m.label}</span></button>
+                <button key={m.id} onClick={e => handleMethod(e, m.id)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 20, cursor: "pointer", background: active ? m.color + "33" : COLORS.bg, border: `1px solid ${active ? m.color : COLORS.border}`, color: active ? m.color : COLORS.textSecondary, fontSize: 11, fontWeight: active ? 700 : 500, transition: "all 0.15s" }}><m.Icon size={12} color={active ? m.color : COLORS.textSecondary} /><span>{m.label}</span></button>
               );
             })}
           </div>
@@ -6346,11 +6347,11 @@ Feel free to use this as a testimonial on the site.
 
 function OutreachMethodModal({ lead, onClose, onSelect, templates }) {
   const METHODS = [
-    { id: "email",    icon: "📧", label: "Email",        hasTemplate: true  },
-    { id: "instagram",icon: "📸", label: "Instagram DM", hasTemplate: false },
-    { id: "whatsapp", icon: "💬", label: "WhatsApp",     hasTemplate: false },
-    { id: "phone",    icon: "📞", label: "Phone",        hasTemplate: false },
-    { id: "other",    icon: "✦",  label: "Other",        hasTemplate: false },
+    { id: "email",    Icon: IconMail,      label: "Email",        hasTemplate: true  },
+    { id: "instagram",Icon: IconInstagram, label: "Instagram DM", hasTemplate: false },
+    { id: "whatsapp", Icon: IconWhatsApp,  label: "WhatsApp",     hasTemplate: false },
+    { id: "phone",    Icon: IconPhone,     label: "Phone",        hasTemplate: false },
+    { id: "other",    Icon: IconOutreach,  label: "Other",        hasTemplate: false },
   ];
 
   const buildMailto = () => {
@@ -6408,7 +6409,7 @@ function OutreachMethodModal({ lead, onClose, onSelect, templates }) {
                   e.currentTarget.style.background = COLORS.bg;
                 }}
               >
-                <span style={{ fontSize: 20, width: 28, textAlign: "center", flexShrink: 0 }}>{method.icon}</span>
+                <div style={{ width: 28, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><method.Icon size={18} color={COLORS.purpleLight} /></div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{method.label}</div>
                   {method.hasTemplate && (
@@ -6990,21 +6991,30 @@ const activeLeads = leads.filter(l => !l.archived);
           </a>
         </div>
         <nav style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}>
-          {TABS.filter(t => t.group === "main").map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: activeTab === tab.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeTab === tab.id ? COLORS.purpleDim : "transparent"}`, color: activeTab === tab.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeTab === tab.id ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
-              <span style={{ fontSize: 14 }}>{tab.icon}</span>
-              {tab.label}
-              {tab.badge > 0 && <span style={{ marginLeft: "auto", background: COLORS.purple, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800 }}>{tab.badge}</span>}
-            </button>
-          ))}
+          {TABS.filter(t => t.group === "main").map(tab => {
+            const isActive = activeTab === tab.id;
+            const TabIcon  = TAB_ICONS[tab.id];
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: isActive ? COLORS.purpleBg : "transparent", border: `1px solid ${isActive ? COLORS.purpleDim : "transparent"}`, color: isActive ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
+                {TabIcon && <TabIcon size={15} color={isActive ? COLORS.purpleLight : COLORS.textSecondary} />}
+                {tab.label}
+                {tab.badge > 0 && <span style={{ marginLeft: "auto", background: COLORS.purple, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800 }}>{tab.badge}</span>}
+              </button>
+            );
+          })}
           <div style={{ height: 1, background: COLORS.border, margin: "10px 4px 12px" }} />
           <div style={{ fontSize: 9, color: COLORS.text3, letterSpacing: "0.12em", textTransform: "uppercase", padding: "0 8px", marginBottom: 6, opacity: 0.6 }}>Resources</div>
-          {TABS.filter(t => t.group === "ref").map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: activeTab === tab.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeTab === tab.id ? COLORS.purpleDim : "transparent"}`, color: activeTab === tab.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeTab === tab.id ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
-              <span style={{ fontSize: 14 }}>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+          {TABS.filter(t => t.group === "ref").map(tab => {
+            const isActive = activeTab === tab.id;
+            const TabIcon  = TAB_ICONS[tab.id];
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: isActive ? COLORS.purpleBg : "transparent", border: `1px solid ${isActive ? COLORS.purpleDim : "transparent"}`, color: isActive ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
+                {TabIcon && <TabIcon size={15} color={isActive ? COLORS.purpleLight : COLORS.textSecondary} />}
+                {tab.label}
+                {tab.badge > 0 && <span style={{ marginLeft: "auto", background: COLORS.purple, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800 }}>{tab.badge}</span>}
+              </button>
+            );
+          })}
         </nav>
         <div style={{ padding: "16px 20px 12px", borderTop: `1px solid ${COLORS.border}`, overflow: "hidden" }}>
           {/* Plan chip */}
@@ -7055,10 +7065,10 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</div>
             <div style={{ fontSize: 9, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</div>
           </div>
-          <button onClick={handleSignOut} title="Sign out" style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, fontSize: 14, padding: 4, borderRadius: 6, transition: "color 0.15s" }}
-            onMouseEnter={e => e.target.style.color = COLORS.red}
-            onMouseLeave={e => e.target.style.color = COLORS.textMuted}
-          >⏻</button>
+          <button onClick={handleSignOut} title="Sign out" style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, padding: 4, borderRadius: 6, transition: "color 0.15s", display: "flex" }}
+            onMouseEnter={e => e.currentTarget.style.color = COLORS.red}
+            onMouseLeave={e => e.currentTarget.style.color = COLORS.textMuted}
+          ><IconPowerOff size={15} color="currentColor" /></button>
         </div>
       </div>
 
@@ -7087,10 +7097,11 @@ const activeLeads = leads.filter(l => !l.archived);
                   ⏰ {dueCount} follow-up{dueCount > 1 ? "s" : ""} due
                 </div>
               )}
-              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Lead
+              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
+                <IconPlus size={14} color="#fff" /> Add Lead
               </button>
               <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.purple}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                <span>📊</span> Import CSV
+                <IconUpload size={14} color={COLORS.purpleLight} /> Import CSV
               </button>
             </div>
           </div>
