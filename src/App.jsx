@@ -6101,37 +6101,43 @@ function AnalyticsView({ userId, supabase, COLORS }) {
       {/* Conversion Funnel */}
       <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Pipeline Conversion Funnel</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
           {[
-            { label: "Target", count: stats.target_count, color: COLORS.text3, width: 100 },
-            { label: "Contacted", count: stats.contacted_count, color: COLORS.purple, width: stats.total_leads > 0 ? (stats.contacted_count / stats.total_leads) * 100 : 0 },
-            { label: "Replied", count: stats.replied_count, color: COLORS.purpleLight, width: stats.contacted_count > 0 ? (stats.replied_count / stats.contacted_count) * 100 : 0 },
-            { label: "Booked", count: stats.booked_count, color: COLORS.green, width: stats.replied_count > 0 ? (stats.booked_count / stats.replied_count) * 100 : 0 },
-          ].map((stage, i) => (
-            <div key={stage.label} style={{ flex: 1 }}>
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 4 }}>{stage.label}</div>
-                <div style={{ fontSize: 20, fontWeight: 600, color: stage.color }}>{stage.count}</div>
+            { label: "Target",    count: stats.target_count,    color: COLORS.text3,       width: 100 },
+            { label: "Contacted", count: stats.contacted_count, color: COLORS.purple,      width: stats.total_leads > 0     ? (stats.contacted_count / stats.total_leads) * 100     : 0 },
+            { label: "Replied",   count: stats.replied_count,   color: COLORS.purpleLight, width: stats.contacted_count > 0 ? (stats.replied_count / stats.contacted_count) * 100   : 0 },
+            { label: "Booked",    count: stats.booked_count,    color: COLORS.green,       width: stats.replied_count > 0   ? (stats.booked_count / stats.replied_count) * 100      : 0 },
+          ].map((stage, i) => {
+            const isBooked = i === 3;
+            return (
+              <div key={stage.label} style={{ flex: isBooked ? 1.4 : 1 }}>
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: isBooked ? 11 : 13, color: isBooked ? stage.color : COLORS.textSecondary, marginBottom: 4, fontWeight: isBooked ? 700 : 400, letterSpacing: isBooked ? "0.08em" : 0, textTransform: isBooked ? "uppercase" : "none" }}>{stage.label}</div>
+                  <div style={{ fontSize: isBooked ? 36 : 20, fontWeight: isBooked ? 800 : 600, color: stage.color, fontFamily: isBooked ? "'DM Mono', monospace" : "inherit", lineHeight: 1 }}>{stage.count}</div>
+                </div>
+                <div style={{
+                  height: isBooked ? 52 : 40,
+                  background: isBooked
+                    ? `linear-gradient(to right, ${stage.color}CC, ${stage.color}88)`
+                    : `linear-gradient(to right, ${stage.color}, ${stage.color}AA)`,
+                  borderRadius: 8,
+                  width: `${Math.max(stage.width, 10)}%`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: isBooked ? 13 : 12,
+                  fontWeight: 700,
+                  color: "#fff",
+                  border: isBooked ? `1px solid ${stage.color}66` : "none",
+                }}>
+                  {stage.width >= 20 && `${Math.round(stage.width)}%`}
+                </div>
+                {i < 3 && (
+                  <div style={{ textAlign: "center", margin: "8px 0", fontSize: 18, color: COLORS.text3 }}>→</div>
+                )}
               </div>
-              <div style={{ 
-                height: 40,
-                background: `linear-gradient(to right, ${stage.color}, ${stage.color}AA)`,
-                borderRadius: 8,
-                width: `${Math.max(stage.width, 10)}%`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#fff",
-              }}>
-                {stage.width >= 20 && `${Math.round(stage.width)}%`}
-              </div>
-              {i < 3 && (
-                <div style={{ textAlign: "center", margin: "8px 0", fontSize: 18, color: COLORS.text3 }}>→</div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
