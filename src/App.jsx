@@ -3,7 +3,31 @@ import { COLORS, STAGES } from './lib/constants.js';
 import { formatShortDate } from './lib/formatters.js';
 import { showToast as showDomToast } from './lib/toast.js';
 import { supabase } from './lib/supabaseClient.js';
+import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload } from './icons/index.jsx';
 
+
+// ── Design Tokens ─────────────────────────────────────────────────────────────
+const BTN = {
+  primary:   { padding: "10px 20px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" },
+  secondary: { padding: "10px 20px", background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, color: "#a1a1aa", fontSize: 13, fontWeight: 500, cursor: "pointer" },
+  ghost:     { padding: "10px 20px", background: "transparent", border: "none", borderRadius: 8, color: "#a1a1aa", fontSize: 13, cursor: "pointer" },
+  danger:    { padding: "10px 20px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, color: "#ef4444", fontSize: 13, fontWeight: 600, cursor: "pointer" },
+  sm:        { padding: "5px 12px", fontSize: 11 },
+  xs:        { padding: "3px 8px",  fontSize: 10 },
+};
+
+const CARD = {
+  base:     { background: "#111111", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10 },
+  elevated: { background: "#18181b", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10 },
+};
+
+const INPUT = {
+  base: {
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)",
+    borderRadius: 8, color: "#ffffff", fontSize: 13, outline: "none",
+    padding: "10px 14px", width: "100%",
+  },
+};
 
 // ── Auth Styles (injected once) ───────────────────────────────────────────────
 const AUTH_CSS = `
@@ -24,21 +48,14 @@ function LoginScreen({ onAuth }) {
   const [error, setError]     = useState("");
   const [success, setSuccess] = useState("");
 
-  const C = {
-    bg: "#060608", surface: "#0f0f18", border: "#1c1c2e", border2: "#252538",
-    purple: "#6B2FD4", purpleL: "#8B4FFF", cyan: "#00D4FF",
-    text: "#f0f0f0", text2: "#a8a8c0", text3: "#7070a0",
-    gold: "#D4AF37", green: "#22C55E", red: "#ef4444",
-  };
-
   const inputStyle = {
     width: "100%", padding: "13px 16px",
-    background: C.surface, border: `1px solid ${C.border2}`,
-    borderRadius: 10, color: C.text, fontSize: 14, outline: "none",
+    background: COLORS.surface, border: `1px solid ${COLORS.border}`,
+    borderRadius: 8, color: COLORS.text, fontSize: 14, outline: "none",
     fontFamily: "'DM Sans', sans-serif",
     transition: "border-color 0.2s",
-    WebkitBoxShadow: `0 0 0 1000px ${C.surface} inset`,
-WebkitTextFillColor: C.text,
+    WebkitBoxShadow: `0 0 0 1000px ${COLORS.surface} inset`,
+    WebkitTextFillColor: COLORS.text,
   };
 
   const handleSubmit = async (e) => {
@@ -81,7 +98,7 @@ WebkitTextFillColor: C.text,
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: C.bg, position: "relative", overflow: "hidden",
+      background: COLORS.bgDeep, position: "relative", overflow: "hidden",
     }}>
       <style>{AUTH_CSS}</style>
 
@@ -99,7 +116,7 @@ WebkitTextFillColor: C.text,
         position: "absolute", top: "50%", left: "50%",
         transform: "translate(-50%, -60%)",
         width: 700, height: 500,
-        background: "radial-gradient(ellipse, rgba(107,47,212,0.15) 0%, rgba(0,212,255,0.04) 50%, transparent 70%)",
+        background: "radial-gradient(ellipse, rgba(14,116,144,0.12) 0%, rgba(14,116,144,0.03) 50%, transparent 70%)",
         pointerEvents: "none", animation: "authGlow 4s ease infinite",
       }} />
 
@@ -111,15 +128,15 @@ WebkitTextFillColor: C.text,
       }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="52" height="52" style={{ borderRadius: 13, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
+          <img src="https://noxreach.com/public/nr-icon.png" width="52" height="52" style={{ borderRadius: 12, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
           <img src="https://noxreach.com/public/nr-wordmark.png" height="18" style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
-          <div style={{ fontSize: 11, color: C.cyan, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
+          <div style={{ fontSize: 11, color: COLORS.purple, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6, letterSpacing: "0.02em" }}>Track venues, replies, follow-ups, and booked gigs in one place.</div>
         </div>
 
         {/* Form card */}
         <div style={{
-          background: C.surface, border: `1px solid ${C.border2}`,
+          background: COLORS.surface, border: `1px solid ${COLORS.border}`,
           borderRadius: 16, padding: "32px 28px",
           boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
         }}>
@@ -127,7 +144,7 @@ WebkitTextFillColor: C.text,
           {mode !== "reset" && (
             <div style={{
               display: "flex", gap: 2, marginBottom: 28,
-              background: "#0a0a10", borderRadius: 10, padding: 3,
+              background: COLORS.bg, borderRadius: 8, padding: 3,
             }}>
               {[["login", "Log in"], ["signup", "Sign up"]].map(([m, label]) => (
                 <button
@@ -156,44 +173,44 @@ WebkitTextFillColor: C.text,
           {mode === "reset" && (
             <div style={{ marginBottom: 24 }}>
               <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Reset password</div>
-              <div style={{ fontSize: 13, color: C.text2 }}>Enter your email and we'll send a reset link.</div>
+              <div style={{ fontSize: 13, color: COLORS.text2 }}>Enter your email and we'll send a reset link.</div>
             </div>
           )}
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {mode === "signup" && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Name</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text2, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Name</div>
                 <input
                   value={name} onChange={e => setName(e.target.value)}
                   placeholder="Your DJ name or full name"
                   style={inputStyle} required
-                  onFocus={e => e.target.style.borderColor = C.purple}
-                  onBlur={e => e.target.style.borderColor = C.border2}
+                  onFocus={e => e.target.style.borderColor = COLORS.purple}
+                  onBlur={e => e.target.style.borderColor = COLORS.border}
                 />
               </div>
             )}
 
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Email</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text2, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Email</div>
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 style={inputStyle} required
-                onFocus={e => e.target.style.borderColor = C.purple}
-                onBlur={e => e.target.style.borderColor = C.border2}
+                onFocus={e => e.target.style.borderColor = COLORS.purple}
+                onBlur={e => e.target.style.borderColor = COLORS.border}
               />
             </div>
 
             {mode !== "reset" && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Password</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text2, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Password</div>
                 <input
                   type="password" value={password} onChange={e => setPassword(e.target.value)}
                   placeholder={mode === "signup" ? "Min. 6 characters" : "Your password"}
                   style={inputStyle} required
-                  onFocus={e => e.target.style.borderColor = C.purple}
-                  onBlur={e => e.target.style.borderColor = C.border2}
+                  onFocus={e => e.target.style.borderColor = COLORS.purple}
+                  onBlur={e => e.target.style.borderColor = COLORS.border}
                 />
               </div>
             )}
@@ -202,25 +219,25 @@ WebkitTextFillColor: C.text,
               <div style={{
                 padding: "10px 14px", borderRadius: 8,
                 background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)",
-                color: C.red, fontSize: 13, lineHeight: 1.5,
+                color: COLORS.red, fontSize: 13, lineHeight: 1.5,
               }}>{error}</div>
             )}
             {success && (
               <div style={{
                 padding: "10px 14px", borderRadius: 8,
                 background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
-                color: C.green, fontSize: 13, lineHeight: 1.5,
+                color: COLORS.green, fontSize: 13, lineHeight: 1.5,
               }}>{success}</div>
             )}
 
             <button type="submit" disabled={loading} style={{
               padding: "13px 0", borderRadius: 10, border: "none",
-              background: loading ? C.purpleL + "88" : `linear-gradient(135deg, ${C.purple}, ${C.purpleL})`,
+              background: loading ? COLORS.purpleLight + "88" : `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`,
               color: "#fff", fontSize: 14, fontWeight: 700,
               fontFamily: "'DM Sans', sans-serif",
               cursor: loading ? "not-allowed" : "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              boxShadow: loading ? "none" : "0 4px 20px rgba(107,47,212,0.4)",
+              boxShadow: loading ? "none" : "0 4px 20px rgba(14,116,144,0.30)",
               transition: "all 0.15s",
             }}>
               {loading ? (
@@ -233,9 +250,9 @@ WebkitTextFillColor: C.text,
           {mode === "login" && (
             <div style={{ marginTop: 12, textAlign: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <div style={{ flex: 1, height: 1, background: C.border }} />
-                <span style={{ fontSize: 11, color: C.text3 }}>or</span>
-                <div style={{ flex: 1, height: 1, background: C.border }} />
+                <div style={{ flex: 1, height: 1, background: COLORS.border }} />
+                <span style={{ fontSize: 11, color: COLORS.text3 }}>or</span>
+                <div style={{ flex: 1, height: 1, background: COLORS.border }} />
               </div>
               <button onClick={async () => {
                 setLoading(true); setError("");
@@ -244,36 +261,35 @@ WebkitTextFillColor: C.text,
                 if (err) setError("Demo unavailable right now.");
                 else onAuth(data.session, data.user);
               }} disabled={loading} style={{
-                width: "100%", padding: "12px 0", borderRadius: 10,
-                background: "transparent", border: `1px solid ${C.border2}`,
-                color: C.text2, fontSize: 13, fontWeight: 600,
+                width: "100%", padding: "12px 0", borderRadius: 8,
+                background: "transparent", border: `1px solid ${COLORS.border}`,
+                color: COLORS.text2, fontSize: 13, fontWeight: 600,
                 fontFamily: "'DM Sans', sans-serif", cursor: "pointer",
                 transition: "all 0.15s",
               }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.purple; e.currentTarget.style.color = C.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border2; e.currentTarget.style.color = C.text2; }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.purple; e.currentTarget.style.color = COLORS.text; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.text2; }}
               >Try Demo →</button>
             </div>
           )}
-
           {/* Footer links */}
           <div style={{ marginTop: 20, textAlign: "center", display: "flex", justifyContent: "center", gap: 20 }}>
             {mode === "login" && (
               <button onClick={() => { setMode("reset"); setError(""); setSuccess(""); }}
-                style={{ background: "none", border: "none", color: C.text3, fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                style={{ background: "none", border: "none", color: COLORS.text3, fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                 Forgot password?
               </button>
             )}
             {mode === "reset" && (
               <button onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
-                style={{ background: "none", border: "none", color: C.text3, fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                style={{ background: "none", border: "none", color: COLORS.text3, fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                 ← Back to log in
               </button>
             )}
           </div>
         </div>
 
-        <div style={{ textAlign: "center", marginTop: 20, fontSize: 12, color: C.text3 }}>
+        <div style={{ textAlign: "center", marginTop: 20, fontSize: 12, color: COLORS.text3 }}>
           Built for DJs who book with intent.
         </div>
         <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.2)", display: "flex", gap: 16, justifyContent: "center" }}>
@@ -313,15 +329,15 @@ function AuthGate({ children }) {
     return (
       <div style={{
         minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        background: "#060608", flexDirection: "column", gap: 16,
+        background: COLORS.bgDeep, flexDirection: "column", gap: 16,
       }}>
         <style>{AUTH_CSS}</style>
         <div style={{
-          width: 40, height: 40, border: "2px solid #1c1c2e",
-          borderTopColor: "#6B2FD4", borderRadius: "50%",
+          width: 40, height: 40, border: `2px solid ${COLORS.border}`,
+          borderTopColor: COLORS.purple, borderRadius: "50%",
           animation: "authSpin 0.7s linear infinite",
         }} />
-        <div style={{ fontSize: 12, color: "#50506a", letterSpacing: "0.1em" }}>LOADING NOXREACH</div>
+        <div style={{ fontSize: 12, color: COLORS.text3, letterSpacing: "0.1em" }}>LOADING NOXREACH</div>
       </div>
     );
   }
@@ -346,7 +362,7 @@ const getTemplates = (artistName) => [
 
 const INITIAL_LEADS = []; // New users start with empty pipeline
 
-const TIER_COLORS = { A1: COLORS.gold, A2: COLORS.purple, A3: COLORS.textSecondary };
+const TIER_COLORS = { A1: COLORS.purpleLight, A2: COLORS.purple, A3: COLORS.textSecondary };
 
 // Leads + Gigs now live in Supabase (per user), not localStorage
 // localStorage kept only for settings, pro status, tags
@@ -361,16 +377,22 @@ function loadIsPro(userId) { try { return localStorage.getItem(STORAGE_KEY_PRO +
 function saveIsPro(v, userId) { try { localStorage.setItem(STORAGE_KEY_PRO + "_" + userId, String(v)); } catch {} }
 const FREE_LIMITS = { leads: 15, gigs: 10, templates: 2 };
 
-const STORAGE_KEY_TAGS = "noxreach_tags_v1";
+const STORAGE_KEY_TAGS        = "noxreach_tags_v1";
+const STORAGE_KEY_TAG_COLORS  = "noxreach_tag_colors_v1";
 const DEFAULT_TAGS = ["Tech-House", "Disco", "Festival"];
-const TAG_PALETTE   = ["#7B3FE4","#3B82F6","#EC4899","#F59E0B","#F43F5E","#22C55E","#F97316","#14B8A6","#8B5CF6","#EAB308"];
-function tagColor(tag) {
-  let hash = 0;
-  for (let i = 0; i < tag.length; i++) hash = tag.charCodeAt(i) + ((hash << 5) - hash);
-  return TAG_PALETTE[Math.abs(hash) % TAG_PALETTE.length];
+const TAG_PALETTE  = ["#F59E0B","#3B82F6","#EC4899","#22C55E","#F97316","#14B8A6","#EAB308","#F43F5E","#06B6D4","#A78BFA","#84CC16","#FB923C"];
+
+// Pick the next palette color least used by existing tags
+function pickNextColor(usedColors) {
+  const counts = Object.fromEntries(TAG_PALETTE.map(c => [c, 0]));
+  usedColors.forEach(c => { if (counts[c] !== undefined) counts[c]++; });
+  return TAG_PALETTE.reduce((a, b) => counts[a] <= counts[b] ? a : b);
 }
-function loadCustomTags() { try { const r = localStorage.getItem(STORAGE_KEY_TAGS); if (r) return JSON.parse(r); } catch {} return [...DEFAULT_TAGS]; }
-function saveCustomTags(t) { try { localStorage.setItem(STORAGE_KEY_TAGS, JSON.stringify(t)); } catch {} }
+
+function loadCustomTags()   { try { const r = localStorage.getItem(STORAGE_KEY_TAGS);       if (r) return JSON.parse(r); } catch {} return [...DEFAULT_TAGS]; }
+function saveCustomTags(t)  { try { localStorage.setItem(STORAGE_KEY_TAGS, JSON.stringify(t)); } catch {} }
+function loadTagColors()    { try { const r = localStorage.getItem(STORAGE_KEY_TAG_COLORS);  if (r) return JSON.parse(r); } catch {} return {}; }
+function saveTagColors(m)   { try { localStorage.setItem(STORAGE_KEY_TAG_COLORS, JSON.stringify(m)); } catch {} }
 
 // Build a date string relative to today for sample data
 const relDate = (daysFromNow) => { const d = new Date(); d.setDate(d.getDate() + daysFromNow); return d.toISOString().split("T")[0]; };
@@ -404,7 +426,7 @@ function FilterPill({ label, active, color = COLORS.purple, onClick, onClear }) 
 function Toast({ toast }) {
   if (!toast) return null;
   const icons  = { success: "✓", schedule: "⏰", info: "◈" };
-  const colors = { success: COLORS.green, schedule: COLORS.gold, info: COLORS.purple };
+  const colors = { success: COLORS.green, schedule: COLORS.amber, info: COLORS.purple };
   const color  = colors[toast.type] || COLORS.purple;
   return (
     <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 2000, animation: "toastIn 0.25s ease", background: COLORS.surface, border: `1px solid ${color}55`, borderRadius: 12, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10, boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px ${color}22`, minWidth: 260 }}>
@@ -424,16 +446,15 @@ function Logo({ size = 24 }) {
       <path d="M3 23V9h2.8l5.6 9.2V9H14v14h-2.8L5.6 13.8V23H3z" fill="url(#nl)"/>
       {/* R */}
       <path d="M16 9h5.2c2.1 0 3.8 1.7 3.8 3.8 0 1.5-.8 2.8-2.1 3.4L26 23h-3.2l-2.6-7.4H19V23h-3V9z M19 11.8v3.4h2.1c.7 0 1.3-.6 1.3-1.3v-.8c0-.7-.6-1.3-1.3-1.3H19z" fill="url(#rl)"/>
-      {/* cyan reach line through center */}
-      <line x1="10" y1="16" x2="22" y2="16" stroke="#00D4FF" strokeWidth="1.2" strokeOpacity="0.7"/>
+      <line x1="10" y1="16" x2="22" y2="16" stroke={COLORS.purple} strokeWidth="1.2" strokeOpacity="0.7"/>
       <defs>
         <linearGradient id="nl" x1="3" y1="9" x2="14" y2="23" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#8B4FFF"/>
-          <stop offset="100%" stopColor="#6B2FD4"/>
+          <stop offset="0%" stopColor={COLORS.purpleLight}/>
+          <stop offset="100%" stopColor={COLORS.purple}/>
         </linearGradient>
         <linearGradient id="rl" x1="16" y1="9" x2="26" y2="23" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#00D4FF"/>
-          <stop offset="100%" stopColor="#8B4FFF"/>
+          <stop offset="0%" stopColor={COLORS.purpleLight}/>
+          <stop offset="100%" stopColor={COLORS.purple}/>
         </linearGradient>
       </defs>
     </svg>
@@ -558,11 +579,11 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
             <span style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 4, flexShrink: 0 }}>Stage</span>
 
             {[
-              { id: "target",    label: "Target",    color: "#444444", stages: ["target"] },
-              { id: "contacted", label: "Contacted", color: "#7B3FE4", stages: ["contacted"] },
-              { id: "followup",  label: "Follow-up", color: "#9B5FFF", stages: ["followup1","followup2"] },
-              { id: "replied",   label: "Replied",   color: "#22C55E", stages: ["replied"] },
-              { id: "booked",    label: "Booked",    color: "#D4AF37", stages: ["booked"] },
+              { id: "target",    label: "Target",    color: COLORS.text3,   stages: ["target"] },
+              { id: "contacted", label: "Contacted", color: COLORS.purple,  stages: ["contacted"] },
+              { id: "followup",  label: "Follow-up", color: COLORS.purple,  stages: ["followup1","followup2"] },
+              { id: "replied",   label: "Replied",   color: COLORS.purple,  stages: ["replied"] },
+              { id: "booked",    label: "Booked",    color: COLORS.green,   stages: ["booked"] },
             ].map(s => (
               <FilterPill key={s.id} label={s.label} active={filters.stage === s.id} color={s.color}
                 onClick={() => toggle("stage", s.id)} onClear={() => toggle("stage", s.id)} />
@@ -638,7 +659,7 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear }) {
                   padding: '8px 12px', background: 'transparent', border: 'none',
                   color: COLORS.text, fontSize: 13, cursor: 'pointer', borderRadius: 4
                 }}
-                onMouseEnter={(e) => e.target.style.background = COLORS.bgHover}
+                onMouseEnter={(e) => e.target.style.background = COLORS.surface2}
                 onMouseLeave={(e) => e.target.style.background = 'transparent'}>
                 {s.label}
               </button>
@@ -675,10 +696,10 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
   const [contactLog, setContactLog] = useState(lead.contactLog || "");
   const [logSaved, setLogSaved] = useState(false);
   const METHODS = [
-    { id: "email",     emoji: "📧", label: "Email", color: "#6B2FD4" },
-    { id: "instagram", emoji: "📸", label: "DM",    color: "#E1306C" },
-    { id: "phone",     emoji: "📞", label: "Phone", color: "#22C55E" },
-    { id: "other",     emoji: "✶", label: "Other", color: "#D4AF37" },
+    { id: "email",     Icon: IconMail,      label: "Email", color: COLORS.purple },
+    { id: "instagram", Icon: IconInstagram, label: "DM",    color: COLORS.purple },
+    { id: "phone",     Icon: IconPhone,     label: "Phone", color: "#22C55E" },
+    { id: "other",     Icon: IconWhatsApp,  label: "Other", color: COLORS.text2 },
   ];
   const handleMethod = (e, methodId) => { e.stopPropagation(); onUpdateLead && onUpdateLead(lead.id, { outreachMethod: methodId }); };
   const handleLogBlur = () => { if (contactLog !== (lead.contactLog || "")) { onUpdateLead && onUpdateLead(lead.id, { contactLog }); setLogSaved(true); setTimeout(() => setLogSaved(false), 1500); } };
@@ -686,11 +707,11 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
   const isOverdue  = lead.followUpDate && new Date(lead.followUpDate) <= new Date();
   const STAGE_COLORS = {
     target:    "#444444",
-    contacted: "#3B82F6",
-    followup1: "#7B3FE4",
-    followup2: "#7B3FE4",
-    replied:   "#00D4FF",
-    booked:    "#D4AF37",
+    contacted: COLORS.purple,
+    followup1: COLORS.purple,
+    followup2: COLORS.purple,
+    replied:   COLORS.purple,
+    booked:    COLORS.green,
   };
   const stageBorder = STAGE_COLORS[lead.stage] || COLORS.border;
 
@@ -716,14 +737,38 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           onSelect(isSelected ? null : lead);
         }} style={{
 
-      background: isBulkSelected ? COLORS.purple + "22" : isSelected ? COLORS.purpleBg : COLORS.surface,
-      border: `1px solid ${isBulkSelected ? COLORS.purpleLight : isSelected ? COLORS.purple : lead.is_inbound && !lead.archived ? "#00D4FF" : isOverdue && !lead.archived ? COLORS.gold : lead.archived ? COLORS.border : stageBorder + "99"}`,
+      background: (isBulkSelected || isSelected) ? `${COLORS.purpleLight}0D` :
+        lead.stage === "booked"  && !lead.archived ? "rgba(34,197,94,0.04)" :
+        lead.stage === "replied" && !lead.archived ? `${COLORS.purpleLight}08` :
+        COLORS.surface,
+      border: (isBulkSelected || isSelected) ? `2px solid rgba(255,255,255,0.70)` : `1px solid ${
+        lead.archived                     ? COLORS.purpleDim :
+        isOverdue                         ? COLORS.amber :
+        lead.stage === "booked"           ? "rgba(34,197,94,0.5)" :
+        lead.stage === "replied"          ? COLORS.purpleLight :
+        lead.stage === "followup1" || lead.stage === "followup2" ? COLORS.purple :
+        lead.stage === "contacted"        ? "rgba(255,255,255,0.22)" :
+        COLORS.purpleDim
+      }`,
+      borderLeft: (isBulkSelected || isSelected) ? undefined :
+        lead.stage === "booked"    && !lead.archived ? "3px solid rgba(34,197,94,0.6)" :
+        lead.stage === "replied"   && !lead.archived ? `3px solid ${COLORS.purpleLight}` :
+        (lead.stage === "followup1" || lead.stage === "followup2") && !lead.archived ? `3px solid ${COLORS.purple}` :
+        lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" :
+        undefined,
+      boxShadow: (isBulkSelected || isSelected)
+        ? `inset 4px 0 0 ${COLORS.purpleLight}, 0 0 16px rgba(34,211,238,0.18), 0 4px 16px rgba(0,0,0,0.5)`
+        : lead.stage === "booked" && !lead.archived
+        ? `0 0 8px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.35)`
+        : lead.stage === "replied" && !lead.archived
+        ? `0 0 10px rgba(34,211,238,0.10), 0 2px 12px rgba(0,0,0,0.35)`
+        : `0 2px 12px rgba(0,0,0,0.35)`,
       borderRadius: 10, padding: "14px 16px", cursor: "pointer",
       transition: "all 0.15s ease", position: "relative", overflow: "hidden",
       opacity: lead.archived ? 0.45 : 1,
     }}>
       {isOverdue && !lead.archived && (
-        <div style={{ position: "absolute", top: 0, right: 0, background: COLORS.gold, color: "#000", fontSize: 9, fontWeight: 800, padding: "2px 8px", borderBottomLeftRadius: 6, letterSpacing: "0.1em" }}>FOLLOW UP</div>
+        <div style={{ position: "absolute", top: 0, right: 0, background: COLORS.amber, color: "#000", fontSize: 9, fontWeight: 800, padding: "2px 8px", borderBottomLeftRadius: 6, letterSpacing: "0.1em" }}>FOLLOW UP</div>
       )}
       {lead.archived && (
         <div style={{ position: "absolute", top: 0, right: 0, background: COLORS.textMuted, color: COLORS.bg, fontSize: 9, fontWeight: 800, padding: "2px 8px", borderBottomLeftRadius: 6, letterSpacing: "0.1em" }}>ARCHIVED</div>
@@ -733,14 +778,15 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           position: "absolute",
           top: 8,
           right: 8,
-          background: COLORS.purpleLight,
-          color: "#FFFFFF",
-          fontSize: 10,
-          fontWeight: 800,
-          padding: "4px 8px",
+          background: COLORS.purpleBg,
+          color: COLORS.purpleLight,
+          border: `1px solid ${COLORS.purpleDim}`,
+          fontSize: 9,
+          fontWeight: 700,
+          padding: "3px 8px",
           borderRadius: 999,
-          letterSpacing: "0.04em",
-          boxShadow: "0 4px 12px rgba(139,79,228,0.28)",
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
           zIndex: 2
         }}>
           Selected
@@ -764,10 +810,10 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
               minWidth: 22,
               minHeight: 22,
               borderRadius: 6,
-              border: isBulkSelected ? "2px solid #A970FF" : "2px solid #6E6E86",
-              background: isBulkSelected ? "#8B4FE4" : "#141421",
+              border: isBulkSelected ? `2px solid ${COLORS.purple}` : `2px solid ${COLORS.text3}`,
+              background: isBulkSelected ? COLORS.purple : COLORS.surface2,
               boxShadow: isBulkSelected
-                ? "0 0 0 2px rgba(169,112,255,0.22), inset 0 0 0 1px rgba(255,255,255,0.12), 0 4px 12px rgba(139,79,228,0.32)"
+                ? `0 0 0 2px ${COLORS.purpleDim}, inset 0 0 0 1px rgba(255,255,255,0.12)`
                 : "inset 0 0 0 1px rgba(255,255,255,0.04)",
               display: "inline-flex",
               alignItems: "center",
@@ -792,13 +838,13 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           </button>
           <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, minWidth: 0 }}>{highlight(lead.name)}</div>
         </div>
-        {lead.stage === "followup1" && <Badge color="#9B5FFF">F1</Badge>}
-        {lead.stage === "followup2" && <Badge color={COLORS.gold}>F2</Badge>}
+        {lead.stage === "followup1" && <Badge color={COLORS.purple}>F1</Badge>}
+        {lead.stage === "followup2" && <Badge color={COLORS.amber}>F2</Badge>}
         <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
       </div>
       <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
         <Badge color={TAG_COLORS[lead.tag] || COLORS.textSecondary}>{lead.tag}</Badge>
-        {lead.is_inbound && <Badge color="#00D4FF" style={{ background: "rgba(0,212,255,0.1)", border: "1px solid rgba(0,212,255,0.3)", color: "#00D4FF" }}>⬇ Inbound</Badge>}
+        {lead.is_inbound && <Badge color={COLORS.purpleLight}>⬇ Inbound</Badge>}
       </div>
       {lead.notes && (
         <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.4, marginBottom: 10 }}>
@@ -831,7 +877,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
               else if (lead.stage === 'replied') nextStage = 'booked';
               else nextStage = STAGES[stageIndex + 1]?.id || 'contacted';
               onMove(lead.id, nextStage); 
-            }} style={{ flex: 2, padding: "5px", background: stageIndex === STAGES.length - 2 ? "rgba(0,212,255,0.15)" : COLORS.purple + "33", border: `1px solid ${stageIndex === STAGES.length - 2 ? "rgba(0,212,255,0.5)" : COLORS.purple + "66"}`, borderRadius: 6, color: stageIndex === STAGES.length - 2 ? "#00D4FF" : COLORS.purpleLight, fontSize: 11, cursor: "pointer", fontWeight: 700 }}>
+            }} style={{ flex: 2, padding: "5px", background: stageIndex === STAGES.length - 2 ? "rgba(34,197,94,0.12)" : COLORS.purpleBg, border: `1px solid ${stageIndex === STAGES.length - 2 ? "rgba(34,197,94,0.4)" : COLORS.purpleDim}`, borderRadius: 6, color: stageIndex === STAGES.length - 2 ? COLORS.green : COLORS.purpleLight, fontSize: 11, cursor: "pointer", fontWeight: 700 }}>
               {stageIndex === STAGES.length - 2 ? "✓ Book" : "Advance →"}
             </button>
           )}
@@ -851,7 +897,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
             {METHODS.map(m => {
               const active = lead.outreachMethod === m.id;
               return (
-                <button key={m.id} onClick={e => handleMethod(e, m.id)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 20, cursor: "pointer", background: active ? m.color + "33" : COLORS.bg, border: `1px solid ${active ? m.color : COLORS.border}`, color: active ? m.color : COLORS.textSecondary, fontSize: 11, fontWeight: active ? 700 : 500, transition: "all 0.15s" }}><span style={{ fontSize: 13 }}>{m.emoji}</span><span>{m.label}</span></button>
+                <button key={m.id} onClick={e => handleMethod(e, m.id)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 20, cursor: "pointer", background: active ? m.color + "33" : COLORS.bg, border: `1px solid ${active ? m.color : COLORS.border}`, color: active ? m.color : COLORS.textSecondary, fontSize: 11, fontWeight: active ? 700 : 500, transition: "all 0.15s" }}><m.Icon size={12} color={active ? m.color : COLORS.textSecondary} /><span>{m.label}</span></button>
               );
             })}
           </div>
@@ -895,20 +941,11 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
 
   return (
     <div>
-      {/* Mobile empty state — shown when no leads yet */}
-      {isMobile && leads.filter(l => !l.archived).length === 0 && !showArchived && (
-        <div style={{ textAlign: "center", padding: "48px 20px", marginBottom: 16, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14 }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>🎛️</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Your pipeline is empty</div>
-          <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 20 }}>Add venues and promoters you want to play. Track every outreach from first DM to booked night.</div>
-          <button onClick={onOpenNewLead} style={{ padding: "12px 28px", background: COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>+ Add your first lead</button>
-        </div>
-      )}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <button onClick={() => setShowArchived(false)} style={{ padding: "6px 14px", borderRadius: 7, cursor: "pointer", fontSize: 12, fontWeight: 600, background: !showArchived ? COLORS.purpleBg : "transparent", border: `1px solid ${!showArchived ? COLORS.purple : COLORS.border}`, color: !showArchived ? COLORS.purpleLight : COLORS.textSecondary }}>
+        <button onClick={() => setShowArchived(false)} style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, background: !showArchived ? COLORS.purpleBg : "transparent", border: `1px solid ${!showArchived ? COLORS.purple : COLORS.border}`, color: !showArchived ? COLORS.purpleLight : COLORS.textSecondary }}>
           Active <span style={{ fontFamily: "'DM Mono', monospace", marginLeft: 4 }}>{leads.filter(l => !l.archived).length}</span>
         </button>
-        <button onClick={() => setShowArchived(true)} style={{ padding: "6px 14px", borderRadius: 7, cursor: "pointer", fontSize: 12, fontWeight: 600, background: showArchived ? COLORS.surface : "transparent", border: `1px solid ${showArchived ? COLORS.borderBright : COLORS.border}`, color: showArchived ? COLORS.textSecondary : COLORS.textMuted }}>
+        <button onClick={() => setShowArchived(true)} style={{ padding: "6px 14px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, background: showArchived ? COLORS.surface : "transparent", border: `1px solid ${showArchived ? COLORS.borderHover : COLORS.border}`, color: showArchived ? COLORS.textSecondary : COLORS.textMuted }}>
           Archived <span style={{ fontFamily: "'DM Mono', monospace", marginLeft: 4 }}>{leads.filter(l => l.archived).length}</span>
         </button>
         {hasFilter && (
@@ -947,11 +984,11 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
       ) : (
         <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8 }}>
           {[
-            { id: "target",    label: "Target",    color: "#444444", stages: ["target"] },
-            { id: "contacted", label: "Contacted", color: "#7B3FE4", stages: ["contacted"] },
-            { id: "followup",  label: "Follow-up", color: "#9B5FFF", stages: ["followup1","followup2"] },
-            { id: "replied",   label: "Replied",   color: "#22C55E", stages: ["replied"] },
-            { id: "booked",    label: "Booked",    color: "#D4AF37", stages: ["booked"] },
+            { id: "target",    label: "Target",    color: COLORS.text3,  stages: ["target"] },
+            { id: "contacted", label: "Contacted", color: COLORS.purple, stages: ["contacted"] },
+            { id: "followup",  label: "Follow-up", color: COLORS.purple, stages: ["followup1","followup2"] },
+            { id: "replied",   label: "Replied",   color: COLORS.purple, stages: ["replied"] },
+            { id: "booked",    label: "Booked",    color: COLORS.green,  stages: ["booked"] },
           ].map(col => {
             const isFiltered = filters.stage && !col.stages.includes(filters.stage);
             const colLeads = activeLeads.filter(l => col.stages.includes(l.stage));
@@ -1176,13 +1213,14 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   return (
     <div style={{
       width: 280,
-      borderLeft: `1px solid ${COLORS.border}`,
+      borderLeft: `3px solid ${COLORS.purpleLight}`,
       background: COLORS.surface,
       display: "flex",
       flexDirection: "column",
       padding: "14px 16px",
       overflowY: "auto",
       flexShrink: 0,
+      boxShadow: `-4px 0 24px rgba(14,116,144,0.12)`,
     }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
@@ -1234,8 +1272,8 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
 
       {/* Follow-up overdue badge */}
       {isOverdue && !lead.archived && (
-        <div style={{ background: COLORS.gold + "22", border: `1px solid ${COLORS.gold}44`, borderRadius: 8, padding: "6px 10px", marginBottom: 10 }}>
-          <div style={{ fontSize: 11, color: COLORS.gold, fontWeight: 600 }}>Follow-up overdue</div>
+        <div style={{ background: COLORS.amber + "22", border: `1px solid ${COLORS.amber}44`, borderRadius: 8, padding: "6px 10px", marginBottom: 10 }}>
+          <div style={{ fontSize: 11, color: COLORS.amber, fontWeight: 600 }}>Follow-up overdue</div>
           <div style={{ fontSize: 10, color: COLORS.textMuted }}>{formatShortDate(lead.follow_up_date)}</div>
         </div>
       )}
@@ -1258,7 +1296,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           if (!error) onUpdate({ ...lead, bookingStatus: next });
         };
         return (
-          <div style={{ background: allDone ? COLORS.gold + "11" : COLORS.surface, border: `1px solid ${allDone ? COLORS.gold + "44" : COLORS.border}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+          <div style={{ background: allDone ? "rgba(34,197,94,0.08)" : COLORS.surface, border: `1px solid ${allDone ? "rgba(34,197,94,0.35)" : COLORS.border}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
             {/* Primary CTA — Create Gig */}
             <button
               onClick={() => {
@@ -1271,7 +1309,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
               <span>📅</span>
               <span>Create Gig in Calendar</span>
             </button>
-            <div style={{ fontSize: 10, color: allDone ? COLORS.gold : COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, fontWeight: 600 }}>
+            <div style={{ fontSize: 10, color: allDone ? COLORS.green : COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, fontWeight: 600 }}>
               {allDone ? "✓ Booking complete" : "Booking checklist"}
             </div>
             {BOOKING_STEPS.map((step, i) => {
@@ -1280,15 +1318,16 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                 <div key={step.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: i < BOOKING_STEPS.length - 1 ? `1px solid ${COLORS.border}22` : "none" }}>
                   <button
                     onClick={() => toggle(step.id)}
-                    style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${done ? COLORS.gold : COLORS.border}`, background: done ? COLORS.gold : "transparent", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
+                    style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${done ? COLORS.green : COLORS.border}`, background: done ? COLORS.green : "transparent", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
                   >
                     {done && <span style={{ fontSize: 10, color: "#000", fontWeight: 700 }}>✓</span>}
                   </button>
-                  <span style={{ fontSize: 12, color: done ? COLORS.text : COLORS.textMuted, fontWeight: done ? 600 : 400 }}>{step.label}</span>
+                  <span style={{ fontSize: 12, color: done ? COLORS.text : COLORS.textMuted, textDecoration: done ? "none" : "none", fontWeight: done ? 600 : 400 }}>{step.label}</span>
                   {!step.required && !done && <span style={{ fontSize: 9, color: COLORS.textMuted, marginLeft: "auto", opacity: 0.6 }}>optional</span>}
                 </div>
               );
             })}
+            
           </div>
         );
       })()}
@@ -1307,7 +1346,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {/* EPK prompt on Replied */}
       {!lead.archived && lead.stage === "replied" && assets && (assets?.epk_url || assets?.soundcloud || assets?.booking_email) && (
         <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#00D4FF", marginBottom: 8 }}>✓ They replied — send your kit</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, marginBottom: 8 }}>✓ They replied — send your kit</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {[
               assets?.epk_url      && { label: "EPK PDF",       value: assets.epk_url },
@@ -1558,17 +1597,21 @@ function AddGenreRow({ onAdd }) {
     </button>
   );
 
+  const previewColor = input.trim() ? tagColor(input.trim()) : null;
   return (
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <input
-          autoFocus
-          value={input}
-          onChange={e => { setInput(e.target.value); setError(""); }}
-          onKeyDown={e => { if (e.key === "Enter") handle(); if (e.key === "Escape") { setAdding(false); setInput(""); setError(""); } }}
-          placeholder="e.g. Afrobeats, Reggaeton…"
-          style={{ flex: 1, padding: "9px 12px", background: COLORS.bg, border: `1px solid ${error ? COLORS.red : COLORS.purple}`, borderRadius: 8, color: COLORS.text, fontSize: 13, outline: "none", fontFamily: "inherit" }}
-        />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", background: COLORS.bg, border: `1px solid ${error ? COLORS.red : previewColor || COLORS.purple}`, borderLeft: previewColor ? `3px solid ${previewColor}` : `1px solid ${COLORS.purple}`, borderRadius: 8, overflow: "hidden", transition: "border-color 0.2s" }}>
+          {previewColor && <div style={{ width: 8, height: 8, borderRadius: "50%", background: previewColor, marginLeft: 10, flexShrink: 0, boxShadow: `0 0 6px ${previewColor}88` }} />}
+          <input
+            autoFocus
+            value={input}
+            onChange={e => { setInput(e.target.value); setError(""); }}
+            onKeyDown={e => { if (e.key === "Enter") handle(); if (e.key === "Escape") { setAdding(false); setInput(""); setError(""); } }}
+            placeholder="e.g. Afrobeats, Reggaeton…"
+            style={{ flex: 1, padding: "9px 12px", background: "transparent", border: "none", color: COLORS.text, fontSize: 13, outline: "none", fontFamily: "inherit" }}
+          />
+        </div>
         <button onClick={handle} style={{ padding: "9px 16px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>Add</button>
         <button onClick={() => { setAdding(false); setInput(""); setError(""); }} style={{ padding: "9px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textSecondary, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>✕</button>
       </div>
@@ -1644,7 +1687,7 @@ function AddLeadModal({ onClose, onAdd, customTags, TAG_COLORS, onAddTag }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderBright}`, borderRadius: 18, width: 480, maxWidth: "95vw", boxShadow: "0 0 60px rgba(123,63,228,0.15), 0 24px 80px rgba(0,0,0,0.6)", overflow: "hidden", animation: "slideUp 0.2s ease" }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 18, width: 480, maxWidth: "95vw", boxShadow: "0 0 60px rgba(14,116,144,0.12), 0 24px 80px rgba(0,0,0,0.6)", overflow: "hidden", animation: "slideUp 0.2s ease" }}>
         <style>{`@keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }`}</style>
         <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1679,7 +1722,7 @@ function AddLeadModal({ onClose, onAdd, customTags, TAG_COLORS, onAddTag }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Priority Tier <span style={{ color: COLORS.purple }}>*</span></label>
               <div style={{ display: "flex", gap: 10 }}>
-                {[{ tier: "A1", desc: "Dream venues", color: COLORS.gold }, { tier: "A2", desc: "Strong targets", color: COLORS.purple }, { tier: "A3", desc: "Long shots", color: COLORS.textSecondary }].map(({ tier, desc, color }) => (
+                {[{ tier: "A1", desc: "Dream venues", color: COLORS.purpleLight }, { tier: "A2", desc: "Strong targets", color: COLORS.purple }, { tier: "A3", desc: "Long shots", color: COLORS.textSecondary }].map(({ tier, desc, color }) => (
                   <button key={tier} onClick={() => set("tier")(tier)} style={{ flex: 1, padding: "12px 10px", borderRadius: 10, cursor: "pointer", background: form.tier === tier ? color + "22" : COLORS.bg, border: `1px solid ${form.tier === tier ? color : COLORS.border}`, transition: "all 0.15s", textAlign: "center" }}>
                     <div style={{ fontSize: 16, fontWeight: 800, color: form.tier === tier ? color : COLORS.textSecondary }}>{tier}</div>
                     <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 3 }}>{desc}</div>
@@ -1711,7 +1754,7 @@ function AddLeadModal({ onClose, onAdd, customTags, TAG_COLORS, onAddTag }) {
             : <button onClick={() => setStep(1)} style={{ padding: "10px 20px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 13, cursor: "pointer" }}>← Back</button>}
           {step === 1
             ? <button onClick={handleNext}   style={{ padding: "10px 28px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Next →</button>
-            : <button onClick={handleSubmit} style={{ padding: "10px 28px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>Add to Pipeline ✓</button>}
+            : <button onClick={handleSubmit} style={{ padding: "10px 28px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(14,116,144,0.35)" }}>Add to Pipeline ✓</button>}
         </div>
       </div>
     </div>
@@ -1734,21 +1777,20 @@ function StatCard({ label, value, sub, accent }) {
 function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) {
   const today    = new Date();
   const active   = leads.filter(l => !l.archived);
+
+  // Revenue panel — gigs with a fee
+  const gigsWithFee    = gigs.filter(g => g.fee && parseFloat(g.fee) > 0);
+  const thisMonth      = gigsWithFee.filter(g => { const d = new Date(g.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); });
+  const upcomingGigs   = gigsWithFee.filter(g => new Date(g.date) > today);
+  const gigRevMonth    = thisMonth.reduce((s, g) => s + (parseFloat(g.fee) || 0), 0);
+  const gigRevTotal    = gigsWithFee.reduce((s, g) => s + (parseFloat(g.fee) || 0), 0);
+  const gigRevUpcoming = upcomingGigs.reduce((s, g) => s + (parseFloat(g.fee) || 0), 0);
+  const avgFee         = gigsWithFee.length > 0 ? Math.round(gigRevTotal / gigsWithFee.length) : 0;
+  const showRevenue    = gigsWithFee.length > 0;
   const booked   = active.filter(l => l.stage === "booked").length;
   const bookedLeadsAll = active.filter(l => l.stage === "booked");
   const totalRevenue = bookedLeadsAll.reduce((sum, l) => sum + (l.fee || 0), 0);
   const unpaidCount  = bookedLeadsAll.filter(l => l.fee && !l.deposit_paid).length;
-
-  // ── Gig Revenue ──────────────────────────────────────────────────────────
-  const parseFee = (f) => { const n = parseFloat(String(f || "").replace(/[^0-9.]/g, "")); return isNaN(n) ? 0 : n; };
-  const gigsWithFee    = gigs.filter(g => parseFee(g.fee) > 0);
-  const thisMonth      = gigsWithFee.filter(g => { const d = new Date(g.date); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && new Date(g.date) <= today; });
-  const upcomingGigs   = gigsWithFee.filter(g => new Date(g.date) > today);
-  const gigRevTotal    = gigsWithFee.filter(g => new Date(g.date) <= today).reduce((s, g) => s + parseFee(g.fee), 0);
-  const gigRevMonth    = thisMonth.reduce((s, g) => s + parseFee(g.fee), 0);
-  const gigRevUpcoming = upcomingGigs.reduce((s, g) => s + parseFee(g.fee), 0);
-  const avgFee         = gigsWithFee.length > 0 ? Math.round(gigRevTotal / gigsWithFee.filter(g => new Date(g.date) <= today).length) : 0;
-  const showRevenue    = gigs.length > 0;
   const replied  = active.filter(l => l.stage === "replied" || l.stage === "booked").length;
   const contacted = active.filter(l => l.stage !== "target").length;
   const replyRate = contacted > 0 ? Math.round((replied / contacted) * 100) : 0;
@@ -1765,7 +1807,7 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
       const stageLabel = l.stage === "contacted" ? "F1" : l.stage === "followup1" ? "F2" : l.stage === "followup2" ? "F3" : l.stage === "replied" ? "Reply" : "?";
       const daysLabel  = l.followUpDate ? (isOverdue ? (daysAgo === 0 ? "Today" : `${daysAgo}d overdue`) : (Math.abs(daysAgo) === 1 ? "Tomorrow" : `in ${Math.abs(daysAgo)}d`)) : "No date set";
       const urgency    = isOverdue ? 0 : daysAgo !== null && Math.abs(daysAgo) <= 2 ? 1 : daysAgo === null ? 3 : 2;
-      const urgencyColor = isOverdue ? COLORS.red : (daysAgo !== null && Math.abs(daysAgo) <= 2) ? COLORS.gold : COLORS.textSecondary;
+      const urgencyColor = isOverdue ? COLORS.red : (daysAgo !== null && Math.abs(daysAgo) <= 2) ? COLORS.amber : COLORS.textSecondary;
       return { ...l, stageLabel, daysLabel, isOverdue, urgency, urgencyColor, stageIdx };
     })
     .sort((a, b) => a.urgency - b.urgency || (a.followUpDate || "z").localeCompare(b.followUpDate || "z"))
@@ -1780,7 +1822,7 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
     { label: "Total Leads",  count: total,      color: COLORS.textSecondary, pct: 100 },
     { label: "Contacted",    count: fContacted, color: COLORS.purple,        pct: total > 0 ? Math.round(fContacted / total * 100) : 0 },
     { label: "Replied",      count: fReplied,   color: COLORS.purpleLight,   pct: total > 0 ? Math.round(fReplied / total * 100) : 0 },
-    { label: "Booked",       count: fBooked,    color: COLORS.gold,          pct: total > 0 ? Math.round(fBooked / total * 100) : 0 },
+    { label: "Booked",       count: fBooked,    color: COLORS.green,         pct: total > 0 ? Math.round(fBooked / total * 100) : 0 },
   ];
   // Drop-off rates between stages
   const dropoffs = [
@@ -1795,9 +1837,9 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
         <StatCard label="Total Leads"   value={total}           sub="in pipeline"                                         accent={COLORS.textSecondary} />
         <StatCard label="Outreach Sent" value={contacted}       sub={`${active.filter(l => l.stage === "target").length} still in target`} accent={COLORS.purple} />
         <StatCard label="Reply Rate"    value={`${replyRate}%`} sub={`${replied} replies`}                                accent={COLORS.purpleLight} />
-        <StatCard label="Booked"        value={booked}          sub="confirmed gigs"                                      accent={COLORS.gold} />
-        {totalRevenue > 0 && <StatCard label="Total Fees" value={`€${totalRevenue.toLocaleString()}`} sub="booked gigs" accent={COLORS.gold} />}
-        {unpaidCount > 0 && <StatCard label="Deposit Due" value={unpaidCount} sub="awaiting deposit" accent={COLORS.red} />}
+        <StatCard label="Booked"        value={booked}          sub="confirmed gigs"                                      accent={COLORS.green} />
+        {totalRevenue > 0 && <StatCard label="Total Fees" value={`€${totalRevenue.toLocaleString()}`} sub="booked gigs" accent={COLORS.green} />}
+        {unpaidCount > 0 && <StatCard label="Deposit Due" value={unpaidCount} sub="awaiting deposit" accent={COLORS.amber} />}
       </div>
 
       {/* ── Revenue Panel ── */}
@@ -1812,7 +1854,7 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
             {[
-              { label: "This Month", value: gigRevMonth > 0 ? `€${gigRevMonth.toLocaleString()}` : "—", sub: `${thisMonth.length} gig${thisMonth.length !== 1 ? "s" : ""}`, color: COLORS.gold },
+              { label: "This Month", value: gigRevMonth > 0 ? `€${gigRevMonth.toLocaleString()}` : "—", sub: `${thisMonth.length} gig${thisMonth.length !== 1 ? "s" : ""}`, color: COLORS.green },
               { label: "All Time",   value: gigRevTotal > 0 ? `€${gigRevTotal.toLocaleString()}` : "—",  sub: `${gigsWithFee.filter(g => new Date(g.date) <= today).length} paid gig${gigsWithFee.filter(g => new Date(g.date) <= today).length !== 1 ? "s" : ""}`, color: COLORS.text },
               { label: "Upcoming",   value: gigRevUpcoming > 0 ? `€${gigRevUpcoming.toLocaleString()}` : "—", sub: `${upcomingGigs.length} booked ahead`, color: COLORS.purpleLight },
               { label: "Avg per Gig",value: avgFee > 0 ? `€${avgFee.toLocaleString()}` : "—", sub: "across all gigs", color: COLORS.textSecondary },
@@ -1826,7 +1868,6 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
           </div>
         </div>
       )}
-
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <ProGate isPro={isPro} reason="funnel" onUpgradeClick={onUpgradeClick} label="Next Actions — Pro feature">
           {/* ── Next Actions ── */}
@@ -1847,7 +1888,7 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
               <div>
                 {nextActions.map((lead, i) => (
                   <div key={lead.id} onClick={() => onNavigate("pipeline")} style={{ padding: "13px 20px", borderBottom: i < nextActions.length - 1 ? `1px solid ${COLORS.border}` : "none", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "background 0.12s" }}
-                    onMouseEnter={e => e.currentTarget.style.background = COLORS.surfaceHover}
+                    onMouseEnter={e => e.currentTarget.style.background = COLORS.surface2}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     <div style={{ width: 36, height: 36, borderRadius: 9, background: lead.urgencyColor + "22", border: `1px solid ${lead.urgencyColor + "55"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: 10, fontWeight: 800, color: lead.urgencyColor, letterSpacing: "0.04em" }}>{lead.stageLabel}</span>
@@ -1856,7 +1897,7 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
                       <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
                       {lead.name}
                       {lead.stage === "booked" && lead.fee && (
-                        <span style={{ fontSize: 10, fontWeight: 700, color: lead.deposit_paid ? "#4ade80" : COLORS.gold, background: lead.deposit_paid ? "rgba(74,222,128,0.1)" : "rgba(212,175,55,0.1)", padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: lead.deposit_paid ? COLORS.green : COLORS.amber, background: lead.deposit_paid ? "rgba(34,197,94,0.1)" : "rgba(245,158,11,0.1)", padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
                           €{lead.fee}{lead.deposit_paid ? " ✓" : ""}
                         </span>
                       )}
@@ -1915,13 +1956,13 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
                 <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase" }}>Overall Conversion</div>
                 <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 2 }}>Target → Booked</div>
               </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.gold, fontFamily: "'DM Mono', monospace" }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.green, fontFamily: "'DM Mono', monospace" }}>
                 {total >= 3 ? `${Math.round(fBooked / total * 100)}%` : "—"}
               </div>
             </div>
-            <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.15)", borderRadius: 7 }}>
-              <span style={{ fontSize: 11, color: "#00D4FF" }}>↗</span>
-              <span style={{ fontSize: 11, color: COLORS.textSecondary }}>Industry avg reply rate: <strong style={{ color: "#00D4FF" }}>18%</strong></span>
+            <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 8 }}>
+              <span style={{ fontSize: 11, color: COLORS.purpleLight }}>↗</span>
+              <span style={{ fontSize: 11, color: COLORS.textSecondary }}>Industry avg reply rate: <strong style={{ color: COLORS.purpleLight }}>18%</strong></span>
               <span style={{ fontSize: 10, color: COLORS.textMuted, marginLeft: "auto" }}>DJ outreach benchmark</span>
             </div>
           </div>
@@ -1936,31 +1977,22 @@ function FollowUpsView({ leads, onNavigate }) {
   const active   = leads.filter(l => !l.archived);
   const due      = active.filter(l => l.followUpDate && new Date(l.followUpDate) <= today);
   const upcoming = active.filter(l => l.followUpDate && new Date(l.followUpDate) > today);
-
-  // Stale = in an active outreach stage but no follow-up date set at all
-  const OUTREACH_STAGES = ["contacted", "followup1", "followup2", "replied"];
-  const stale = active.filter(l =>
-    OUTREACH_STAGES.includes(l.stage) && !l.followUpDate
-  ).sort((a, b) => {
-    // Most urgent first: replied > followup2 > followup1 > contacted
-    const urgency = { replied: 0, followup2: 1, followup1: 2, contacted: 3 };
-    return (urgency[a.stage] ?? 9) - (urgency[b.stage] ?? 9);
-  });
+  const stale    = active.filter(l => ["contacted","followup1","followup2","replied"].includes(l.stage) && !l.followUpDate);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.gold, boxShadow: `0 0 8px ${COLORS.gold}` }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.gold, letterSpacing: "0.08em", textTransform: "uppercase" }}>Due Now</span>
-          <Badge color={COLORS.gold}>{due.length}</Badge>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.red, boxShadow: `0 0 8px ${COLORS.red}` }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.red, letterSpacing: "0.08em", textTransform: "uppercase" }}>Due Now</span>
+          <Badge color={COLORS.red}>{due.length}</Badge>
         </div>
         {due.length === 0 ? (
-          <div style={{ padding: "20px", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, color: COLORS.textMuted, fontSize: 12, textAlign: "center" }}>All caught up ✓</div>
+          <div style={{ padding: "20px", background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${COLORS.green}`, borderRadius: 10, color: COLORS.green, fontSize: 12, textAlign: "center", fontWeight: 600 }}>All caught up ✓</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {due.map(lead => (
-              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.gold}44`, borderRadius: 10, padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${COLORS.red}`, borderRadius: 10, padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
                   <div style={{ display: "flex", gap: 6 }}>
@@ -1969,7 +2001,7 @@ function FollowUpsView({ leads, onNavigate }) {
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 11, color: COLORS.gold, fontWeight: 700, marginBottom: 6 }}>Follow up today</div>
+                  <div style={{ fontSize: 11, color: COLORS.red, fontWeight: 700, marginBottom: 6 }}>Follow up today</div>
                   <button onClick={() => onNavigate("outreach")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Get Template →</button>
                 </div>
               </div>
@@ -1977,7 +2009,7 @@ function FollowUpsView({ leads, onNavigate }) {
           </div>
         )}
       </div>
-      {/* ── Needs Attention ── */}
+{/* ── Needs Attention ── */}
       {stale.length > 0 && (
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -1991,18 +2023,18 @@ function FollowUpsView({ leads, onNavigate }) {
               const stageLabel = { contacted: "Contacted", followup1: "Follow-up 1", followup2: "Follow-up 2", replied: "Replied" }[lead.stage] || lead.stage;
               const isReplied = lead.stage === "replied";
               return (
-                <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${isReplied ? COLORS.gold + "55" : COLORS.red + "44"}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${isReplied ? COLORS.amber + "55" : COLORS.red + "44"}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
-                      <Badge color={isReplied ? COLORS.gold : COLORS.red}>{stageLabel}</Badge>
+                      <Badge color={isReplied ? COLORS.amber : COLORS.red}>{stageLabel}</Badge>
                       <span style={{ fontSize: 11, color: COLORS.textMuted }}>
                         {isReplied ? "⚠ They replied — schedule your next move" : "No date set — don't let this go cold"}
                       </span>
                     </div>
                   </div>
-                  <button onClick={() => onNavigate("pipeline")} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${isReplied ? COLORS.gold : COLORS.red}`, borderRadius: 7, color: isReplied ? COLORS.gold : COLORS.red, fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+                  <button onClick={() => onNavigate("pipeline")} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${isReplied ? COLORS.amber : COLORS.red}`, borderRadius: 8, color: isReplied ? COLORS.amber : COLORS.red, fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
                     Set Follow-Up →
                   </button>
                 </div>
@@ -2010,13 +2042,11 @@ function FollowUpsView({ leads, onNavigate }) {
             })}
           </div>
         </div>
-      )}
-
-      <div>
+      )}      <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.textSecondary }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Upcoming</span>
-          <Badge color={COLORS.textSecondary}>{upcoming.length}</Badge>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.purple, boxShadow: `0 0 8px ${COLORS.purple}` }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.purpleLight, letterSpacing: "0.08em", textTransform: "uppercase" }}>Upcoming</span>
+          <Badge color={COLORS.purple}>{upcoming.length}</Badge>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {upcoming.map(lead => {
@@ -2027,7 +2057,7 @@ function FollowUpsView({ leads, onNavigate }) {
               ? { text: "Coming up soon", color: COLORS.textSecondary }
               : { text: "On track", color: COLORS.textMuted };
             return (
-              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${nudge.color}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -2078,7 +2108,7 @@ function OutreachView({ isPro, onUpgradeClick, supabase, userId }) {
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                 <span style={{ fontSize: 16, color: locked ? COLORS.textMuted : COLORS.purple }}>{t.icon}</span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{t.label}</span>
-                {locked && <span style={{ marginLeft: "auto", fontSize: 9, color: COLORS.gold, background: COLORS.gold + "22", border: `1px solid ${COLORS.gold}44`, borderRadius: 4, padding: "1px 6px", fontWeight: 800, letterSpacing: "0.06em" }}>PRO</span>}
+                {locked && <span style={{ marginLeft: "auto", fontSize: 9, color: COLORS.purpleLight, background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, borderRadius: 4, padding: "1px 6px", fontWeight: 700, letterSpacing: "0.06em" }}>PRO</span>}
               </div>
               <div style={{ fontSize: 10, color: COLORS.textSecondary, letterSpacing: "0.04em" }}>{t.tone}</div>
             </button>
@@ -2144,14 +2174,6 @@ function AssetsView({ supabase, userId }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeSection, setActiveSection] = useState("epk");
-  const [kitUsername, setKitUsername] = useState(null);
-  const [kitCopied, setKitCopied] = useState(false);
-
-  useEffect(() => {
-    if (!userId) return;
-    supabase.from("profiles").select("username").eq("id", userId).single()
-      .then(({ data }) => { if (data?.username) setKitUsername(data.username); });
-  }, [userId]);
 
   const SECTIONS = [
     { id: "epk",   label: "EPK",         icon: "📄" },
@@ -2203,26 +2225,17 @@ function AssetsView({ supabase, userId }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 24 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6, paddingLeft: 14 }}>Sections</div>
+      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, padding: "0 4px" }}>Your Assets</div>
           {SECTIONS.map(s => (
-            <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ padding: "10px 14px", borderRadius: 9, textAlign: "left", cursor: "pointer", background: activeSection === s.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeSection === s.id ? COLORS.purple : "transparent"}`, color: activeSection === s.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeSection === s.id ? 700 : 500, display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s", width: "100%" }}>
-              <span style={{ fontSize: 14 }}>{s.icon}</span>{s.label}
+            <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ padding: "12px 14px", borderRadius: 10, textAlign: "left", cursor: "pointer", background: activeSection === s.id ? COLORS.purpleBg : COLORS.surface, border: `1px solid ${activeSection === s.id ? COLORS.purple : COLORS.border}`, color: activeSection === s.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeSection === s.id ? 700 : 500, display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
+              <span>{s.icon}</span>{s.label}
             </button>
           ))}
-          <div style={{ height: 1, background: COLORS.border, margin: "10px 0" }} />
-          <button onClick={save} disabled={saving} style={{ padding: "10px 14px", background: saved ? COLORS.green + "22" : COLORS.purple, border: `1px solid ${saved ? COLORS.green : "transparent"}`, borderRadius: 9, color: saved ? COLORS.green : "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "100%", textAlign: "center" }}>
-            {saving ? "Saving…" : saved ? "✓ Saved" : "Save Assets"}
+          <button onClick={save} disabled={saving} style={{ marginTop: 12, padding: "10px", background: saved ? COLORS.green : COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            {saving ? "Saving..." : saved ? "✓ Saved" : "Save Assets"}
           </button>
-          {kitUsername && (
-            <button onClick={() => {
-              navigator.clipboard.writeText(`https://app.noxreach.com/kit/${kitUsername}`);
-              setKitCopied(true); setTimeout(() => setKitCopied(false), 2000);
-            }} style={{ padding: "10px 14px", background: kitCopied ? COLORS.green + "22" : "transparent", border: `1px solid ${kitCopied ? COLORS.green : COLORS.border}`, borderRadius: 9, color: kitCopied ? COLORS.green : COLORS.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", width: "100%", textAlign: "center" }}>
-              {kitCopied ? "✓ Copied!" : "🔗 Share Kit"}
-            </button>
-          )}
         </div>
 
         <div>
@@ -2241,6 +2254,7 @@ function AssetsView({ supabase, userId }) {
               <input style={inputStyle} value={assets.press_photos_url || ""} onChange={set("press_photos_url")} placeholder="https://yoursite.com/press_photos.zip" />
               <label style={labelStyle}>Booking Email</label>
               <input style={inputStyle} value={assets.booking_email || ""} onChange={set("booking_email")} placeholder="booking@yoursite.com" />
+              {assets.epk_url && <div style={{ marginTop: 12 }}><CopyBlock label="EPK PDF URL" value={assets.epk_url} /></div>}
             </div>
           )}
           {activeSection === "mixes" && (
@@ -2328,9 +2342,9 @@ function UpgradeModal({ onClose, onUpgrade, reason }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 440, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(123,63,228,0.2), 0 32px 80px rgba(0,0,0,0.7)`, animation: "slideUp 0.2s ease" }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 440, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(14,116,144,0.15), 0 32px 80px rgba(0,0,0,0.7)`, animation: "slideUp 0.2s ease" }}>
         {/* Top accent */}
-        <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.purple}, ${COLORS.purpleLight}, ${COLORS.gold})` }} />
+        <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.purple}, ${COLORS.purpleLight})` }} />
 
         <div style={{ padding: "28px 28px 0" }}>
           {/* Trigger reason */}
@@ -2367,7 +2381,7 @@ function UpgradeModal({ onClose, onUpgrade, reason }) {
 
         {/* Actions */}
         <div style={{ padding: "0 28px 28px", display: "flex", flexDirection: "column", gap: 10 }}>
-          <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "14px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 24px rgba(123,63,228,0.45)", letterSpacing: "0.01em" }}>
+          <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "14px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 24px rgba(14,116,144,0.40)", letterSpacing: "0.01em" }}>
             Upgrade to Pro →
           </button>
           <button onClick={onClose} style={{ width: "100%", padding: "10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 12, color: COLORS.textMuted, fontSize: 12, cursor: "pointer" }}>
@@ -2399,7 +2413,7 @@ function ProGate({ children, isPro, reason, onUpgradeClick, label = "Pro feature
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 function InboundView({ leads, user, supabase }) {
-  const inbound = leads.filter(l => !l.archived && l.is_inbound === true);
+  const inbound = leads.filter(l => !l.archived && l.stage === "replied" && l.contact && l.contact.includes("@"));
   const [username, setUsername] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -2420,11 +2434,11 @@ function InboundView({ leads, user, supabase }) {
         <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Booking requests from your public form</div>
       </div>
 
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 20, marginBottom: 24 }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 24 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Your booking link</div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 14px", fontSize: 13, color: COLORS.textSecondary, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{bookingLink}</div>
-          <button onClick={copy} style={{ background: copied ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${copied ? "rgba(74,222,128,0.3)" : COLORS.purpleDim}`, borderRadius: 8, padding: "10px 16px", color: copied ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={copy} style={{ background: copied ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${copied ? "rgba(74,222,128,0.3)" : COLORS.purple}`, borderRadius: 8, padding: "10px 16px", color: copied ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
             {copied ? "Copied ✓" : "Copy link"}
           </button>
         </div>
@@ -2432,7 +2446,7 @@ function InboundView({ leads, user, supabase }) {
       </div>
 
       {inbound.length === 0 ? (
-        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: "48px 24px", textAlign: "center" }}>
+        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: "48px 24px", textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>⬇</div>
           <div style={{ fontSize: 15, fontWeight: 600, color: COLORS.text, marginBottom: 6 }}>No inbound requests yet</div>
           <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Share your booking link to start receiving requests from promoters.</div>
@@ -2440,7 +2454,7 @@ function InboundView({ leads, user, supabase }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {inbound.map(lead => (
-            <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "14px 18px" }}>
+            <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: "14px 18px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>{lead.name}</div>
@@ -2595,7 +2609,7 @@ function WelcomeNewUserModal({ onClose }) {
             { num: "03", title: "Fill your Booking Kit", text: "Add your EPK, SoundCloud, and booking email. When a lead replies — you respond in seconds." },
           ].map(s => (
             <div key={s.num} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(107,47,212,0.15)", border: `1px solid rgba(107,47,212,0.3)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purple, flexShrink: 0, fontFamily: "monospace" }}>{s.num}</div>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(14,116,144,0.10)", border: `1px solid rgba(14,116,144,0.25)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purple, flexShrink: 0, fontFamily: "monospace" }}>{s.num}</div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, marginBottom: 2 }}>{s.title}</div>
                 <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>{s.text}</div>
@@ -2626,7 +2640,7 @@ function ProWelcomeModal({ onClose }) {
 
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>⭐</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#D4AF37", marginBottom: 6 }}>You're now Pro</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.purple, marginBottom: 6 }}>You're now Pro</div>
           <div style={{ fontSize: 14, color: COLORS.textSecondary, lineHeight: 1.6 }}>Here's what's just unlocked for you.</div>
         </div>
 
@@ -2648,7 +2662,7 @@ function ProWelcomeModal({ onClose }) {
           ))}
         </div>
 
-        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: "linear-gradient(135deg, #D4AF37, #f0c040)", border: "none", borderRadius: 10, color: "#000", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
           Start using Pro →
         </button>
       </div>
@@ -2656,7 +2670,40 @@ function ProWelcomeModal({ onClose }) {
   );
 }
 
-function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, defaultTags, onAddTag, onRemoveTag, supabase, user }) {
+function GenreRow({ tag, color, onRemove, onSetColor }) {
+  const [showPicker, setShowPicker] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: color + "12", border: `1px solid ${color}40`, borderLeft: `3px solid ${color}`, borderRadius: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Clickable color dot */}
+          <button
+            onClick={() => setShowPicker(p => !p)}
+            title="Change color"
+            style={{ width: 16, height: 16, borderRadius: "50%", background: color, border: `2px solid ${color}99`, flexShrink: 0, cursor: "pointer", boxShadow: `0 0 6px ${color}88`, padding: 0 }}
+          />
+          <span style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>{tag}</span>
+        </div>
+        <button onClick={onRemove} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 14, lineHeight: 1, padding: "0 4px" }}
+          onMouseEnter={e => e.target.style.color = COLORS.red}
+          onMouseLeave={e => e.target.style.color = COLORS.textMuted}>✕</button>
+      </div>
+      {showPicker && (
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 100, background: COLORS.surface2, border: `1px solid ${COLORS.borderHover}`, borderRadius: 10, padding: 10, display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6, boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+          {TAG_PALETTE.map(c => (
+            <button key={c} onClick={() => { onSetColor(c); setShowPicker(false); }}
+              style={{ width: 24, height: 24, borderRadius: "50%", background: c, border: c === color ? `2px solid #fff` : "2px solid transparent", cursor: "pointer", padding: 0, boxShadow: c === color ? `0 0 8px ${c}` : "none", transition: "transform 0.1s" }}
+              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
+              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, defaultTags, onAddTag, onRemoveTag, TAG_COLORS, onSetTagColor, supabase, user }) {
   const [local, setLocal] = useState({ ...settings });
   const [saved,  setSaved]  = useState(false);
   const [username, setUsername] = useState("");
@@ -2710,13 +2757,13 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     const val = local[stateKey];
     const pct = ((val - min) / (max - min)) * 100;
     return (
-      <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px" }}>
+      <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: "18px 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{label}</div>
             <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 3 }}>{desc}</div>
           </div>
-          <div style={{ padding: "4px 12px", background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, fontSize: 13, fontWeight: 800, color: COLORS.purpleLight, fontFamily: "'DM Mono', monospace", flexShrink: 0, marginLeft: 12 }}>
+          <div style={{ padding: "4px 12px", background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, borderRadius: 20, fontSize: 13, fontWeight: 800, color: COLORS.purpleLight, fontFamily: "'DM Mono', monospace", flexShrink: 0, marginLeft: 12 }}>
             {val} {unit}
           </div>
         </div>
@@ -2737,10 +2784,10 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
 
   return (
     <div style={{ maxWidth: 560 }}>
-      <style>{`input[type=range]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: ${COLORS.purple}; border: 2px solid ${COLORS.purpleLight}; box-shadow: 0 0 8px rgba(123,63,228,0.5); cursor: pointer; }`}</style>
+      <style>{`input[type=range]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: ${COLORS.purple}; border: 2px solid ${COLORS.purpleLight}; box-shadow: 0 0 8px rgba(14,116,144,0.40); cursor: pointer; }`}</style>
 
       {/* Booking Link */}
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Your booking link</div>
         <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
           <div style={{ display: "flex", flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, overflow: "hidden" }}>
@@ -2753,7 +2800,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
               style={{ flex: 1, background: "transparent", border: "none", outline: "none", padding: "10px 12px", fontSize: 13, color: COLORS.text, colorScheme: "dark" }}
             />
           </div>
-          <button onClick={saveUsername} style={{ background: usernameSaved ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${usernameSaved ? "rgba(74,222,128,0.3)" : COLORS.purpleDim}`, borderRadius: 8, padding: "10px 16px", color: usernameSaved ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={saveUsername} style={{ background: usernameSaved ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${usernameSaved ? "rgba(74,222,128,0.3)" : COLORS.purple}`, borderRadius: 8, padding: "10px 16px", color: usernameSaved ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
             {usernameSaved ? "Saved ✓" : "Save"}
           </button>
         </div>
@@ -2769,7 +2816,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
               placeholder="e.g. DJ GEEZ"
               style={{ flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 13, color: COLORS.text, outline: "none", colorScheme: "dark" }}
             />
-            <button onClick={saveDisplayName} style={{ background: displayNameSaved ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${displayNameSaved ? "rgba(74,222,128,0.3)" : COLORS.purpleDim}`, borderRadius: 8, padding: "10px 16px", color: displayNameSaved ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+            <button onClick={saveDisplayName} style={{ background: displayNameSaved ? "rgba(74,222,128,0.15)" : COLORS.purpleBg, border: `1px solid ${displayNameSaved ? "rgba(74,222,128,0.3)" : COLORS.purple}`, borderRadius: 8, padding: "10px 16px", color: displayNameSaved ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
               {displayNameSaved ? "Saved ✓" : "Save"}
             </button>
           </div>
@@ -2783,7 +2830,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         <div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Follow-up Intervals</div>
           <ProGate isPro={isPro} reason="settings" onUpgradeClick={onUpgradeClick} label="Custom intervals — Pro feature">
-            <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, overflow: "hidden" }}>
               <div style={{ padding: "14px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
                 <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6 }}>
                   When you mark a lead as <strong style={{ color: COLORS.text }}>Contacted</strong> or advance through follow-up stages, reminders are automatically scheduled. Set how many days out each reminder fires.
@@ -2800,12 +2847,12 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         {/* Preview */}
         <div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Schedule Preview</div>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "16px 20px" }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: "16px 20px" }}>
             <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
               {[
                 { label: "Outreach sent", day: "Day 0", color: COLORS.textSecondary },
                 { label: `Follow-up 1`, day: `Day ${local.followup1Days}`, color: COLORS.purple },
-                { label: `Follow-up 2`, day: `Day ${local.followup1Days + local.followup2Days}`, color: COLORS.gold },
+                { label: `Follow-up 2`, day: `Day ${local.followup1Days + local.followup2Days}`, color: COLORS.purpleLight },
               ].map((item, i, arr) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", flex: i < arr.length - 1 ? 1 : 0 }}>
                   <div style={{ textAlign: "center" }}>
@@ -2825,7 +2872,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         {/* Pipeline stages (read-only info) */}
         <div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Pipeline Stages</div>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, overflow: "hidden" }}>
             {STAGES.map((s, i) => (
               <div key={s.id} style={{ padding: "12px 18px", borderBottom: i < STAGES.length - 1 ? `1px solid ${COLORS.border}` : "none", display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
@@ -2846,7 +2893,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         {/* Genre Management */}
         <div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Genres & Scenes</div>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, overflow: "hidden" }}>
             <div style={{ padding: "14px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
               <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6 }}>
                 These genres appear in lead and gig forms, and as filter pills in your pipeline. Add any scene that fits your sound.
@@ -2854,21 +2901,9 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
             </div>
             <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
               {customTags.map(tag => {
-                const isDefault = defaultTags.includes(tag);
-                const color = tagColor(tag);
+                const color = TAG_COLORS[tag] || TAG_PALETTE[0];
                 return (
-                  <div key={tag} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: color, flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>{tag}</span>
-                      {isDefault && <span style={{ fontSize: 9, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", background: COLORS.border, padding: "1px 6px", borderRadius: 3 }}>default</span>}
-                    </div>
-                    {!isDefault && (
-                      <button onClick={() => onRemoveTag(tag)} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 14, lineHeight: 1, padding: "0 4px" }}
-                        onMouseEnter={e => e.target.style.color = COLORS.red}
-                        onMouseLeave={e => e.target.style.color = COLORS.textMuted}>✕</button>
-                    )}
-                  </div>
+                  <GenreRow key={tag} tag={tag} color={color} onRemove={() => onRemoveTag(tag)} onSetColor={c => onSetTagColor(tag, c)} />
                 );
               })}
 
@@ -2880,7 +2915,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
 
         {/* Save */}
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button onClick={handleSave} style={{ padding: "11px 28px", background: isDirty ? COLORS.purple : COLORS.border, border: "none", borderRadius: 10, color: isDirty ? "#fff" : COLORS.textMuted, fontSize: 13, fontWeight: 700, cursor: isDirty ? "pointer" : "default", transition: "all 0.2s", boxShadow: isDirty ? "0 4px 20px rgba(123,63,228,0.35)" : "none" }}>
+          <button onClick={handleSave} style={{ padding: "11px 28px", background: isDirty ? COLORS.purple : COLORS.border, border: "none", borderRadius: 10, color: isDirty ? "#fff" : COLORS.textMuted, fontSize: 13, fontWeight: 700, cursor: isDirty ? "pointer" : "default", transition: "all 0.2s", boxShadow: isDirty ? "0 4px 20px rgba(14,116,144,0.28)" : "none" }}>
             {saved ? "✓ Saved" : "Save Settings"}
           </button>
           {isDirty && (
@@ -2946,20 +2981,14 @@ function leadToDb(lead, userId) {
 }
 function dbToGig(r) {
   return {
-    id:              r.id,
-    venue:           r.venue || "",
-    city:            r.city || "",
-    date:            r.date || "",
-    status:          r.status || "pending",
-    fee:             r.fee || "",
-    tag:             r.tag || "",
-    notes:           r.notes || "",
-    // Logbook fields
-    setlist_url:     r.setlist_url || "",
-    recording_url:   r.recording_url || "",
-    crowd_rating:    r.crowd_rating || null,
-    promoter_rating: r.promoter_rating || null,
-    recap:           r.recap || "",
+    id:     r.id,
+    venue:  r.venue || "",
+    city:   r.city || "",
+    date:   r.date || "",
+    status: r.status || "pending",
+    fee:    r.fee || "",
+    tag:    r.tag || "",
+    notes:  r.notes || "",
   };
 }
 function gigToDb(gig, userId) {
@@ -2972,15 +3001,10 @@ function gigToDb(gig, userId) {
     fee:     gig.fee || "",
     tag:     gig.tag || "",
     notes:   gig.notes || "",
-    // Logbook fields
-    setlist_url:     gig.setlist_url || null,
-    recording_url:   gig.recording_url || null,
-    crowd_rating:    gig.crowd_rating || null,
-    promoter_rating: gig.promoter_rating || null,
-    recap:           gig.recap || null,
   };
   if (gig.id && typeof gig.id === "string") obj.id = gig.id;
   return obj;
+   
 }
 
 function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClick, customTags, TAG_COLORS, supabase, onDateClick, userId }) {
@@ -2990,10 +3014,6 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
   const [selected,  setSelected]  = useState(null);
   const [showAdd,   setShowAdd]   = useState(false);
   const [addForm,   setAddForm]   = useState({ venue: "", city: "", date: "", status: "confirmed", fee: "", tag: "Tech-House", notes: "" });
-  const [logbook,   setLogbook]   = useState({ recap: "", crowd_rating: null, promoter_rating: null, setlist_url: "", recording_url: "" });
-  const [logbookSaving, setLogbookSaving] = useState(false);
-  const [shareUsername, setShareUsername] = useState(null);
-  const [shareCopied,   setShareCopied]   = useState(false);
 
   // Listen for "Add to Calendar" from Booked modal
   useEffect(() => {
@@ -3004,6 +3024,53 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
     window.addEventListener('addGigFromBooked', handleAddFromBooked);
     return () => window.removeEventListener('addGigFromBooked', handleAddFromBooked);
   }, []);
+
+  const [shareUsername, setShareUsername] = useState(null);
+  const [shareCopied, setShareCopied]     = useState(false);
+  const confirmedUpcoming = gigs.filter(g => g.status === "confirmed" && new Date(g.date) >= today).length;
+  const copyGigListLink = () => {
+    if (!shareUsername) return;
+    navigator.clipboard.writeText(`https://app.noxreach.com/gigs/${shareUsername}`);
+    setShareCopied(true); setTimeout(() => setShareCopied(false), 2000);
+  };
+  const [logbook, setLogbook]           = useState({ recap: "", setlist_url: "", recording_url: "", crowd_rating: null, promoter_rating: null });
+  const [logbookSaving, setLogbookSaving] = useState(false);
+
+  useEffect(() => {
+    if (!userId || !supabase) return;
+    supabase.from("profiles").select("username").eq("id", userId).single()
+      .then(({ data }) => { if (data?.username) setShareUsername(data.username); });
+  }, [userId]);
+
+  useEffect(() => {
+    if (!selected) return;
+    setLogbook({
+      recap: selected.logbook_recap || "",
+      setlist_url: selected.logbook_setlist_url || "",
+      recording_url: selected.logbook_recording_url || "",
+      crowd_rating: selected.logbook_crowd_rating || null,
+      promoter_rating: selected.logbook_promoter_rating || null,
+    });
+  }, [selected?.id]);
+
+  const saveLogbook = async () => {
+    if (!selected?.id) return;
+    setLogbookSaving(true);
+    try {
+      await supabase.from("gigs").update({
+        logbook_recap: logbook.recap,
+        logbook_setlist_url: logbook.setlist_url,
+        logbook_recording_url: logbook.recording_url,
+        logbook_crowd_rating: logbook.crowd_rating,
+        logbook_promoter_rating: logbook.promoter_rating,
+      }).eq("id", selected.id);
+      showToast("Logbook saved", "success");
+    } catch {
+      showToast("Failed to save logbook", "info");
+    } finally {
+      setLogbookSaving(false);
+    }
+  };
 
   const monthStart  = new Date(viewYear, viewMonth, 1);
   const monthEnd    = new Date(viewYear, viewMonth + 1, 0);
@@ -3054,84 +3121,31 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
     } catch (err) { console.error("deleteGig sync failed:", err); }
   };
 
-  // Sync logbook form when selected gig changes
-  useEffect(() => {
-    if (selected) {
-      setLogbook({
-        recap:           selected.recap || "",
-        crowd_rating:    selected.crowd_rating || null,
-        promoter_rating: selected.promoter_rating || null,
-        setlist_url:     selected.setlist_url || "",
-        recording_url:   selected.recording_url || "",
-      });
-    }
-  }, [selected?.id]);
-
-  const saveLogbook = async () => {
-    if (!selected) return;
-    setLogbookSaving(true);
-    const patch = {
-      recap:           logbook.recap || null,
-      crowd_rating:    logbook.crowd_rating || null,
-      promoter_rating: logbook.promoter_rating || null,
-      setlist_url:     logbook.setlist_url || null,
-      recording_url:   logbook.recording_url || null,
-    };
-    try {
-      const { error } = await supabase.from("gigs").update(patch).eq("id", selected.id).eq("user_id", userId);
-      if (error) throw error;
-      setGigs(prev => prev.map(g => g.id === selected.id ? { ...g, ...patch } : g));
-      setSelected(prev => ({ ...prev, ...patch }));
-      showToast("Logbook saved ✓", "success");
-    } catch (err) {
-      showToast("Failed to save logbook", "info");
-      console.error(err);
-    }
-    setLogbookSaving(false);
-  };
-
   const upcoming = gigs.filter(g => new Date(g.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date));
   const past     = gigs.filter(g => new Date(g.date) < today).sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  // Fetch username for shareable gig list link
-  useEffect(() => {
-    if (!userId) return;
-    supabase.from("profiles").select("username").eq("id", userId).single()
-      .then(({ data }) => { if (data?.username) setShareUsername(data.username); });
-  }, [userId]);
-
-  const copyGigListLink = () => {
-    if (!shareUsername) return;
-    navigator.clipboard.writeText(`https://app.noxreach.com/gigs/${shareUsername}`);
-    setShareCopied(true);
-    setTimeout(() => setShareCopied(false), 2500);
-  };
 
   // Booked leads that aren't gigs yet
   const bookedLeads = leads.filter(l => l.stage === "booked" && !l.archived);
 
-  const confirmedUpcoming = gigs.filter(g => g.status === "confirmed" && new Date(g.date) >= today).length;
-
   return (
-    <div>
+<div>
     {/* Share banner */}
     {shareUsername && confirmedUpcoming > 0 && (
-      <div style={{ background: "linear-gradient(90deg, rgba(139,92,246,0.12), rgba(99,102,241,0.08))", border: `1px solid rgba(139,92,246,0.25)`, borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+      <div style={{ background: "linear-gradient(90deg, rgba(14,116,144,0.10), rgba(99,102,241,0.08))", border: `1px solid rgba(14,116,144,0.25)`, borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#a78bfa", marginBottom: 2 }}>📅 {confirmedUpcoming} confirmed gig{confirmedUpcoming > 1 ? "s" : ""} — share your schedule</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.purpleLight, marginBottom: 2 }}>📅 {confirmedUpcoming} confirmed gig{confirmedUpcoming > 1 ? "s" : ""} — share your schedule</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>app.noxreach.com/gigs/{shareUsername}</div>
         </div>
         <button onClick={copyGigListLink}
-          style={{ padding: "9px 18px", background: shareCopied ? "rgba(74,222,128,0.15)" : "rgba(139,92,246,0.2)", border: `1px solid ${shareCopied ? "rgba(74,222,128,0.4)" : "rgba(139,92,246,0.4)"}`, borderRadius: 8, color: shareCopied ? "#4ade80" : "#a78bfa", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+          style={{ padding: "9px 18px", background: shareCopied ? "rgba(74,222,128,0.15)" : "rgba(14,116,144,0.15)", border: `1px solid ${shareCopied ? "rgba(74,222,128,0.4)" : "rgba(14,116,144,0.35)"}`, borderRadius: 8, color: shareCopied ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
           {shareCopied ? "✓ Copied!" : "🔗 Copy link"}
         </button>
         <a href={`/gigs/${shareUsername}`} target="_blank" rel="noopener noreferrer"
-          style={{ padding: "9px 18px", background: "#D4AF37", border: "none", borderRadius: 8, color: "#0a0a0a", fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap" }}>
+          style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap" }}>
           Preview →
         </a>
       </div>
-    )}
-    <div style={{ display: "grid", gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "1fr 300px", gap: 20 }}>
+    )}    <div style={{ display: "grid", gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "1fr 300px", gap: 20 }}>
       {/* Left: Calendar + upcoming list */}
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -3165,20 +3179,16 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 
               return (
                 <div key={i} onClick={() => { if (!valid) return; if (hasGig) setSelected(dayGigs[0]); else { setAddForm(f => ({ ...f, date: dateStr })); setShowAdd(true); } }}
-  style={{ padding: "8px 4px", minHeight: 52, borderBottom: `1px solid ${COLORS.border}`, borderRight: `1px solid ${COLORS.border}`, cursor: valid ? "pointer" : "default", background: hasGig && selected?.date === dateStr ? COLORS.purpleBg : "transparent", transition: "background 0.15s", position: "relative" }}>
+  style={{ padding: "8px 4px", minHeight: 52, borderBottom: `1px solid ${COLORS.border}`, borderRight: `1px solid ${COLORS.border}`, cursor: valid && hasGig ? "pointer" : "default", background: hasGig && selected?.date === dateStr ? COLORS.purpleBg : "transparent", transition: "background 0.15s" }}>
                   {valid && (
                     <>
                       <div style={{ textAlign: "center", fontSize: 12, fontWeight: isToday ? 800 : 400, color: isToday ? COLORS.purple : COLORS.text, width: isToday ? 22 : "auto", height: isToday ? 22 : "auto", borderRadius: isToday ? "50%" : 0, background: isToday ? COLORS.purpleBg : "transparent", border: isToday ? `1px solid ${COLORS.purple}` : "none", margin: isToday ? "0 auto" : 0, display: isToday ? "flex" : "block", alignItems: "center", justifyContent: "center" }}>{dayNum}</div>
                       {hasGig && (
                         <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 4, flexWrap: "wrap" }}>
                           {dayGigs.map((g, gi) => (
-                            <div key={gi} style={{ width: 6, height: 6, borderRadius: "50%", background: g.status === "confirmed" ? COLORS.gold : COLORS.textSecondary, boxShadow: g.status === "confirmed" ? `0 0 4px ${COLORS.gold}88` : "none" }} />
+                            <div key={gi} style={{ width: 6, height: 6, borderRadius: "50%", background: g.status === "confirmed" ? COLORS.green : COLORS.textSecondary, boxShadow: g.status === "confirmed" ? `0 0 4px ${COLORS.green}88` : "none" }} />
                           ))}
                         </div>
-                      )}
-                      {hasGig && (
-                        <div onClick={e => { e.stopPropagation(); setSelected(null); setAddForm(f => ({ ...f, date: dateStr })); setShowAdd(true); }}
-                          style={{ position: "absolute", top: 2, right: 2, width: 14, height: 14, borderRadius: "50%", background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: COLORS.purpleLight, cursor: "pointer", lineHeight: 1 }}>+</div>
                       )}
                     </>
                   )}
@@ -3189,7 +3199,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 
           {/* Legend */}
           <div style={{ padding: "12px 20px", display: "flex", gap: 20, borderTop: `1px solid ${COLORS.border}` }}>
-            {[["confirmed", COLORS.gold, "Confirmed"], ["pending", COLORS.textSecondary, "Pending"]].map(([s, c, l]) => (
+            {[["confirmed", COLORS.green, "Confirmed"], ["pending", COLORS.textSecondary, "Pending"]].map(([s, c, l]) => (
               <div key={s} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div style={{ width: 7, height: 7, borderRadius: "50%", background: c, boxShadow: s === "confirmed" ? `0 0 5px ${c}88` : "none" }} />
                 <span style={{ fontSize: 11, color: COLORS.textSecondary }}>{l}</span>
@@ -3221,7 +3231,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <div style={{ marginBottom: 4 }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: gig.status === "confirmed" ? COLORS.gold + "22" : COLORS.border, color: gig.status === "confirmed" ? COLORS.gold : COLORS.textSecondary, border: `1px solid ${gig.status === "confirmed" ? COLORS.gold + "44" : COLORS.border}`, textTransform: "uppercase", letterSpacing: "0.06em" }}>{gig.status}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: gig.status === "confirmed" ? "rgba(34,197,94,0.12)" : COLORS.border, color: gig.status === "confirmed" ? COLORS.green : COLORS.textSecondary, border: `1px solid ${gig.status === "confirmed" ? "rgba(34,197,94,0.4)" : COLORS.border}`, textTransform: "uppercase", letterSpacing: "0.06em" }}>{gig.status}</span>
                       </div>
                       <div style={{ fontSize: 10, color: COLORS.textMuted }}>{daysLeft === 0 ? "Today" : `in ${daysLeft}d`}</div>
                     </div>
@@ -3237,18 +3247,17 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
           <div>
             <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>Past Gigs <span style={{ fontFamily: "'DM Mono', monospace", marginLeft: 4 }}>{past.length}</span></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {past.slice(0, 5).map(gig => (
-                <div key={gig.id} onClick={() => { setSelected(gig); setShowAdd(false); }}
-                  style={{ background: COLORS.surface, border: `1px solid ${selected?.id === gig.id ? COLORS.purple : COLORS.border}`, borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", opacity: selected?.id === gig.id ? 1 : 0.6, transition: "all 0.15s" }}>
+              {past.slice(0, 3).map(gig => (
+                <div key={gig.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.55 }}>
                   <div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>{gig.venue}</span>
                     <span style={{ fontSize: 11, color: COLORS.textSecondary, marginLeft: 8 }}>{gig.city}</span>
-                    {gig.recap && <span style={{ fontSize: 10, color: COLORS.purple, marginLeft: 8 }}>📓</span>}
+{gig.recap && <span style={{ fontSize: 10, color: COLORS.purple, marginLeft: 8 }}>📓</span>}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    {gig.crowd_rating && <span style={{ fontSize: 10, color: COLORS.gold }}>{'★'.repeat(gig.crowd_rating)}</span>}
-                    <span style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "'DM Mono', monospace" }}>{gig.date}</span>
-                  </div>
+                    {gig.crowd_rating && <span style={{ fontSize: 10, color: COLORS.amber }}>{'★'.repeat(gig.crowd_rating)}</span>}
+                    <span style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "'DM Mono', monospace" }}>{gig.date}</span>                  </div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "'DM Mono', monospace" }}>{gig.date}</div>
                 </div>
               ))}
             </div>
@@ -3292,7 +3301,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
                 <label style={{ fontSize: 10, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Status</label>
                 <div style={{ display: "flex", gap: 8 }}>
                   {["confirmed", "pending"].map(s => (
-                    <button key={s} onClick={() => setAddForm(f => ({ ...f, status: s }))} style={{ flex: 1, padding: "7px", borderRadius: 7, cursor: "pointer", background: addForm.status === s ? (s === "confirmed" ? COLORS.gold + "22" : COLORS.purpleBg) : "transparent", border: `1px solid ${addForm.status === s ? (s === "confirmed" ? COLORS.gold : COLORS.purple) : COLORS.border}`, color: addForm.status === s ? (s === "confirmed" ? COLORS.gold : COLORS.purpleLight) : COLORS.textSecondary, fontSize: 12, fontWeight: 600, textTransform: "capitalize" }}>{s}</button>
+                    <button key={s} onClick={() => setAddForm(f => ({ ...f, status: s }))} style={{ flex: 1, padding: "7px", borderRadius: 8, cursor: "pointer", background: addForm.status === s ? (s === "confirmed" ? "rgba(34,197,94,0.12)" : COLORS.purpleBg) : "transparent", border: `1px solid ${addForm.status === s ? (s === "confirmed" ? "rgba(34,197,94,0.4)" : COLORS.purple) : COLORS.border}`, color: addForm.status === s ? (s === "confirmed" ? COLORS.green : COLORS.purpleLight) : COLORS.textSecondary, fontSize: 12, fontWeight: 600, textTransform: "capitalize" }}>{s}</button>
                   ))}
                 </div>
               </div>
@@ -3312,17 +3321,9 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
           /* Gig detail */
           <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 20, position: "sticky", top: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>{selected.venue}</div>
                 <div style={{ fontSize: 12, color: COLORS.textSecondary }}>{selected.city}</div>
-                {(gigsByDate[selected.date]?.length > 1) && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
-                    {gigsByDate[selected.date].map((g, i) => (
-                      <button key={g.id} onClick={() => setSelected(g)} style={{ width: 7, height: 7, borderRadius: "50%", background: g.id === selected.id ? COLORS.purple : COLORS.border, border: "none", cursor: "pointer", padding: 0 }} />
-                    ))}
-                    <span style={{ fontSize: 10, color: COLORS.textMuted }}>{gigsByDate[selected.date].findIndex(g => g.id === selected.id) + 1}/{gigsByDate[selected.date].length} on this date</span>
-                  </div>
-                )}
               </div>
               <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", color: COLORS.textSecondary, cursor: "pointer", fontSize: 18 }}>×</button>
             </div>
@@ -3330,15 +3331,14 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
               {[["Date", selected.date], ["Fee", selected.fee || "—"], ["Status", selected.status], ["Genre", selected.tag]].map(([k, v]) => (
                 <div key={k} style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 11, color: COLORS.textSecondary, letterSpacing: "0.06em", textTransform: "uppercase" }}>{k}</span>
-                  <span style={{ fontSize: 12, color: k === "Status" ? (v === "confirmed" ? COLORS.gold : COLORS.textSecondary) : COLORS.text, fontWeight: k === "Status" ? 700 : 400, textTransform: k === "Status" ? "capitalize" : "none" }}>{v}</span>
+                  <span style={{ fontSize: 12, color: k === "Status" ? (v === "confirmed" ? COLORS.green : COLORS.textSecondary) : COLORS.text, fontWeight: k === "Status" ? 700 : 400, textTransform: k === "Status" ? "capitalize" : "none" }}>{v}</span>
                 </div>
               ))}
             </div>
             {selected.notes && (
               <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 16 }}>{selected.notes}</div>
             )}
-
-            {/* ── Gig Logbook (past gigs only) ── */}
+{/* ── Gig Logbook (past gigs only) ── */}
             {new Date(selected.date) < today && (() => {
               const StarRow = ({ label, field }) => (
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -3346,7 +3346,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
                   <div style={{ display: "flex", gap: 4 }}>
                     {[1,2,3,4,5].map(n => (
                       <button key={n} onClick={() => setLogbook(l => ({ ...l, [field]: l[field] === n ? null : n }))}
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: 1, fontSize: 16, color: (logbook[field] || 0) >= n ? COLORS.gold : COLORS.border, transition: "color 0.1s" }}>
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: 1, fontSize: 16, color: (logbook[field] || 0) >= n ? COLORS.amber : COLORS.border, transition: "color 0.1s" }}>
                         ★
                       </button>
                     ))}
@@ -3391,25 +3391,18 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
                   </div>
                 </div>
               );
-            })()}
-
-            <div style={{ display: "flex", gap: 8 }}>
+            })()}            <div style={{ display: "flex", gap: 8 }}>
               <button onClick={async () => {
                 const newStatus = selected.status === "confirmed" ? "pending" : "confirmed";
                 setGigs(prev => prev.map(g => g.id === selected.id ? { ...g, status: newStatus } : g));
                 setSelected(prev => ({ ...prev, status: newStatus }));
                 try { await supabase.from("gigs").update({ status: newStatus }).eq("id", selected.id).eq("user_id", userId); } catch(e) { console.error(e); }
               }}
-                style={{ flex: 1, padding: "8px", background: selected.status === "confirmed" ? COLORS.gold + "22" : COLORS.purpleBg, border: `1px solid ${selected.status === "confirmed" ? COLORS.gold + "44" : COLORS.purpleDim}`, borderRadius: 8, color: selected.status === "confirmed" ? COLORS.gold : COLORS.purpleLight, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                style={{ flex: 1, padding: "8px", background: selected.status === "confirmed" ? "rgba(34,197,94,0.12)" : COLORS.purpleBg, border: `1px solid ${selected.status === "confirmed" ? "rgba(34,197,94,0.4)" : COLORS.purpleDim}`, borderRadius: 8, color: selected.status === "confirmed" ? COLORS.green : COLORS.purpleLight, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                 {selected.status === "confirmed" ? "Mark Pending" : "Confirm ✓"}
               </button>
               <button onClick={() => deleteGig(selected.id)} style={{ padding: "8px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.red + "AA", fontSize: 11, cursor: "pointer" }}>✕</button>
             </div>
-            <button onClick={() => { const d = selected.date; setSelected(null); setAddForm(f => ({ ...f, date: d })); setShowAdd(true); }}
-              style={{ width: "100%", marginTop: 8, padding: "7px", background: "transparent", border: `1px dashed ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 11, cursor: "pointer", transition: "all 0.15s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.purple; e.currentTarget.style.color = COLORS.purpleLight; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.textMuted; }}
-            >+ Add another gig on this date</button>
           </div>
         ) : (
           <div style={{ background: COLORS.surface, border: `1px dashed ${COLORS.border}`, borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
@@ -3428,16 +3421,23 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
         )}
       </div>
     </div>
-    </div>
+  </div>
   );
 }
 
 // ─── Reply Hub ─────────────────────────────────────────────────────────────────
 
-function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, readIds, markRead }) {
+function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
   const [filter, setFilter]   = useState("all"); // all | unread | replied
   const [selected, setSelected] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const [readIds, setReadIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]")); } catch { return new Set(); }
+  });
+
+  const markRead = (id) => {
+    setReadIds(prev => { const n = new Set(prev); n.add(id); try { localStorage.setItem("noxreach_read_replies", JSON.stringify([...n])); } catch {} return n; });
+  };
 
   // Replied leads are the "inbox" — they represent inbound promoter interest
   const repliedLeads = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked"));
@@ -3466,7 +3466,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, readIds, markRead 
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "320px 1fr", gap: 0, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden", minHeight: 500 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 0, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden", minHeight: 500 }}>
 
       {/* Left: message list */}
       <div style={{ borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column" }}>
@@ -3476,7 +3476,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, readIds, markRead 
             <button key={id} onClick={() => setFilter(id)} style={{ flex: 1, padding: "6px 4px", borderRadius: 7, cursor: "pointer", background: filter === id ? COLORS.purpleBg : "transparent", border: `1px solid ${filter === id ? COLORS.purple : COLORS.border}`, color: filter === id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 11, fontWeight: filter === id ? 700 : 500, position: "relative" }}>
               {label}
               {id === "unread" && unreadCount > 0 && (
-                <span style={{ marginLeft: 4, background: COLORS.gold, color: "#000", borderRadius: 8, padding: "0 5px", fontSize: 9, fontWeight: 800 }}>{unreadCount}</span>
+                <span style={{ marginLeft: 4, background: COLORS.purple, color: "#fff", borderRadius: 8, padding: "0 5px", fontSize: 9, fontWeight: 800 }}>{unreadCount}</span>
               )}
             </button>
           ))}
@@ -3495,10 +3495,10 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, readIds, markRead 
               const isActive = selected?.id === lead.id;
               return (
                 <div key={lead.id} onClick={() => { setSelected(lead); markRead(lead.id); setReplyText(""); }}
-                  style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer", background: isActive ? COLORS.purpleBg : "transparent", borderLeft: `3px solid ${isActive ? COLORS.purple : isUnread ? COLORS.gold : "transparent"}`, transition: "background 0.15s" }}>
+                  style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer", background: isActive ? COLORS.purpleBg : "transparent", borderLeft: `3px solid ${isActive ? COLORS.purple : isUnread ? COLORS.purple : "transparent"}`, transition: "background 0.15s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      {isUnread && <div style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.gold, flexShrink: 0 }} />}
+                      {isUnread && <div style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.purple, flexShrink: 0 }} />}
                       <div style={{ fontSize: 13, fontWeight: isUnread ? 800 : 600, color: COLORS.text }}>{lead.name}</div>
                     </div>
                     <div style={{ fontSize: 10, color: COLORS.textMuted, flexShrink: 0, marginLeft: 6 }}>{msg.time}</div>
@@ -3507,7 +3507,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, readIds, markRead 
                   <div style={{ fontSize: 11, color: COLORS.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{msg.preview}</div>
                   <div style={{ marginTop: 6, display: "flex", gap: 4 }}>
                     <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
-                    <Badge color={lead.stage === "booked" ? COLORS.gold : COLORS.green}>{lead.stage === "booked" ? "Booked" : "Replied"}</Badge>
+                    <Badge color={lead.stage === "booked" ? COLORS.green : COLORS.purpleLight}>{lead.stage === "booked" ? "Booked" : "Replied"}</Badge>
                   </div>
                 </div>
               );
@@ -3528,7 +3528,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, readIds, markRead 
       {selected ? (() => {
         const msg  = getMessage(selected);
         const hint = selected.stage === "replied"
-          ? { action: "Confirm booking", next: "booked", color: COLORS.gold }
+          ? { action: "Confirm booking", next: "booked", color: COLORS.green }
           : null;
         return (
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -3559,33 +3559,40 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, readIds, markRead 
               {/* Pipeline action */}
               {hint && (
                 <button onClick={() => { onMove(selected.id, hint.next); setSelected(prev => ({ ...prev, stage: hint.next })); }}
-                  style={{ width: "100%", padding: "12px 16px", borderRadius: 10, cursor: "pointer", marginBottom: 16, background: COLORS.gold + "18", border: `1px solid ${COLORS.gold}44`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  style={{ width: "100%", padding: "12px 16px", borderRadius: 10, cursor: "pointer", marginBottom: 16, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.35)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.gold }}>{hint.action}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.green }}>{hint.action}</div>
                     <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 2 }}>Move this lead to Booked in the pipeline</div>
                   </div>
-                  <span style={{ fontSize: 18, color: COLORS.gold }}>→</span>
+                  <span style={{ fontSize: 18, color: COLORS.green }}>→</span>
                 </button>
               )}
               {selected.stage === "booked" && (
-                <div style={{ padding: "14px 16px", background: COLORS.gold + "18", border: `1px solid ${COLORS.gold}44`, borderRadius: 10, marginBottom: 16 }}>
+                <div style={{ padding: "14px 16px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 10, marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                     <div style={{ fontSize: 16 }}>✓</div>
-                    <div style={{ fontSize: 13, color: COLORS.gold, fontWeight: 700 }}>Booking confirmed — this gig is locked in</div>
+                    <div style={{ fontSize: 13, color: COLORS.green, fontWeight: 700 }}>Booking confirmed — this gig is locked in</div>
                   </div>
                   <button
                     onClick={() => {
-                      window.dispatchEvent(new CustomEvent('switchToCalendar', {
-                        detail: { venue: selected.name, tag: selected.tag }
-                      }));
+                      setActiveTab("calendar");
+                      // Small delay to let tab switch complete, then trigger add form
+                      setTimeout(() => {
+                        const calendarSection = document.querySelector('[data-calendar-view]');
+                        if (calendarSection) {
+                          window.dispatchEvent(new CustomEvent('addGigFromBooked', { 
+                            detail: { venue: selected.name, tag: selected.tag } 
+                          }));
+                        }
+                      }, 100);
                     }}
                     style={{
                       width: "100%",
                       padding: "10px 14px",
-                      background: COLORS.gold,
+                      background: COLORS.green,
                       border: "none",
                       borderRadius: 8,
-                      color: COLORS.bg,
+                      color: "#fff",
                       fontSize: 12,
                       fontWeight: 700,
                       cursor: "pointer",
@@ -3665,7 +3672,7 @@ function PricingView({ isPro, onUpgrade }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* Free */}
         <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 16, padding: 24 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Free</div>
+          <div style={{ display: "inline-block", fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.5)", color: COLORS.text, letterSpacing: "0.08em", marginBottom: 12 }}>FREE</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 20 }}>
             <span style={{ fontSize: 32, fontWeight: 800, color: COLORS.text, fontFamily: "'DM Mono', monospace" }}>€0</span>
             <span style={{ fontSize: 13, color: COLORS.textSecondary }}>/month</span>
@@ -3680,17 +3687,17 @@ function PricingView({ isPro, onUpgrade }) {
               </div>
             ))}
           </div>
-          <div style={{ width: "100%", padding: "11px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 10, color: COLORS.textMuted, fontSize: 12, fontWeight: 700, textAlign: "center" }}>
+          <div style={{ width: "100%", padding: "11px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.5)", borderRadius: 10, color: COLORS.text, fontSize: 12, fontWeight: 700, textAlign: "center" }}>
             {isPro ? "Previous plan" : "Current plan"}
           </div>
         </div>
 
         {/* Pro */}
-        <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 16, padding: 24, position: "relative", boxShadow: "0 0 40px rgba(123,63,228,0.12)" }}>
+        <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, borderRadius: 16, padding: 24, position: "relative", boxShadow: "0 0 40px rgba(14,116,144,0.10)" }}>
           {!isPro && (
             <div style={{ position: "absolute", top: -10, right: 16, background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 800, color: "#fff", letterSpacing: "0.05em" }}>RECOMMENDED</div>
           )}
-          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Pro</div>
+          <div style={{ display: "inline-block", fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, color: COLORS.purpleLight, letterSpacing: "0.08em", marginBottom: 12 }}>PRO</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
             <span style={{ fontSize: 32, fontWeight: 800, color: COLORS.text, fontFamily: "'DM Mono', monospace" }}>€19</span>
             <span style={{ fontSize: 13, color: COLORS.textSecondary }}>/month</span>
@@ -3712,7 +3719,7 @@ function PricingView({ isPro, onUpgrade }) {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "12px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>
+              <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "12px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(14,116,144,0.35)" }}>
                 Upgrade to Pro — €19/mo →
               </button>
               <button onClick={() => onUpgrade("yearly")} style={{ width: "100%", padding: "10px", background: "transparent", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 10, color: COLORS.purpleLight, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
@@ -3803,7 +3810,7 @@ function OnboardingBanner({ leads, assets, onNavigate, onDismiss }) {
           {steps.map((step, i) => (
             <div key={i} style={{
               flex: 1, background: step.done ? COLORS.green + "11" : step.locked ? "transparent" : COLORS.surface,
-              border: `1px solid ${step.done ? COLORS.green + "44" : step.locked ? COLORS.border : COLORS.borderBright}`,
+              border: `1px solid ${step.done ? COLORS.green + "44" : step.locked ? COLORS.border : COLORS.borderHover}`,
               borderRadius: 10, padding: "14px 16px", opacity: step.locked ? 0.4 : 1,
               transition: "all 0.2s",
             }}>
@@ -4148,7 +4155,7 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
                 >
                   Cancel
                 </button>
-                <button onClick={handleImport} disabled={!mapping.name || !mapping.contact || importing} style={{ flex: 1, padding: '12px 20px', background: COLORS.purple, border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!mapping.name || !mapping.contact || importing) ? 0.5 : 1 }}>
+                <button onClick={handleImport} disabled={!mapping.name || !mapping.contact || importing} style={{ flex: 1, padding: '12px 20px', background: COLORS.purple, border: 'none', borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!mapping.name || !mapping.contact || importing) ? 0.5 : 1 }}>
                   {importing ? 'Importing...' : `Import ${preview.totalRows} Leads`}
                 </button>
               </div>
@@ -4167,14 +4174,14 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
                     {result.duplicates > 0 && ` · Skipped ${result.duplicates} duplicates`}
                     {result.errors > 0 && ` · ${result.errors} errors`}
                   </div>
-                  <div style={{ fontSize: 12, color: COLORS.textTertiary }}>Closing in 3 seconds...</div>
+                  <div style={{ fontSize: 12, color: COLORS.text3 }}>Closing in 3 seconds...</div>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '32px 20px' }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>✕</div>
                   <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: COLORS.red }}>Import Failed</div>
                   <div style={{ fontSize: 14, color: COLORS.textSecondary, marginBottom: 20 }}>{result.error}</div>
-                  <button onClick={onClose} style={{ padding: '12px 24px', background: COLORS.purple, border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  <button onClick={onClose} style={{ padding: '12px 24px', background: COLORS.purple, border: 'none', borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                     Close
                   </button>
                 </div>
@@ -4188,6 +4195,22 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
 }
 
 // Message Templates Components (Bundle 5.2)
+// TemplatesView Component - Message Templates Management
+// Reusable outreach templates with placeholders
+
+
+// Template Create/Edit Modal
+
+
+// TemplatePicker Component - Quick insert templates into outreach
+// Used in LeadDetail panel for fast template insertion
+
+
+
+
+// Message Templates Components (Bundle 5.2)
+// TemplatesView Component - Message Templates Management
+// Reusable outreach templates with placeholders
 
 function TemplatesView({ supabase, user }) {
   const [templates, setTemplates] = useState([]);
@@ -4229,11 +4252,11 @@ function TemplatesView({ supabase, user }) {
 
   function getCategoryColor(category) {
     const colors = {
-      'Initial Outreach': '#6B2FD4',
-      'Follow-up': '#8B4FFF',
-      'Booking Request': '#00D4FF',
-      'Thank You': '#10B981',
-      'Other': '#6B7280'
+      'Initial Outreach': COLORS.purple,
+      'Follow-up': COLORS.purpleLight,
+      'Booking Request': COLORS.purple,
+      'Thank You': COLORS.green,
+      'Other': COLORS.text3
     };
     return colors[category] || colors['Other'];
   }
@@ -4307,39 +4330,39 @@ function TemplatesView({ supabase, user }) {
             background: COLORS.bg, 
             padding: '4px 8px', 
             borderRadius: 4,
-            color: COLORS.cyan
+            color: COLORS.purpleLight
           }}>
             {'{venue_name}'}
           </code>
-          <code style={{ 
-            background: COLORS.bg, 
-            padding: '4px 8px', 
+          <code style={{
+            background: COLORS.bg,
+            padding: '4px 8px',
             borderRadius: 4,
-            color: COLORS.cyan
+            color: COLORS.purpleLight
           }}>
             {'{contact_name}'}
           </code>
-          <code style={{ 
-            background: COLORS.bg, 
-            padding: '4px 8px', 
+          <code style={{
+            background: COLORS.bg,
+            padding: '4px 8px',
             borderRadius: 4,
-            color: COLORS.cyan
+            color: COLORS.purpleLight
           }}>
             {'{artist_name}'}
           </code>
-          <code style={{ 
-            background: COLORS.bg, 
-            padding: '4px 8px', 
+          <code style={{
+            background: COLORS.bg,
+            padding: '4px 8px',
             borderRadius: 4,
-            color: COLORS.cyan
+            color: COLORS.purpleLight
           }}>
             {'{genre}'}
           </code>
-          <code style={{ 
-            background: COLORS.bg, 
-            padding: '4px 8px', 
+          <code style={{
+            background: COLORS.bg,
+            padding: '4px 8px',
             borderRadius: 4,
-            color: COLORS.cyan
+            color: COLORS.purpleLight
           }}>
             {'{instagram}'}
           </code>
@@ -4786,6 +4809,228 @@ Best,
     </div>
   );
 }
+
+
+// TemplatePicker Component - Quick insert templates into outreach
+// Used in LeadDetail panel for fast template insertion
+
+function TemplatePicker({ supabase, user, lead, onInsert }) {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+
+  useEffect(() => {
+    if (showPicker) {
+      loadTemplates();
+    }
+  }, [showPicker]);
+
+  async function loadTemplates() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('message_templates')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('use_count', { ascending: false });
+    
+    if (!error && data) {
+      setTemplates(data);
+    }
+    setLoading(false);
+  }
+
+  async function handleSelectTemplate(template) {
+    // Increment use count
+    await supabase.rpc('increment_template_usage', { 
+      template_id: template.id 
+    });
+
+    // Replace placeholders
+    const artistName = user.user_metadata?.full_name || 'GEEZ'; // Get from user_assets later
+    const venueName = lead.name || '{venue_name}';
+    const contactName = lead.contact?.split('@')[0] || '{contact_name}';
+    const genre = lead.tag || '{genre}';
+    const instagram = lead.instagram || '{instagram}';
+
+    let message = template.body
+      .replace(/{venue_name}/g, venueName)
+      .replace(/{contact_name}/g, contactName)
+      .replace(/{artist_name}/g, artistName)
+      .replace(/{genre}/g, genre)
+      .replace(/{instagram}/g, instagram);
+
+    onInsert(message);
+    setShowPicker(false);
+  }
+
+  if (!showPicker) {
+    return (
+      <button
+        onClick={() => setShowPicker(true)}
+        style={{
+          background: COLORS.purple + '15',
+          color: COLORS.purple,
+          border: 'none',
+          padding: '8px 16px',
+          borderRadius: 6,
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }}
+      >
+        📝 Use Template
+      </button>
+    );
+  }
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0,0,0,0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: 20
+    }}>
+      <div style={{
+        background: COLORS.bg,
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 16,
+        width: '100%',
+        maxWidth: 500,
+        maxHeight: '80vh',
+        overflow: 'auto',
+        padding: 24
+      }}>
+        {/* Header */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 20
+        }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: COLORS.text }}>
+            Select Template
+          </h3>
+          <button
+            onClick={() => setShowPicker(false)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: COLORS.text2,
+              fontSize: 24,
+              cursor: 'pointer',
+              padding: 0,
+              width: 32,
+              height: 32
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 32, color: COLORS.text2 }}>
+            Loading templates...
+          </div>
+        ) : templates.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 32 }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>📝</div>
+            <div style={{ fontSize: 14, color: COLORS.text2, marginBottom: 16 }}>
+              No templates yet
+            </div>
+            <div style={{ fontSize: 13, color: COLORS.text3 }}>
+              Create templates in the Templates tab
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {templates.map(template => (
+              <button
+                key={template.id}
+                onClick={() => handleSelectTemplate(template)}
+                style={{
+                  background: COLORS.surface,
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: 10,
+                  padding: 16,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = COLORS.purple;
+                  e.currentTarget.style.background = COLORS.purple + '08';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = COLORS.border;
+                  e.currentTarget.style.background = COLORS.surface;
+                }}
+              >
+                {/* Category Badge */}
+                <div style={{
+                  display: 'inline-block',
+                  background: COLORS.purple + '20',
+                  color: COLORS.purple,
+                  padding: '2px 8px',
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  marginBottom: 8,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  {template.category}
+                </div>
+
+                {/* Template Name */}
+                <div style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: COLORS.text,
+                  marginBottom: 6
+                }}>
+                  {template.name}
+                </div>
+
+                {/* Preview */}
+                <div style={{
+                  fontSize: 12,
+                  color: COLORS.text2,
+                  lineHeight: 1.5,
+                  maxHeight: 40,
+                  overflow: 'hidden'
+                }}>
+                  {template.body.substring(0, 100)}...
+                </div>
+
+                {/* Use Count */}
+                {template.use_count > 0 && (
+                  <div style={{
+                    fontSize: 11,
+                    color: COLORS.text3,
+                    marginTop: 8
+                  }}>
+                    Used {template.use_count} times
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 // Smart Suggestions Components (Bundle 5.3)
 
@@ -5378,8 +5623,8 @@ function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded }) {
       <button
         onClick={() => setShowModal(true)}
         style={{
-          background: COLORS.cyan + '15',
-          color: COLORS.cyan,
+          background: COLORS.purpleBg,
+          color: COLORS.purpleLight,
           border: 'none',
           padding: '8px 16px',
           borderRadius: 6,
@@ -5709,7 +5954,7 @@ function QuickActionTooltip({ children, text, shortcut }) {
 
 // AnalyticsView Component - Insert this into App.jsx
 
-function AnalyticsView({ userId, supabase, COLORS }) {
+function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {} }) {
   const [stats, setStats] = useState(null);
   const [tierStats, setTierStats] = useState([]);
   const [tagStats, setTagStats] = useState([]);
@@ -5820,80 +6065,58 @@ function AnalyticsView({ userId, supabase, COLORS }) {
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto" }}>
       {/* Key Metrics Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
         {[
-          { label: "Total Leads", value: stats.total_leads, icon: "📊", color: COLORS.purple },
-          { label: "Total Gigs", value: stats.booked_count, icon: "🎵", color: COLORS.gold },
-          { label: "Conversion Rate", value: `${stats.conversion_rate}%`, icon: "📈", color: COLORS.green },
-          { label: "Response Rate", value: `${stats.response_rate}%`, icon: "💬", color: COLORS.cyan },
+          { label: "Total Leads",     value: stats.total_leads,           color: COLORS.purpleLight },
+          { label: "Total Gigs",      value: stats.booked_count,          color: COLORS.green       },
+          { label: "Conversion Rate", value: `${stats.conversion_rate}%`, color: COLORS.purpleLight },
+          { label: "Response Rate",   value: `${stats.response_rate}%`,   color: COLORS.purpleLight },
         ].map(card => (
           <div key={card.label} style={{
             background: COLORS.surface,
-            border: `1px solid ${COLORS.border}`,
+            border: `1px solid ${COLORS.borderHover}`,
+            borderTop: `3px solid ${card.color}`,
             borderRadius: 12,
-            padding: 20,
-            position: "relative",
-            overflow: "hidden",
+            padding: "20px 24px",
           }}>
-            <div style={{
-              position: "absolute",
-              top: -10,
-              right: -10,
-              fontSize: 60,
-              opacity: 0.08,
-            }}>{card.icon}</div>
-            <div style={{ position: "relative" }}>
-              <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 8, fontWeight: 500 }}>
-                {card.label}
-              </div>
-              <div style={{ fontSize: 32, fontWeight: 700, color: card.color }}>
-                {card.value}
-              </div>
+            <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              {card.label}
+            </div>
+            <div style={{ fontSize: 34, fontWeight: 800, color: card.color, fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>
+              {card.value}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Conversion Funnel */}
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
-        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Pipeline Conversion Funnel</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      {/* Conversion Funnel — same 4-col grid as stat cards */}
+      <div style={{ marginBottom: 32 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Pipeline Conversion Funnel</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, alignItems: "end" }}>
           {[
-            { label: "Target", count: stats.target_count, color: COLORS.textTertiary, width: 100 },
-            { label: "Contacted", count: stats.contacted_count, color: COLORS.purple, width: stats.total_leads > 0 ? (stats.contacted_count / stats.total_leads) * 100 : 0 },
-            { label: "Replied", count: stats.replied_count, color: COLORS.cyan, width: stats.contacted_count > 0 ? (stats.replied_count / stats.contacted_count) * 100 : 0 },
-            { label: "Booked", count: stats.booked_count, color: COLORS.gold, width: stats.replied_count > 0 ? (stats.booked_count / stats.replied_count) * 100 : 0 },
-          ].map((stage, i) => (
-            <div key={stage.label} style={{ flex: 1 }}>
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 4 }}>{stage.label}</div>
-                <div style={{ fontSize: 20, fontWeight: 600, color: stage.color }}>{stage.count}</div>
+            { label: "Target",    count: stats.target_count,    color: COLORS.text3,       width: 100 },
+            { label: "Contacted", count: stats.contacted_count, color: COLORS.purple,      width: stats.total_leads > 0     ? (stats.contacted_count / stats.total_leads) * 100  : 0 },
+            { label: "Replied",   count: stats.replied_count,   color: COLORS.purpleLight, width: stats.contacted_count > 0 ? (stats.replied_count / stats.contacted_count) * 100 : 0 },
+            { label: "Booked",    count: stats.booked_count,    color: COLORS.green,       width: stats.replied_count > 0   ? (stats.booked_count / stats.replied_count) * 100   : 0 },
+          ].map((stage, i) => {
+            const isBooked = i === 3;
+            return (
+              <div key={stage.label} style={{ background: COLORS.surface, border: `1px solid ${isBooked ? stage.color + "60" : COLORS.borderHover}`, borderTop: `3px solid ${stage.color}`, borderRadius: 12, padding: "16px 20px" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: stage.color, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>{stage.label}</div>
+                <div style={{ fontSize: isBooked ? 36 : 28, fontWeight: 800, color: stage.color, fontFamily: "'DM Mono', monospace", lineHeight: 1, marginBottom: 12 }}>{stage.count}</div>
+                <div style={{ height: 8, background: COLORS.border, borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${Math.max(stage.width, 4)}%`, background: stage.color, borderRadius: 4, opacity: isBooked ? 1 : 0.8 }} />
+                </div>
+                <div style={{ fontSize: 11, color: stage.color, fontWeight: 700, marginTop: 6 }}>{Math.round(stage.width)}%{i > 0 ? " conversion" : " of pipeline"}</div>
               </div>
-              <div style={{ 
-                height: 40,
-                background: `linear-gradient(to right, ${stage.color}, ${stage.color}AA)`,
-                borderRadius: 8,
-                width: `${Math.max(stage.width, 10)}%`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#fff",
-              }}>
-                {stage.width >= 20 && `${Math.round(stage.width)}%`}
-              </div>
-              {i < 3 && (
-                <div style={{ textAlign: "center", margin: "8px 0", fontSize: 18, color: COLORS.textTertiary }}>→</div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       {/* Weekly Activity Chart */}
       {weeklyActivity.length > 0 && (
-        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
+        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: 24, marginBottom: 32 }}>
           <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Activity Timeline (Last 8 Weeks)</div>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 200 }}>
             {weeklyActivity.map(week => {
@@ -5914,12 +6137,12 @@ function AnalyticsView({ userId, supabase, COLORS }) {
                     <div style={{
                       width: 16,
                       height: gigsHeight || 4,
-                      background: COLORS.gold,
+                      background: COLORS.green,
                       borderRadius: 4,
                       position: "relative",
                     }} title={`${week.gigs_booked} gigs`} />
                   </div>
-                  <div style={{ fontSize: 10, color: COLORS.textTertiary, transform: "rotate(-45deg)", transformOrigin: "center", marginTop: 8 }}>
+                  <div style={{ fontSize: 10, color: COLORS.text3, transform: "rotate(-45deg)", transformOrigin: "center", marginTop: 8 }}>
                     {weekLabel}
                   </div>
                 </div>
@@ -5932,7 +6155,7 @@ function AnalyticsView({ userId, supabase, COLORS }) {
               <span style={{ color: COLORS.textSecondary }}>Leads Added</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
-              <div style={{ width: 12, height: 12, background: COLORS.gold, borderRadius: 2 }} />
+              <div style={{ width: 12, height: 12, background: COLORS.green, borderRadius: 2 }} />
               <span style={{ color: COLORS.textSecondary }}>Gigs Booked</span>
             </div>
           </div>
@@ -5943,7 +6166,7 @@ function AnalyticsView({ userId, supabase, COLORS }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
         {/* Tier Performance */}
         {tierStats.length > 0 && (
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24 }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: 24 }}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Performance by Tier</div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -5954,15 +6177,23 @@ function AnalyticsView({ userId, supabase, COLORS }) {
                 </tr>
               </thead>
               <tbody>
-                {tierStats.map(tier => (
-                  <tr key={tier.tier} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                    <td style={{ padding: "10px 0", fontSize: 14, fontWeight: 500 }}>{tier.tier}</td>
-                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tier.total_leads}</td>
-                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tier.response_rate > 0 ? COLORS.green : COLORS.textTertiary }}>
-                      {tier.response_rate}%
-                    </td>
-                  </tr>
-                ))}
+                {tierStats.map(tier => {
+                  const tierColor = { A1: COLORS.purpleLight, A2: COLORS.purple, A3: COLORS.textSecondary }[tier.tier] || COLORS.textSecondary;
+                  return (
+                    <tr key={tier.tier} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                      <td style={{ padding: "10px 0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: tierColor, flexShrink: 0, boxShadow: `0 0 6px ${tierColor}88` }} />
+                          <span style={{ fontSize: 14, fontWeight: 700, color: tierColor }}>{tier.tier}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tier.total_leads}</td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tier.response_rate > 0 ? COLORS.green : COLORS.text3 }}>
+                        {tier.response_rate}%
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -5970,7 +6201,7 @@ function AnalyticsView({ userId, supabase, COLORS }) {
 
         {/* Tag Performance */}
         {tagStats.length > 0 && (
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 24 }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 12, padding: 24 }}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Performance by Tag</div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -5981,15 +6212,23 @@ function AnalyticsView({ userId, supabase, COLORS }) {
                 </tr>
               </thead>
               <tbody>
-                {tagStats.slice(0, 10).map(tag => (
-                  <tr key={tag.tag} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                    <td style={{ padding: "10px 0", fontSize: 14, fontWeight: 500 }}>{tag.tag}</td>
-                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tag.total_leads}</td>
-                    <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tag.response_rate > 0 ? COLORS.green : COLORS.textTertiary }}>
-                      {tag.response_rate}%
-                    </td>
-                  </tr>
-                ))}
+                {tagStats.slice(0, 10).map(tag => {
+                  const tagColor = TAG_COLORS[tag.tag] || COLORS.textSecondary;
+                  return (
+                    <tr key={tag.tag} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                      <td style={{ padding: "10px 0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: tagColor, flexShrink: 0, boxShadow: `0 0 5px ${tagColor}77` }} />
+                          <span style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{tag.tag}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, color: COLORS.textSecondary }}>{tag.total_leads}</td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 600, color: tag.response_rate > 0 ? COLORS.green : COLORS.text3 }}>
+                        {tag.response_rate}%
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -6011,7 +6250,7 @@ function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inbou
   return (
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
-      background: '#111111', borderTop: '1px solid #1E1E1E',
+      background: COLORS.surface, borderTop: `1px solid ${COLORS.border}`,
       display: 'flex', paddingBottom: 'env(safe-area-inset-bottom, 0px)',
     }}>
       {NAV_ITEMS.map(item => {
@@ -6026,15 +6265,15 @@ function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inbou
             {item.badge > 0 && (
               <div style={{
                 position: 'absolute', top: 6, right: '50%', marginRight: -18,
-                background: '#D4AF37', color: '#000',
+                background: COLORS.purple, color: '#fff',
                 borderRadius: 8, padding: '0 4px',
                 fontSize: 9, fontWeight: 800, lineHeight: '14px',
                 minWidth: 14, textAlign: 'center',
               }}>{item.badge}</div>
             )}
             <span style={{ fontSize: 18, lineHeight: 1, opacity: active ? 1 : 0.4 }}>{item.icon}</span>
-            <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? '#8B4FFF' : '#888' }}>{item.label}</span>
-            {active && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: '#8B4FFF', borderRadius: 2 }} />}
+            <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? COLORS.purple : COLORS.text3 }}>{item.label}</span>
+            {active && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: COLORS.purple, borderRadius: 2 }} />}
           </button>
         );
       })}
@@ -6072,7 +6311,7 @@ Feel free to use this as a testimonial on the site.
         boxShadow: `0 0 80px rgba(212,175,55,0.15), 0 32px 80px rgba(0,0,0,0.7)`,
         animation: "slideUp 0.2s ease",
       }}>
-        <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.gold}, ${COLORS.purple}, ${COLORS.purpleLight})` }} />
+        <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.purple}, ${COLORS.purpleLight})` }} />
         <div style={{ padding: "32px 28px", textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>
@@ -6093,8 +6332,8 @@ Feel free to use this as a testimonial on the site.
               "Best quotes get featured on NoxReach.io",
             ].map((s, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <div style={{ width: 16, height: 16, borderRadius: "50%", background: COLORS.gold + "22", border: `1px solid ${COLORS.gold}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: 8, color: COLORS.gold, fontWeight: 800 }}>{i + 1}</span>
+                <div style={{ width: 16, height: 16, borderRadius: "50%", background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ fontSize: 8, color: COLORS.purpleLight, fontWeight: 800 }}>{i + 1}</span>
                 </div>
                 <span style={{ fontSize: 12, color: COLORS.textSecondary }}>{s}</span>
               </div>
@@ -6105,8 +6344,8 @@ Feel free to use this as a testimonial on the site.
               onClick={onClose}
               style={{
                 display: "block", padding: "13px",
-                background: `linear-gradient(135deg, ${COLORS.gold}, #f0c040)`,
-                borderRadius: 12, color: "#000",
+                background: COLORS.purple,
+                borderRadius: 12, color: "#fff",
                 fontSize: 14, fontWeight: 800,
                 textDecoration: "none", textAlign: "center",
                 boxShadow: "0 4px 20px rgba(212,175,55,0.4)",
@@ -6122,6 +6361,96 @@ Feel free to use this as a testimonial on the site.
               Maybe later
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function OutreachMethodModal({ lead, onClose, onSelect, templates }) {
+  const METHODS = [
+    { id: "email",    Icon: IconMail,      label: "Email",        hasTemplate: true  },
+    { id: "instagram",Icon: IconInstagram, label: "Instagram DM", hasTemplate: false },
+    { id: "whatsapp", Icon: IconWhatsApp,  label: "WhatsApp",     hasTemplate: false },
+    { id: "phone",    Icon: IconPhone,     label: "Phone",        hasTemplate: false },
+    { id: "other",    Icon: IconOutreach,  label: "Other",        hasTemplate: false },
+  ];
+
+  const buildMailto = () => {
+    const template = templates.find(t => t.id === "berlin");
+    const body = template ? template.text : "Hey,\n\nI wanted to reach out about a potential booking.";
+    const subject = encodeURIComponent("Booking Inquiry");
+    const encodedBody = encodeURIComponent(body.replace("[Name]", lead.name));
+    const email = lead.contact || "";
+    return "mailto:" + email + "?subject=" + subject + "&body=" + encodedBody;
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 3000,
+      background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <style>{`@keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }`}</style>
+      <div style={{
+        background: COLORS.surface, border: "1px solid " + COLORS.purpleDim,
+        borderRadius: 20, width: 400, maxWidth: "95vw",
+        overflow: "hidden", animation: "slideUp 0.2s ease",
+        boxShadow: "0 0 60px rgba(14,116,144,0.10), 0 32px 80px rgba(0,0,0,0.7)",
+      }}>
+        <div style={{ height: 3, background: "linear-gradient(90deg, " + COLORS.purple + ", " + COLORS.purpleLight + ")" }} />
+        <div style={{ padding: "28px 28px 24px" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>
+            How did you reach out?
+          </div>
+          <div style={{ fontSize: 12, color: COLORS.textSecondary, marginBottom: 20 }}>
+            {lead.name} · log your outreach method
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {METHODS.map(method => (
+              <button key={method.id}
+                onClick={() => {
+                  if (method.id === "email") {
+                    window.open(buildMailto(), "_blank");
+                  }
+                  onSelect(method.id);
+                }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 14,
+                  padding: "13px 16px", borderRadius: 10, cursor: "pointer",
+                  background: COLORS.bg, border: "1px solid " + COLORS.border,
+                  transition: "all 0.15s", textAlign: "left",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = COLORS.purple;
+                  e.currentTarget.style.background = COLORS.purpleBg;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = COLORS.border;
+                  e.currentTarget.style.background = COLORS.bg;
+                }}
+              >
+                <div style={{ width: 28, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><method.Icon size={18} color={COLORS.purpleLight} /></div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{method.label}</div>
+                  {method.hasTemplate && (
+                    <div style={{ fontSize: 11, color: COLORS.purple, marginTop: 2 }}>Opens email with template pre-filled →</div>
+                  )}
+                </div>
+                <span style={{ fontSize: 14, color: COLORS.textMuted }}>›</span>
+              </button>
+            ))}
+          </div>
+
+          <button onClick={onClose} style={{
+            width: "100%", marginTop: 12, padding: "10px",
+            background: "transparent", border: "1px solid " + COLORS.border,
+            borderRadius: 10, color: COLORS.textMuted, fontSize: 12, cursor: "pointer",
+          }}>
+            Skip
+          </button>
         </div>
       </div>
     </div>
@@ -6157,12 +6486,12 @@ function NoxReachApp({ user, session, supabase }) {
   const [dataLoading, setDataLoading]   = useState(true);
   const [settings, setSettings]         = useState(() => loadSettings());
   const [isPro, setIsPro]               = useState(() => loadIsPro(user.id));
-  const [adminUsers, setAdminUsers]         = useState([]);
-  const [adminSignupsByDay, setAdminSignupsByDay] = useState([]);
-  const [adminEmailSends, setAdminEmailSends]   = useState([]);
-  const [selectedUser, setSelectedUser]     = useState(null);
+  const [adminUsers, setAdminUsers]     = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [selectedUserLeads, setSelectedUserLeads] = useState([]);
   const [loadingAdminData, setLoadingAdminData] = useState(false);
+  const [adminEmailSends, setAdminEmailSends]   = useState([]);
+  const emailTotal = adminEmailSends.reduce((s, x) => s + (x.count || 0), 0);
 
   const [showWelcomeNew, setShowWelcomeNew] = useState(() => {
     try { return !localStorage.getItem("nr_welcomed_" + user.id); } catch { return true; }
@@ -6259,8 +6588,8 @@ const loadAdminUsers = async () => {
     try {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, display_name, is_pro, health_status, last_health_check, created_at, email")
-        .order("created_at", { ascending: false });
+        .select("id, username, display_name, is_pro, health_status, last_health_check, created_at, email");
+
 
       const enriched = await Promise.all(
         (profiles || []).map(async (p) => {
@@ -6268,37 +6597,15 @@ const loadAdminUsers = async () => {
             supabase.from("leads").select("*", { count: "exact", head: true }).eq("user_id", p.id).eq("archived", false),
             supabase.from("gigs").select("*",  { count: "exact", head: true }).eq("user_id", p.id),
           ]);
+          
+          
           return { ...p, leadCount: leadsRes.count || 0, gigCount: gigsRes.count || 0 };
         })
       );
+
       setAdminUsers(enriched);
-
-      // Signups by day — last 14 days
-      const now = new Date();
-      const days = Array.from({ length: 14 }, (_, i) => {
-        const d = new Date(now);
-        d.setDate(d.getDate() - (13 - i));
-        return d.toISOString().split("T")[0];
-      });
-      setAdminSignupsByDay(days.map(day => ({
-        day,
-        label: new Date(day + "T12:00:00").toLocaleDateString("en", { month: "short", day: "numeric" }),
-        count: (profiles || []).filter(p => p.created_at?.startsWith(day)).length,
-      })));
-
-      // Email sends breakdown
-      const { data: emailSends } = await supabase.from("email_sends").select("email_type");
-      const sendCounts = (emailSends || []).reduce((acc, s) => {
-        acc[s.email_type] = (acc[s.email_type] || 0) + 1;
-        return acc;
-      }, {});
-      setAdminEmailSends(
-        Object.entries(sendCounts)
-          .map(([type, count]) => ({ type, count }))
-          .sort((a, b) => b.count - a.count)
-      );
     } catch (err) {
-      console.error("Failed to load admin data:", err);
+      console.error("Failed to load admin users:", err);
     }
     setLoadingAdminData(false);
   };
@@ -6309,16 +6616,18 @@ const loadAdminUsers = async () => {
   }, [activeTab]);
 
   const loadUserLeads = async (userId) => {
-    setSelectedUserLeads([]); // clear previous user's leads immediately
-    try {
-      const { data, error } = await supabase.rpc("admin_get_user_leads", { p_user_id: userId });
-      if (error) throw error;
-      setSelectedUserLeads((data || []).map(dbToLead));
-    } catch (err) {
-      console.error("Failed to load user leads:", err);
-      setSelectedUserLeads([]);
-    }
-  };
+  try {
+    const { data } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    setSelectedUserLeads(data || []);
+  } catch (err) {
+    console.error("Failed to load user leads:", err);
+    setSelectedUserLeads([]);
+  }
+};
   
   const [selectedLeads, setSelectedLeads] = useState(new Set());
   const [showBulkBar, setShowBulkBar] = useState(false);
@@ -6379,8 +6688,18 @@ const loadAdminUsers = async () => {
     setShowBulkBar(false);
   };
   
-  // Derived — always up to date with customTags
-  const TAG_COLORS = Object.fromEntries(customTags.map(t => [t, tagColor(t)]));
+  // Per-tag color overrides (user-picked or auto-assigned)
+  const [tagColorMap, setTagColorMap] = useState(() => {
+    const stored = loadTagColors();
+    // Seed any missing tags with unique colors on first load
+    const tags = loadCustomTags();
+    const used = Object.values(stored);
+    tags.forEach(t => { if (!stored[t]) { stored[t] = pickNextColor([...used]); used.push(stored[t]); } });
+    return stored;
+  });
+
+  // Derived TAG_COLORS: override map first, fallback to auto-pick
+  const TAG_COLORS = Object.fromEntries(customTags.map(t => [t, tagColorMap[t] || TAG_PALETTE[0]]));
 
   const addCustomTag = (tag) => {
     const clean = tag.trim();
@@ -6388,14 +6707,25 @@ const loadAdminUsers = async () => {
     const next = [...customTags, clean];
     setCustomTags(next);
     saveCustomTags(next);
+    // Assign a unique color for the new tag
+    const usedColors = Object.values(tagColorMap);
+    const newColor = pickNextColor(usedColors);
+    const nextMap = { ...tagColorMap, [clean]: newColor };
+    setTagColorMap(nextMap);
+    saveTagColors(nextMap);
     return true;
   };
 
   const removeCustomTag = (tag) => {
-    if (DEFAULT_TAGS.includes(tag)) return; // can't remove built-ins
     const next = customTags.filter(t => t !== tag);
     setCustomTags(next);
     saveCustomTags(next);
+  };
+
+  const setTagColor = (tag, color) => {
+    const nextMap = { ...tagColorMap, [tag]: color };
+    setTagColorMap(nextMap);
+    saveTagColors(nextMap);
   }; // null or reason string
   const [selectedLead, setSelectedLead] = useState(null);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
@@ -6585,37 +6915,22 @@ const loadAdminUsers = async () => {
   };
 const dueCount     = leads.filter(l => !l.archived && l.followUpDate && new Date(l.followUpDate) <= new Date()).length;
   const repliedCount = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked")).length;
-  const inboundCount = leads.filter(l => !l.archived && l.is_inbound === true).length;
-  const [readIds, setReadIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]")); } catch { return new Set(); }
-  });
-  const markRead = (id) => {
-    setReadIds(prev => { const n = new Set(prev); n.add(id); try { localStorage.setItem("noxreach_read_replies", JSON.stringify([...n])); } catch {} return n; });
-  };
-  const unreadCount = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked") && !readIds.has(l.id)).length;
+  const inboundCount = leads.filter(l => !l.archived && l.is_inbound && l.stage === "replied").length;
+  const unreadCount  = useMemo(() => {
+    try {
+      const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]"));
+      return leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked") && !read.has(l.id)).length;
+    } catch { return 0; }
+  }, [leads]);
 const activeLeads = leads.filter(l => !l.archived);
   const hasFilter   = search || filters.tier || filters.tag || filters.stage;
-
-  const exportCSV = () => {
-    const cols = ["Venue", "Contact Email", "Instagram", "Stage", "Tier", "Genre", "Fee", "Follow-up Date", "Notes", "Contact Log"];
-    const rows = activeLeads.map(l => [
-      l.name, l.contact, l.instagram, l.stage, l.tier, l.tag,
-      l.fee || "", l.followUpDate || "", l.notes, l.contactLog,
-    ].map(v => `"${String(v || "").replace(/"/g, '""')}"`));
-    const csv = [cols.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `noxreach-leads-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click(); URL.revokeObjectURL(url);
-  };
   // ── Loading screen while fetching user data ────────────────────────────────
   if (dataLoading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#060608", flexDirection: "column", gap: 16 }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: COLORS.bgDeep, flexDirection: "column", gap: 16 }}>
         <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
-        <div style={{ width: 36, height: 36, border: "2px solid #1c1c2e", borderTopColor: "#6B2FD4", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-        <div style={{ fontSize: 11, color: "#50506a", letterSpacing: "0.12em" }}>LOADING YOUR PIPELINE</div>
+        <div style={{ width: 36, height: 36, border: `2px solid ${COLORS.border}`, borderTopColor: COLORS.purple, borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+        <div style={{ fontSize: 11, color: COLORS.text3, letterSpacing: "0.12em" }}>LOADING YOUR PIPELINE</div>
       </div>
     );
   }
@@ -6657,9 +6972,9 @@ const activeLeads = leads.filter(l => !l.archived);
       {showWelcomePro && (
         <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
           onClick={() => setShowWelcomePro(false)}>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 420, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(123,63,228,0.2)` }}
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 420, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(14,116,144,0.15)` }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.purple}, ${COLORS.purpleLight}, ${COLORS.gold})` }} />
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.purple}, ${COLORS.purpleLight})` }} />
             <div style={{ padding: "32px 28px" }}>
               <div style={{ textAlign: "center", marginBottom: 24 }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
@@ -6683,7 +6998,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   </div>
                 ))}
               </div>
-              <button onClick={() => setShowWelcomePro(false)} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>
+              <button onClick={() => setShowWelcomePro(false)} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(14,116,144,0.35)" }}>
                 Let's go →
               </button>
             </div>
@@ -6698,7 +7013,7 @@ const activeLeads = leads.filter(l => !l.archived);
 }
         {showResetConfirm && (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowResetConfirm(false)}>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderBright}`, borderRadius: 16, padding: 28, width: 360, maxWidth: "90vw", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }}>
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 16, padding: 28, width: 360, maxWidth: "90vw", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }}>
             <div style={{ fontSize: 18, marginBottom: 8 }}>⚠️</div>
             <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Reset pipeline?</div>
             <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 24 }}>This will clear all your leads and replace them with sample data. This cannot be undone.</div>
@@ -6720,21 +7035,30 @@ const activeLeads = leads.filter(l => !l.archived);
           </a>
         </div>
         <nav style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}>
-          {TABS.filter(t => t.group === "main").map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: activeTab === tab.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeTab === tab.id ? COLORS.purpleDim : "transparent"}`, color: activeTab === tab.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeTab === tab.id ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
-              <span style={{ fontSize: 14 }}>{tab.icon}</span>
-              {tab.label}
-              {tab.badge > 0 && <span style={{ marginLeft: "auto", background: COLORS.gold, color: "#000", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800 }}>{tab.badge}</span>}
-            </button>
-          ))}
+          {TABS.filter(t => t.group === "main").map(tab => {
+            const isActive = activeTab === tab.id;
+            const TabIcon  = TAB_ICONS[tab.id];
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: isActive ? COLORS.purpleBg : "transparent", border: `1px solid ${isActive ? COLORS.purple : "transparent"}`, color: isActive ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
+                {TabIcon && <TabIcon size={15} color={isActive ? COLORS.purpleLight : COLORS.textSecondary} />}
+                {tab.label}
+                {tab.badge > 0 && <span style={{ marginLeft: "auto", background: COLORS.purple, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800 }}>{tab.badge}</span>}
+              </button>
+            );
+          })}
           <div style={{ height: 1, background: COLORS.border, margin: "10px 4px 12px" }} />
-          <div style={{ fontSize: 9, color: "#00D4FF", letterSpacing: "0.12em", textTransform: "uppercase", padding: "0 8px", marginBottom: 6, opacity: 0.6 }}>Resources</div>
-          {TABS.filter(t => t.group === "ref").map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: activeTab === tab.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeTab === tab.id ? COLORS.purpleDim : "transparent"}`, color: activeTab === tab.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeTab === tab.id ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
-              <span style={{ fontSize: 14 }}>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+          <div style={{ fontSize: 9, color: COLORS.text3, letterSpacing: "0.12em", textTransform: "uppercase", padding: "0 8px", marginBottom: 6, opacity: 0.6 }}>Resources</div>
+          {TABS.filter(t => t.group === "ref").map(tab => {
+            const isActive = activeTab === tab.id;
+            const TabIcon  = TAB_ICONS[tab.id];
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: isActive ? COLORS.purpleBg : "transparent", border: `1px solid ${isActive ? COLORS.purple : "transparent"}`, color: isActive ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
+                {TabIcon && <TabIcon size={15} color={isActive ? COLORS.purpleLight : COLORS.textSecondary} />}
+                {tab.label}
+                {tab.badge > 0 && <span style={{ marginLeft: "auto", background: COLORS.purple, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800 }}>{tab.badge}</span>}
+              </button>
+            );
+          })}
         </nav>
         <div style={{ padding: "16px 20px 12px", borderTop: `1px solid ${COLORS.border}`, overflow: "hidden" }}>
           {/* Plan chip */}
@@ -6742,7 +7066,7 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 4, background: COLORS.border, color: COLORS.textSecondary, letterSpacing: "0.1em" }}>FREE</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.5)", color: COLORS.text, letterSpacing: "0.08em" }}>FREE</div>
                   <span style={{ fontSize: 10, color: COLORS.textMuted }}>{leads.filter(l => !l.archived).length} / {FREE_LIMITS.leads} leads</span>
                 </div>
                 <button onClick={() => requestUpgrade("leads")} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Upgrade</button>
@@ -6753,7 +7077,7 @@ const activeLeads = leads.filter(l => !l.archived);
             </div>
           ) : (
             <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 4, background: COLORS.gold + "22", color: COLORS.gold, border: `1px solid ${COLORS.gold}44`, letterSpacing: "0.1em" }}>PRO</div>
+              <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: COLORS.purpleBg, color: COLORS.purpleLight, border: `1px solid ${COLORS.purple}`, letterSpacing: "0.08em" }}>PRO</div>
               <span style={{ fontSize: 10, color: COLORS.textMuted }}>All features unlocked</span>
               {user?.email === "info@soundofgeez.com" && <button onClick={() => { setIsPro(false); saveIsPro(false, user.id); showToast("Switched to Free (demo)", "info"); }} style={{ marginLeft: "auto", fontSize: 9, color: COLORS.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0 }}>demo</button>}
               <a href="https://instagram.com/noxreach.os" target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: COLORS.textMuted, textDecoration: "none", marginTop: 4, display: "block" }}>@noxreach.os</a>
@@ -6777,20 +7101,18 @@ const activeLeads = leads.filter(l => !l.archived);
           </div>
         </div>
         {/* User info + sign out — own flex child so it's always visible */}
-        <div style={{ padding: "12px 20px", borderTop: `1px solid ${COLORS.border}`, flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: COLORS.purpleBg, border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, flexShrink: 0 }}>
-              {userName.charAt(0).toUpperCase()}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</div>
-              <div style={{ fontSize: 9, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</div>
-            </div>
+        <div style={{ padding: "12px 20px", borderTop: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: COLORS.purpleBg, border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, flexShrink: 0 }}>
+            {userName.charAt(0).toUpperCase()}
           </div>
-          <button onClick={handleSignOut} style={{ width: "100%", padding: "7px 10px", borderRadius: 7, background: "transparent", border: `1px solid ${COLORS.border}`, color: COLORS.textSecondary, fontSize: 12, fontWeight: 500, cursor: "pointer", textAlign: "center", transition: "all 0.15s" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.red; e.currentTarget.style.color = COLORS.red; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.textSecondary; }}
-          >Sign out</button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</div>
+            <div style={{ fontSize: 9, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</div>
+          </div>
+          <button onClick={handleSignOut} title="Sign out" style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, padding: 4, borderRadius: 6, transition: "color 0.15s", display: "flex" }}
+            onMouseEnter={e => e.currentTarget.style.color = COLORS.red}
+            onMouseLeave={e => e.currentTarget.style.color = COLORS.textMuted}
+          ><IconPowerOff size={15} color="currentColor" /></button>
         </div>
       </div>
 
@@ -6815,20 +7137,16 @@ const activeLeads = leads.filter(l => !l.archived);
             </div>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               {dueCount > 0 && (
-                <div style={{ padding: "6px 12px", background: COLORS.gold + "22", border: `1px solid ${COLORS.gold}44`, borderRadius: 8, fontSize: 11, color: COLORS.gold, fontWeight: 700 }}>
+                <div style={{ padding: "6px 12px", background: COLORS.amber + "22", border: `1px solid ${COLORS.amber}44`, borderRadius: 8, fontSize: 11, color: COLORS.amber, fontWeight: 700 }}>
                   ⏰ {dueCount} follow-up{dueCount > 1 ? "s" : ""} due
                 </div>
               )}
-              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Lead
+              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
+                <IconPlus size={14} color="#fff" /> Add Lead
               </button>
               <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.purple}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                <span>📊</span> Import CSV
+                <IconUpload size={14} color={COLORS.purpleLight} /> Import CSV
               </button>
-              {activeLeads.length > 0 && (
-                <button onClick={exportCSV} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span>⬇️</span> Export CSV
-                </button>
-              )}
             </div>
           </div>
 
@@ -6859,7 +7177,7 @@ const activeLeads = leads.filter(l => !l.archived);
         {isMobile && <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} dueCount={dueCount} unreadCount={unreadCount} inboundCount={inboundCount} />}
 
         {/* Content */}
-        <div style={{ padding: isMobile ? 16 : 28, paddingBottom: isMobile ? 80 : 28, flex: 1, display: activeTab === "pipeline" && selectedLead ? "grid" : "block", gridTemplateColumns: activeTab === "pipeline" && selectedLead ? "1fr 280px" : undefined, gap: 20 }}>
+        <div style={{ padding: isMobile ? 16 : 28, flex: 1, display: activeTab === "pipeline" && selectedLead ? "grid" : "block", gridTemplateColumns: activeTab === "pipeline" && selectedLead ? "1fr 280px" : undefined, gap: 20 }}>
           {activeTab === "dashboard" && (
             <>
               {!onboardingDismissed && (
@@ -6876,20 +7194,10 @@ const activeLeads = leads.filter(l => !l.archived);
               <DashboardView leads={leads} gigs={gigs} onNavigate={setActiveTab} isPro={isPro} onUpgradeClick={requestUpgrade} TAG_COLORS={TAG_COLORS} />
             </>
           )}
-          {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} />}
+          {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} TAG_COLORS={TAG_COLORS} />}
           {activeTab === "templates" && <TemplatesView supabase={supabase} user={user} />}
           {activeTab === "pipeline"  && (
             <>
-              {!isPro && activeLeads.length >= FREE_LIMITS.leads && (
-                <div style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(99,102,241,0.08))", border: "1px solid rgba(139,92,246,0.35)", borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-                  <div style={{ fontSize: 22 }}>⚡</div>
-                  <div style={{ flex: 1, minWidth: 180 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#a78bfa", marginBottom: 2 }}>You've hit the free tier limit ({FREE_LIMITS.leads} leads)</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>Upgrade to Pro to keep adding venues — no cap, no friction.</div>
-                  </div>
-                  <button onClick={requestUpgrade} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Upgrade to Pro →</button>
-                </div>
-              )}
               <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
               {selectedLead && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} />}
             </>
@@ -6899,65 +7207,33 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} />}
-          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} readIds={readIds} markRead={markRead} />}
-          {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} supabase={supabase} user={user} />}
+          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} />}
+          {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
             <div>
               {loadingAdminData && (
-                <div style={{ padding: 40, textAlign: "center", color: COLORS.textSecondary }}>Loading dashboard…</div>
+                <div style={{ padding: 40, textAlign: "center", color: COLORS.textSecondary }}>Loading users…</div>
               )}
 
-              {!loadingAdminData && !selectedUser && (() => {
-                const proCount   = adminUsers.filter(u => u.is_pro).length;
-                const newThisWeek = adminUsers.filter(u => u.created_at && (Date.now() - new Date(u.created_at).getTime()) < 7 * 86400000).length;
-                const totalLeads = adminUsers.reduce((s, u) => s + u.leadCount, 0);
-                const totalGigs  = adminUsers.reduce((s, u) => s + u.gigCount, 0);
-                const avgLeads   = adminUsers.length > 0 ? (totalLeads / adminUsers.length).toFixed(1) : "0";
-                const emailTotal = adminEmailSends.reduce((s, e) => s + e.count, 0);
-                const chartMax   = Math.max(...adminSignupsByDay.map(d => d.count), 1);
-
-                return (
-                  <>
-                    {/* ── Stats row ── */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 20 }}>
-                      {[
-                        { label: "Total Users",   value: adminUsers.length, accent: false },
-                        { label: "New (7d)",      value: newThisWeek,       accent: true  },
-                        { label: "Pro",           value: proCount,          accent: false },
-                        { label: "MRR est.",      value: `€${proCount * 9}`,accent: true  },
-                        { label: "Total Leads",   value: totalLeads,        accent: false },
-                        { label: "Total Gigs",    value: totalGigs,         accent: false },
-                      ].map(card => (
-                        <div key={card.label} style={{ background: COLORS.surface, border: `1px solid ${card.accent ? COLORS.purpleDim : COLORS.border}`, borderRadius: 12, padding: "14px 16px" }}>
-                          <div style={{ fontSize: 10, color: COLORS.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>{card.label}</div>
-                          <div style={{ fontSize: 22, fontWeight: 700, color: card.accent ? COLORS.purpleLight : COLORS.text }}>{card.value}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* ── Charts row ── */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-
-                      {/* Signup trend */}
-                      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: COLORS.text }}>Signups — Last 14 Days</div>
-                        <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 16 }}>{adminUsers.length} total users</div>
-                        <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 72 }}>
-                          {adminSignupsByDay.map(d => (
-                            <div key={d.day} title={`${d.label}: ${d.count}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 3, height: "100%" }}>
-                              <div style={{ width: "100%", background: d.count > 0 ? COLORS.purple : COLORS.border, borderRadius: "2px 2px 0 0", height: `${Math.max((d.count / chartMax) * 64, d.count > 0 ? 4 : 2)}px` }} />
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 10, color: COLORS.textMuted }}>
-                          <span>{adminSignupsByDay[0]?.label}</span>
-                          <span>{adminSignupsByDay[adminSignupsByDay.length - 1]?.label}</span>
-                        </div>
+              {!loadingAdminData && !selectedUser && (
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+                    {[
+                      { label: "Total Users",     value: adminUsers.length },
+                      { label: "Pro Subscribers", value: adminUsers.filter(u => u.is_pro).length },
+                      { label: "Active",          value: adminUsers.filter(u => u.health_status === "active").length },
+                      { label: "Avg Leads/User",  value: adminUsers.length > 0 ? (adminUsers.reduce((s, u) => s + u.leadCount, 0) / adminUsers.length).toFixed(1) : 0 },
+                    ].map(card => (
+                      <div key={card.label} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 16 }}>
+                        <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 8 }}>{card.label}</div>
+                        <div style={{ fontSize: 24, fontWeight: 500 }}>{card.value}</div>
                       </div>
+                    ))}
+                  </div>
 
-                      {/* Email sends */}
-                      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20 }}>
+                  {/* Email sends */}
+                  <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: COLORS.text }}>Behavioral Emails Sent</div>
                         <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 16 }}>{emailTotal} total</div>
                         {adminEmailSends.length === 0 ? (
@@ -6987,7 +7263,6 @@ const activeLeads = leads.filter(l => !l.archived);
                           </div>
                         )}
                       </div>
-                    </div>
 
                     {/* ── User table ── */}
                     <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
@@ -7009,7 +7284,7 @@ const activeLeads = leads.filter(l => !l.archived);
                               active:              { bg: "rgba(0,212,170,0.15)",  fg: "#00D4AA" },
                               no_leads_added:      { bg: "rgba(255,165,0,0.15)",  fg: "#FFA500" },
                               leads_not_contacted: { bg: "rgba(255,215,0,0.15)",  fg: "#FFD700" },
-                              replies_no_bookings: { bg: "rgba(0,212,255,0.15)",  fg: "#00D4FF" },
+                              replies_no_bookings: { bg: COLORS.purpleBg,         fg: COLORS.purpleLight },
                             }[u.health_status] || { bg: "rgba(113,113,122,0.15)", fg: "#71717a" };
                             const joined = u.created_at ? new Date(u.created_at).toLocaleDateString("en", { month: "short", day: "numeric" }) : "—";
                             return (
@@ -7021,7 +7296,12 @@ const activeLeads = leads.filter(l => !l.archived);
                                 </td>
                                 <td style={{ padding: "12px 16px", fontSize: 12, color: COLORS.textSecondary }}>{joined}</td>
                                 <td style={{ padding: "12px 16px" }}>
-                                  <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: u.is_pro ? "linear-gradient(135deg,#D4AF37,#F4D03F)" : COLORS.border, color: u.is_pro ? "#2C2C2A" : COLORS.textSecondary }}>
+                                  <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                    background: u.is_pro ? COLORS.purpleBg : "rgba(255,255,255,0.06)",
+                                    color: u.is_pro ? COLORS.purpleLight : COLORS.text,
+                                    border: u.is_pro ? `1px solid ${COLORS.purple}` : "1px solid rgba(255,255,255,0.5)",
+                                    letterSpacing: "0.06em",
+                                  }}>
                                     {u.is_pro ? "Pro" : "Free"}
                                   </span>
                                 </td>
@@ -7042,8 +7322,7 @@ const activeLeads = leads.filter(l => !l.archived);
                       </table>
                     </div>
                   </>
-                );
-              })()}
+              )}
 
               {!loadingAdminData && selectedUser && (() => {
                 const [adminDetailTab, setAdminDetailTab] = [
@@ -7118,8 +7397,8 @@ const activeLeads = leads.filter(l => !l.archived);
                           {[
                             { label: "Total Leads",    value: uActive.length, color: COLORS.text },
                             { label: "Reply Rate",     value: `${uReplyRate}%`, color: COLORS.purpleLight },
-                            { label: "Booking Rate",   value: uReplied > 0 ? `${uBookRate}%` : "—", color: COLORS.gold },
-                            { label: "Booked",         value: uBooked, color: COLORS.gold },
+                            { label: "Booking Rate",   value: uReplied > 0 ? `${uBookRate}%` : "—", color: COLORS.green },
+                            { label: "Booked",         value: uBooked, color: COLORS.green },
                           ].map(c => (
                             <div key={c.label} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "14px 16px" }}>
                               <div style={{ fontSize: 10, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{c.label}</div>
@@ -7135,7 +7414,7 @@ const activeLeads = leads.filter(l => !l.archived);
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                               {stageBreakdown.map(s => {
-                                const stageColor = { target: COLORS.textSecondary, contacted: COLORS.purple, followup1: COLORS.purpleLight, followup2: "#a78bfa", replied: "#00D4FF", booked: COLORS.gold }[s.id] || COLORS.textSecondary;
+                                const stageColor = { target: COLORS.textSecondary, contacted: COLORS.purple, followup1: COLORS.purpleLight, followup2: COLORS.purpleLight, replied: COLORS.purpleLight, booked: COLORS.green }[s.id] || COLORS.textSecondary;
                                 return (
                                   <div key={s.id}>
                                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
@@ -7152,8 +7431,7 @@ const activeLeads = leads.filter(l => !l.archived);
                           )}
                         </div>
                       </div>
-                    )}
-                  </div>
+                    )}                  </div>
                 );
               })()}
             </div>
@@ -7218,23 +7496,29 @@ function PublicBookingForm({ supabase }) {
   const handleSubmit = async () => {
     if (!form.venue || !form.contact_email) return;
     setSubmitting(true);
+    await supabase.from('leads').insert({
+      user_id: djProfile.id, name: form.venue, contact: form.contact_email,
+      instagram: form.instagram, stage: 'replied', tag: form.event_type || null, is_inbound: true,
+      notes: [form.message, form.date ? 'Date: ' + form.date : '', form.fee_offer ? 'Fee offer: EUR' + form.fee_offer : ''].filter(Boolean).join(' | '),
+      last_contact: new Date().toISOString().split('T')[0],
+    });
+    // Fire notification emails (non-blocking)
     try {
-      const res = await fetch('https://ckttttvgvpvflgjzkbmy.supabase.co/functions/v1/booking-inquiry', {
+      await fetch('https://ckttttvgvpvflgjzkbmy.supabase.co/functions/v1/booking-notify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, ...form }),
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + 'sb_publishable_77AjzPzfXgMSvku0fRFD9w_l4hHVMvo' },
+        body: JSON.stringify({
+          venue: form.venue,
+          contact_email: form.contact_email,
+          instagram: form.instagram,
+          event_type: form.event_type,
+          date: form.date,
+          fee_offer: form.fee_offer,
+          message: form.message,
+          dj_user_id: djProfile.id,
+        }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        console.error('Booking inquiry failed:', data);
-        setSubmitting(false);
-        return;
-      }
-    } catch (e) {
-      console.error('Booking inquiry error:', e);
-      setSubmitting(false);
-      return;
-    }
+    } catch (e) { console.warn('Notify failed', e); }
     setSubmitting(false);
     setStep('success');
   };
@@ -7298,231 +7582,179 @@ function PublicBookingForm({ supabase }) {
   );
 }
 
-// ── Public shareable gig list ─────────────────────────────────────────────────
 function PublicGigList({ supabase }) {
   const username = window.location.pathname.split('/gigs/')[1]?.toLowerCase().trim();
-  const [profile,  setProfile]  = useState(null);
-  const [gigs,     setGigs]     = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [copied,   setCopied]   = useState(false);
+  const [djProfile, setDjProfile] = useState(null);
+  const [gigs, setGigs]           = useState([]);
+  const [status, setStatus]       = useState('loading');
 
   useEffect(() => {
-    if (!username) { setNotFound(true); setLoading(false); return; }
-    (async () => {
-      const { data: prof, error } = await supabase
-        .from('profiles')
-        .select('id, display_name, username')
-        .eq('username', username)
-        .single();
-      if (error || !prof) { setNotFound(true); setLoading(false); return; }
-      setProfile(prof);
-
-      const { data: gigData } = await supabase.rpc('get_public_gigs', { p_username: username });
-      setGigs(gigData || []);
-      setLoading(false);
-    })();
+    if (!username) { setStatus('notfound'); return; }
+    supabase.from('profiles').select('id, display_name, username').eq('username', username).single()
+      .then(({ data, error }) => {
+        if (error || !data) { setStatus('notfound'); return; }
+        setDjProfile(data);
+        return supabase.from('gigs')
+          .select('venue, city, date, status, tag')
+          .eq('user_id', data.id)
+          .eq('status', 'confirmed')
+          .gte('date', new Date().toISOString().split('T')[0])
+          .order('date', { ascending: true });
+      })
+      .then(res => {
+        if (!res) return;
+        if (res.error) { setStatus('ready'); return; }
+        setGigs(res.data || []);
+        setStatus('ready');
+      })
+      .catch(() => setStatus('notfound'));
   }, [username]);
 
-  const share = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAY_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // Tag color palette — maps genre → subtle tint
+  const TAG_COLORS_PUBLIC = {
+    'Tech-House': { bg:'rgba(14,116,144,0.18)', border:'rgba(34,211,238,0.30)', color:'#22D3EE' },
+    'Festival':   { bg:'rgba(234,179,8,0.14)',  border:'rgba(234,179,8,0.35)',  color:'#EAB308' },
+    'Disco':      { bg:'rgba(236,72,153,0.14)', border:'rgba(236,72,153,0.35)', color:'#EC4899' },
+    'House':      { bg:'rgba(99,102,241,0.15)', border:'rgba(99,102,241,0.35)', color:'#818CF8' },
+    'Techno':     { bg:'rgba(239,68,68,0.14)',  border:'rgba(239,68,68,0.35)',  color:'#F87171' },
+    'Afro House': { bg:'rgba(249,115,22,0.14)', border:'rgba(249,115,22,0.35)', color:'#FB923C' },
+    'Melodic':    { bg:'rgba(20,184,166,0.14)', border:'rgba(20,184,166,0.35)', color:'#2DD4BF' },
   };
+  const fallbackTag = { bg:'rgba(255,255,255,0.06)', border:'rgba(255,255,255,0.18)', color:'rgba(255,255,255,0.55)' };
+  const getTagStyle = tag => TAG_COLORS_PUBLIC[tag] || fallbackTag;
 
-  const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const spinnerStyle = `
+    @keyframes pgSpin { to { transform: rotate(360deg); } }
+    @keyframes pgFadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pgPulse { 0%,100% { opacity:.4; } 50% { opacity:.9; } }
+  `;
 
-  if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>Loading...</div>
+  if (status === 'loading') return (
+    <div style={{ minHeight:'100vh', background:'#060608', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'-apple-system, BlinkMacSystemFont, sans-serif' }}>
+      <style>{spinnerStyle}</style>
+      <div style={{ width:28, height:28, border:'2.5px solid rgba(34,211,238,0.15)', borderTopColor:'#22D3EE', borderRadius:'50%', animation:'pgSpin 0.8s linear infinite' }} />
     </div>
   );
 
-  if (notFound) return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, sans-serif' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, color: '#fff', marginBottom: 16 }}>404</div>
-        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 16 }}>Artist page not found</div>
+  if (status === 'notfound') return (
+    <div style={{ minHeight:'100vh', background:'#060608', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'-apple-system, BlinkMacSystemFont, sans-serif' }}>
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontSize:56, fontWeight:900, color:'rgba(255,255,255,0.08)', letterSpacing:'-0.04em', marginBottom:12 }}>404</div>
+        <div style={{ color:'rgba(255,255,255,0.35)', fontSize:15 }}>Schedule not found</div>
       </div>
     </div>
   );
 
+  const nextGig = gigs[0];
+
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '48px 24px 80px' }}>
-      <div style={{ maxWidth: 560, margin: '0 auto' }}>
+    <div style={{ minHeight:'100vh', background:'#060608', fontFamily:'-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif', overflowX:'hidden' }}>
+      <style>{`
+        ${spinnerStyle}
+        .pg-card { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+        .pg-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.10) !important; }
+        .pg-cta { transition: opacity 0.18s ease, transform 0.18s ease; }
+        .pg-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+        * { box-sizing: border-box; }
+      `}</style>
+
+      {/* Atmospheric background glow */}
+      <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0 }}>
+        <div style={{ position:'absolute', top:'-20%', left:'50%', transform:'translateX(-50%)', width:700, height:500, background:'radial-gradient(ellipse, rgba(14,116,144,0.13) 0%, transparent 65%)', borderRadius:'50%' }} />
+        <div style={{ position:'absolute', bottom:'-10%', right:'-15%', width:500, height:400, background:'radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 65%)', borderRadius:'50%' }} />
+      </div>
+
+      <div style={{ position:'relative', zIndex:1, maxWidth:580, margin:'0 auto', padding:'56px 20px 80px' }}>
 
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '3px', color: '#8b5cf6', marginBottom: 24, textTransform: 'uppercase' }}>NOXREACH</div>
-          <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🎧</div>
-          <h1 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{profile.display_name}</h1>
-          <p style={{ margin: '0 0 24px', fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Upcoming confirmed shows</p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={share}
-              style={{ padding: '10px 20px', background: copied ? 'rgba(74,222,128,0.15)' : 'rgba(139,92,246,0.15)', border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : 'rgba(139,92,246,0.4)'}`, borderRadius: 8, color: copied ? '#4ade80' : '#a78bfa', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-              {copied ? '✓ Link copied' : '🔗 Share'}
-            </button>
-            <a href={`/book/${username}`}
-              style={{ padding: '10px 20px', background: '#D4AF37', border: 'none', borderRadius: 8, color: '#0a0a0a', fontSize: 13, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
-              Book this artist →
-            </a>
+        <div style={{ textAlign:'center', marginBottom:52, animation:'pgFadeUp 0.5s ease both' }}>
+          <img src="https://noxreach.com/public/nr-icon.png" width="40" height="40"
+            style={{ borderRadius:10, marginBottom:20, opacity:0.7 }} alt="NR" />
+          <div style={{ fontSize:42, fontWeight:900, color:'#fff', letterSpacing:'-0.03em', lineHeight:1, marginBottom:10 }}>
+            {djProfile?.display_name}
+          </div>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+            <div style={{ width:5, height:5, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 8px #22c55e', animation:'pgPulse 2.2s ease infinite' }} />
+            <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.35)', letterSpacing:'0.14em', textTransform:'uppercase' }}>
+              {gigs.length} Upcoming Show{gigs.length !== 1 ? 's' : ''}
+            </span>
           </div>
         </div>
 
-        {/* Gig list */}
+        {/* Next show highlight */}
+        {nextGig && (() => {
+          const d = new Date(nextGig.date + 'T00:00:00');
+          const ts = getTagStyle(nextGig.tag);
+          const daysUntil = Math.round((d - new Date()) / 86400000);
+          return (
+            <div style={{ marginBottom:16, animation:'pgFadeUp 0.5s 0.08s ease both', opacity:0 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.3)', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:8, paddingLeft:2 }}>Next show</div>
+              <div className="pg-card" style={{ background:'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:16, padding:'20px 22px', display:'flex', alignItems:'center', gap:20, boxShadow:'0 4px 24px rgba(0,0,0,0.5)' }}>
+                {/* Big date */}
+                <div style={{ flexShrink:0, textAlign:'center', minWidth:52 }}>
+                  <div style={{ fontSize:36, fontWeight:900, color:'#fff', lineHeight:1, letterSpacing:'-0.03em' }}>{String(d.getDate()).padStart(2,'0')}</div>
+                  <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.4)', letterSpacing:'0.1em', textTransform:'uppercase', marginTop:3 }}>{MONTH_SHORT[d.getMonth()]} '{String(d.getFullYear()).slice(2)}</div>
+                  <div style={{ fontSize:9, color:'rgba(255,255,255,0.25)', marginTop:2 }}>{DAY_SHORT[d.getDay()]}</div>
+                </div>
+                <div style={{ width:1, height:52, background:'rgba(255,255,255,0.08)', flexShrink:0 }} />
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:18, fontWeight:800, color:'#fff', marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', letterSpacing:'-0.01em' }}>{nextGig.venue}</div>
+                  {nextGig.city && <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginBottom:8 }}>{nextGig.city}</div>}
+                  {nextGig.tag && (
+                    <span style={{ fontSize:9, fontWeight:800, padding:'3px 8px', borderRadius:5, background:ts.bg, border:`1px solid ${ts.border}`, color:ts.color, letterSpacing:'0.12em', textTransform:'uppercase' }}>{nextGig.tag}</span>
+                  )}
+                </div>
+                <div style={{ flexShrink:0, textAlign:'right' }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'rgba(34,197,94,0.8)', letterSpacing:'0.04em' }}>
+                    {daysUntil === 0 ? 'TODAY' : daysUntil === 1 ? 'TOMORROW' : `IN ${daysUntil}D`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Rest of gig list */}
         {gigs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 24px', background: '#111', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16 }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📅</div>
-            <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)' }}>No upcoming shows announced yet</div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {gigs.map((gig, i) => {
-              const d = new Date(gig.gig_date);
+          <div style={{ textAlign:'center', padding:'70px 0', color:'rgba(255,255,255,0.2)', fontSize:14 }}>No upcoming shows scheduled</div>
+        ) : gigs.length > 1 ? (
+          <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:40, animation:'pgFadeUp 0.5s 0.16s ease both', opacity:0 }}>
+            {gigs.slice(1).map((g, i) => {
+              const d = new Date(g.date + 'T00:00:00');
+              const ts = getTagStyle(g.tag);
               return (
-                <div key={i} style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 18 }}>
-                  {/* Date badge */}
-                  <div style={{ textAlign: 'center', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 10, padding: '10px 14px', minWidth: 52, flexShrink: 0 }}>
-                    <div style={{ fontSize: 10, color: '#a78bfa', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{MONTH_ABBR[d.getMonth()]}</div>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', lineHeight: 1.1, fontFamily: 'monospace' }}>{d.getDate()}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{d.getFullYear()}</div>
+                <div key={i} className="pg-card" style={{ display:'flex', alignItems:'center', gap:16, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, padding:'13px 18px', boxShadow:'0 2px 12px rgba(0,0,0,0.35)' }}>
+                  <div style={{ flexShrink:0, textAlign:'center', minWidth:40 }}>
+                    <div style={{ fontSize:17, fontWeight:800, color:'rgba(255,255,255,0.85)', lineHeight:1, letterSpacing:'-0.02em' }}>{String(d.getDate()).padStart(2,'0')}</div>
+                    <div style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,0.3)', letterSpacing:'0.08em', textTransform:'uppercase', marginTop:2 }}>{MONTH_SHORT[d.getMonth()]} '{String(d.getFullYear()).slice(2)}</div>
                   </div>
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{gig.venue}</div>
-                    {gig.city && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>📍 {gig.city}</div>}
+                  <div style={{ width:1, height:32, background:'rgba(255,255,255,0.06)', flexShrink:0 }} />
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:14, fontWeight:700, color:'rgba(255,255,255,0.85)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom: g.city ? 1 : 0 }}>{g.venue}</div>
+                    {g.city && <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{g.city}</div>}
                   </div>
-                  {/* Tag */}
-                  {gig.tag && (
-                    <div style={{ flexShrink: 0, padding: '4px 10px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 6, fontSize: 11, color: '#a78bfa', fontWeight: 600 }}>{gig.tag}</div>
+                  {g.tag && (
+                    <span style={{ flexShrink:0, fontSize:9, fontWeight:800, padding:'2px 8px', borderRadius:4, background:ts.bg, border:`1px solid ${ts.border}`, color:ts.color, letterSpacing:'0.12em', textTransform:'uppercase', whiteSpace:'nowrap' }}>{g.tag}</span>
                   )}
                 </div>
               );
             })}
           </div>
-        )}
+        ) : <div style={{ marginBottom:40 }} />}
 
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: 48 }}>
-          <a href="https://noxreach.com" style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', textDecoration: 'none', letterSpacing: '0.05em' }}>
-            Powered by <span style={{ color: '#8b5cf6', fontWeight: 700 }}>NOXREACH</span>
+        {/* CTA */}
+        <div style={{ textAlign:'center', animation:'pgFadeUp 0.5s 0.24s ease both', opacity:0 }}>
+          <a href={`/book/${username}`} className="pg-cta"
+            style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'15px 36px', background:'#D4AF37', color:'#0a0a0a', borderRadius:12, fontSize:15, fontWeight:800, textDecoration:'none', letterSpacing:'0.01em', boxShadow:'0 4px 24px rgba(212,175,55,0.30)' }}>
+            Book {djProfile?.display_name}
+            <span style={{ fontSize:16 }}>→</span>
           </a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Public artist kit page (/kit/[username]) ──────────────────────────────────
-function PublicAssetKit({ supabase }) {
-  const username = window.location.pathname.split('/kit/')[1]?.toLowerCase().trim();
-  const [kit, setKit] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!username) { setNotFound(true); setLoading(false); return; }
-    supabase.rpc('get_public_kit', { p_username: username }).then(({ data, error }) => {
-      if (error || !data || data.length === 0) { setNotFound(true); setLoading(false); return; }
-      setKit(data[0]);
-      setLoading(false);
-    });
-  }, [username]);
-
-  const share = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true); setTimeout(() => setCopied(false), 2000);
-  };
-
-  const s = { minHeight: '100vh', background: '#0a0a0a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' };
-
-  if (loading) return (
-    <div style={{ ...s, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>Loading...</div>
-    </div>
-  );
-
-  if (notFound) return (
-    <div style={{ ...s, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, color: '#fff', marginBottom: 16 }}>404</div>
-        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 16 }}>Artist kit not found</div>
-      </div>
-    </div>
-  );
-
-  const link = (label, href) => href ? (
-    <a href={href} target="_blank" rel="noopener noreferrer"
-      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600, transition: 'border-color 0.15s' }}>
-      <span style={{ flex: 1 }}>{label}</span>
-      <span style={{ color: '#8b5cf6', fontSize: 12 }}>→</span>
-    </a>
-  ) : null;
-
-  return (
-    <div style={s}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '48px 24px 80px' }}>
-
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '3px', color: '#8b5cf6', marginBottom: 24, textTransform: 'uppercase' }}>NOXREACH</div>
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🎧</div>
-          <h1 style={{ margin: '0 0 6px', fontSize: 30, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{kit.artist_name || username}</h1>
-          {kit.tagline && <p style={{ margin: '0 0 6px', fontSize: 15, color: '#a78bfa', fontWeight: 600 }}>{kit.tagline}</p>}
-          {kit.location && <p style={{ margin: '0 0 6px', fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>📍 {kit.location}</p>}
-          {kit.genres && <p style={{ margin: '0 0 20px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{kit.genres}</p>}
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={share} style={{ padding: '10px 20px', background: copied ? 'rgba(74,222,128,0.15)' : 'rgba(139,92,246,0.15)', border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : 'rgba(139,92,246,0.4)'}`, borderRadius: 8, color: copied ? '#4ade80' : '#a78bfa', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-              {copied ? '✓ Link copied' : '🔗 Share Kit'}
-            </button>
-            {kit.booking_email && (
-              <a href={`mailto:${kit.booking_email}`} style={{ padding: '10px 20px', background: '#D4AF37', border: 'none', borderRadius: 8, color: '#0a0a0a', fontSize: 13, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
-                📩 Book this artist
-              </a>
-            )}
-          </div>
+          <div style={{ marginTop:20, fontSize:11, color:'rgba(255,255,255,0.15)', letterSpacing:'0.04em' }}>Powered by NoxReach</div>
         </div>
 
-        {/* Bio */}
-        {kit.bio && (
-          <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 22px', marginBottom: 20 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#8b5cf6', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>About</div>
-            <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7 }}>{kit.bio}</p>
-          </div>
-        )}
-
-        {/* Links */}
-        {(kit.epk_url || kit.soundcloud || kit.spotify || kit.mix_link_1 || kit.mix_link_2 || kit.website || kit.press_photos_url) && (
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Links</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {link('📄 EPK / Press Kit', kit.epk_url)}
-              {link('☁ SoundCloud', kit.soundcloud)}
-              {link('🎵 Spotify', kit.spotify)}
-              {link('🎧 Mix 1', kit.mix_link_1)}
-              {link('🎧 Mix 2', kit.mix_link_2)}
-              {link('🌐 Website', kit.website)}
-              {link('📸 Press Photos', kit.press_photos_url)}
-            </div>
-          </div>
-        )}
-
-        {/* Upcoming shows CTA */}
-        <div style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa', marginBottom: 3 }}>Upcoming shows</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Check confirmed gig dates</div>
-          </div>
-          <a href={`/gigs/${username}`} style={{ padding: '9px 16px', background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.35)', borderRadius: 8, color: '#a78bfa', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>View schedule →</a>
-        </div>
-
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: 48 }}>
-          <a href="https://noxreach.com" style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', textDecoration: 'none', letterSpacing: '0.05em' }}>
-            Powered by <span style={{ color: '#8b5cf6', fontWeight: 700 }}>NOXREACH</span>
-          </a>
-        </div>
       </div>
     </div>
   );
@@ -7531,7 +7763,6 @@ function PublicAssetKit({ supabase }) {
 export default function NoxReach() {
   if (window.location.pathname.startsWith('/gigs/')) return <PublicGigList supabase={supabase} />;
   if (window.location.pathname.startsWith('/book/')) return <PublicBookingForm supabase={supabase} />;
-  if (window.location.pathname.startsWith('/kit/'))  return <PublicAssetKit  supabase={supabase} />;
   if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy.html') {
     window.location.href = 'https://noxreach.com/privacy.html';
     return null;
