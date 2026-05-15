@@ -1223,6 +1223,18 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         };
         return (
           <div style={{ background: allDone ? COLORS.gold + "11" : COLORS.surface, border: `1px solid ${allDone ? COLORS.gold + "44" : COLORS.border}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
+            {/* Primary CTA — Create Gig */}
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('switchToCalendar', {
+                  detail: { venue: lead.name, tag: lead.tag }
+                }));
+              }}
+              style={{ width: "100%", marginBottom: 12, padding: "10px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+            >
+              <span>📅</span>
+              <span>Create Gig in Calendar</span>
+            </button>
             <div style={{ fontSize: 10, color: allDone ? COLORS.gold : COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, fontWeight: 600 }}>
               {allDone ? "✓ Booking complete" : "Booking checklist"}
             </div>
@@ -1236,39 +1248,11 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                   >
                     {done && <span style={{ fontSize: 10, color: "#000", fontWeight: 700 }}>✓</span>}
                   </button>
-                  <span style={{ fontSize: 12, color: done ? COLORS.text : COLORS.textMuted, textDecoration: done ? "none" : "none", fontWeight: done ? 600 : 400 }}>{step.label}</span>
+                  <span style={{ fontSize: 12, color: done ? COLORS.text : COLORS.textMuted, fontWeight: done ? 600 : 400 }}>{step.label}</span>
                   {!step.required && !done && <span style={{ fontSize: 9, color: COLORS.textMuted, marginLeft: "auto", opacity: 0.6 }}>optional</span>}
                 </div>
               );
             })}
-            
-            {/* Add to Calendar CTA */}
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('switchToCalendar', { 
-                  detail: { venue: lead.name, tag: lead.tag } 
-                }));
-              }}
-              style={{
-                width: "100%",
-                marginTop: 12,
-                padding: "10px 14px",
-                background: COLORS.gold,
-                border: "none",
-                borderRadius: 8,
-                color: COLORS.bg,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-              }}
-            >
-              <span>📅</span>
-              <span>Add to Calendar</span>
-            </button>
           </div>
         );
       })()}
@@ -3168,17 +3152,10 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 
 // ─── Reply Hub ─────────────────────────────────────────────────────────────────
 
-function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
+function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, readIds, markRead }) {
   const [filter, setFilter]   = useState("all"); // all | unread | replied
   const [selected, setSelected] = useState(null);
   const [replyText, setReplyText] = useState("");
-  const [readIds, setReadIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]")); } catch { return new Set(); }
-  });
-
-  const markRead = (id) => {
-    setReadIds(prev => { const n = new Set(prev); n.add(id); try { localStorage.setItem("noxreach_read_replies", JSON.stringify([...n])); } catch {} return n; });
-  };
 
   // Replied leads are the "inbox" — they represent inbound promoter interest
   const repliedLeads = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked"));
@@ -3207,7 +3184,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 0, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden", minHeight: 500 }}>
+    <div style={{ display: "grid", gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "320px 1fr", gap: 0, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden", minHeight: 500 }}>
 
       {/* Left: message list */}
       <div style={{ borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column" }}>
@@ -6640,12 +6617,13 @@ const loadAdminUsers = async () => {
 const dueCount     = leads.filter(l => !l.archived && l.followUpDate && new Date(l.followUpDate) <= new Date()).length;
   const repliedCount = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked")).length;
   const inboundCount = leads.filter(l => !l.archived && l.is_inbound && l.stage === "replied").length;
-  const unreadCount  = useMemo(() => {
-    try {
-      const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]"));
-      return leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked") && !read.has(l.id)).length;
-    } catch { return 0; }
-  }, [leads]);
+  const [readIds, setReadIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]")); } catch { return new Set(); }
+  });
+  const markRead = (id) => {
+    setReadIds(prev => { const n = new Set(prev); n.add(id); try { localStorage.setItem("noxreach_read_replies", JSON.stringify([...n])); } catch {} return n; });
+  };
+  const unreadCount = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked") && !readIds.has(l.id)).length;
 const activeLeads = leads.filter(l => !l.archived);
   const hasFilter   = search || filters.tier || filters.tag || filters.stage;
   // ── Loading screen while fetching user data ────────────────────────────────
@@ -6893,7 +6871,7 @@ const activeLeads = leads.filter(l => !l.archived);
         {isMobile && <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} dueCount={dueCount} unreadCount={unreadCount} inboundCount={inboundCount} />}
 
         {/* Content */}
-        <div style={{ padding: isMobile ? 16 : 28, flex: 1, display: activeTab === "pipeline" && selectedLead ? "grid" : "block", gridTemplateColumns: activeTab === "pipeline" && selectedLead ? "1fr 280px" : undefined, gap: 20 }}>
+        <div style={{ padding: isMobile ? 16 : 28, paddingBottom: isMobile ? 80 : 28, flex: 1, display: activeTab === "pipeline" && selectedLead ? "grid" : "block", gridTemplateColumns: activeTab === "pipeline" && selectedLead ? "1fr 280px" : undefined, gap: 20 }}>
           {activeTab === "dashboard" && (
             <>
               {!onboardingDismissed && (
@@ -6923,7 +6901,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} />}
-          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} />}
+          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} readIds={readIds} markRead={markRead} />}
           {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} supabase={supabase} user={user} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
