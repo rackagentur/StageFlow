@@ -2383,7 +2383,7 @@ function ProGate({ children, isPro, reason, onUpgradeClick, label = "Pro feature
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 function InboundView({ leads, user, supabase }) {
-  const inbound = leads.filter(l => !l.archived && l.stage === "replied" && l.contact && l.contact.includes("@"));
+  const inbound = leads.filter(l => !l.archived && l.is_inbound === true);
   const [username, setUsername] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -2930,14 +2930,20 @@ function leadToDb(lead, userId) {
 }
 function dbToGig(r) {
   return {
-    id:     r.id,
-    venue:  r.venue || "",
-    city:   r.city || "",
-    date:   r.date || "",
-    status: r.status || "pending",
-    fee:    r.fee || "",
-    tag:    r.tag || "",
-    notes:  r.notes || "",
+    id:              r.id,
+    venue:           r.venue || "",
+    city:            r.city || "",
+    date:            r.date || "",
+    status:          r.status || "pending",
+    fee:             r.fee || "",
+    tag:             r.tag || "",
+    notes:           r.notes || "",
+    // Logbook fields
+    setlist_url:     r.setlist_url || "",
+    recording_url:   r.recording_url || "",
+    crowd_rating:    r.crowd_rating || null,
+    promoter_rating: r.promoter_rating || null,
+    recap:           r.recap || "",
   };
 }
 function gigToDb(gig, userId) {
@@ -2950,10 +2956,15 @@ function gigToDb(gig, userId) {
     fee:     gig.fee || "",
     tag:     gig.tag || "",
     notes:   gig.notes || "",
+    // Logbook fields
+    setlist_url:     gig.setlist_url || null,
+    recording_url:   gig.recording_url || null,
+    crowd_rating:    gig.crowd_rating || null,
+    promoter_rating: gig.promoter_rating || null,
+    recap:           gig.recap || null,
   };
   if (gig.id && typeof gig.id === "string") obj.id = gig.id;
   return obj;
-   
 }
 
 function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClick, customTags, TAG_COLORS, supabase, onDateClick, userId }) {
@@ -2963,6 +2974,8 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
   const [selected,  setSelected]  = useState(null);
   const [showAdd,   setShowAdd]   = useState(false);
   const [addForm,   setAddForm]   = useState({ venue: "", city: "", date: "", status: "confirmed", fee: "", tag: "Tech-House", notes: "" });
+  const [logbook,   setLogbook]   = useState({ recap: "", crowd_rating: null, promoter_rating: null, setlist_url: "", recording_url: "" });
+  const [logbookSaving, setLogbookSaving] = useState(false);
 
   // Listen for "Add to Calendar" from Booked modal
   useEffect(() => {
@@ -3021,6 +3034,42 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
     try {
       await supabase.from("gigs").delete().eq("id", id).eq("user_id", userId);
     } catch (err) { console.error("deleteGig sync failed:", err); }
+  };
+
+  // Sync logbook form when selected gig changes
+  useEffect(() => {
+    if (selected) {
+      setLogbook({
+        recap:           selected.recap || "",
+        crowd_rating:    selected.crowd_rating || null,
+        promoter_rating: selected.promoter_rating || null,
+        setlist_url:     selected.setlist_url || "",
+        recording_url:   selected.recording_url || "",
+      });
+    }
+  }, [selected?.id]);
+
+  const saveLogbook = async () => {
+    if (!selected) return;
+    setLogbookSaving(true);
+    const patch = {
+      recap:           logbook.recap || null,
+      crowd_rating:    logbook.crowd_rating || null,
+      promoter_rating: logbook.promoter_rating || null,
+      setlist_url:     logbook.setlist_url || null,
+      recording_url:   logbook.recording_url || null,
+    };
+    try {
+      const { error } = await supabase.from("gigs").update(patch).eq("id", selected.id).eq("user_id", userId);
+      if (error) throw error;
+      setGigs(prev => prev.map(g => g.id === selected.id ? { ...g, ...patch } : g));
+      setSelected(prev => ({ ...prev, ...patch }));
+      showToast("Logbook saved ✓", "success");
+    } catch (err) {
+      showToast("Failed to save logbook", "info");
+      console.error(err);
+    }
+    setLogbookSaving(false);
   };
 
   const upcoming = gigs.filter(g => new Date(g.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -3136,13 +3185,18 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
           <div>
             <div style={{ fontSize: 11, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>Past Gigs <span style={{ fontFamily: "'DM Mono', monospace", marginLeft: 4 }}>{past.length}</span></div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {past.slice(0, 3).map(gig => (
-                <div key={gig.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.55 }}>
+              {past.slice(0, 5).map(gig => (
+                <div key={gig.id} onClick={() => { setSelected(gig); setShowAdd(false); }}
+                  style={{ background: COLORS.surface, border: `1px solid ${selected?.id === gig.id ? COLORS.purple : COLORS.border}`, borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", opacity: selected?.id === gig.id ? 1 : 0.6, transition: "all 0.15s" }}>
                   <div>
                     <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>{gig.venue}</span>
                     <span style={{ fontSize: 11, color: COLORS.textSecondary, marginLeft: 8 }}>{gig.city}</span>
+                    {gig.recap && <span style={{ fontSize: 10, color: COLORS.purple, marginLeft: 8 }}>📓</span>}
                   </div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "'DM Mono', monospace" }}>{gig.date}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {gig.crowd_rating && <span style={{ fontSize: 10, color: COLORS.gold }}>{'★'.repeat(gig.crowd_rating)}</span>}
+                    <span style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "'DM Mono', monospace" }}>{gig.date}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -3231,6 +3285,62 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
             {selected.notes && (
               <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 16 }}>{selected.notes}</div>
             )}
+
+            {/* ── Gig Logbook (past gigs only) ── */}
+            {new Date(selected.date) < today && (() => {
+              const StarRow = ({ label, field }) => (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, color: COLORS.textSecondary, letterSpacing: "0.05em", textTransform: "uppercase" }}>{label}</span>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {[1,2,3,4,5].map(n => (
+                      <button key={n} onClick={() => setLogbook(l => ({ ...l, [field]: l[field] === n ? null : n }))}
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: 1, fontSize: 16, color: (logbook[field] || 0) >= n ? COLORS.gold : COLORS.border, transition: "color 0.1s" }}>
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+              return (
+                <div style={{ borderTop: `1px solid ${COLORS.border}`, paddingTop: 14, marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>📓 Logbook</div>
+                  <StarRow label="Crowd" field="crowd_rating" />
+                  <StarRow label="Promoter" field="promoter_rating" />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+                    <textarea
+                      placeholder="How did the set go? Notes for next time..."
+                      value={logbook.recap}
+                      onChange={e => setLogbook(l => ({ ...l, recap: e.target.value }))}
+                      rows={3}
+                      style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: "8px 10px", color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", resize: "vertical", width: "100%", boxSizing: "border-box" }}
+                      onFocus={e => e.target.style.borderColor = COLORS.purple}
+                      onBlur={e => e.target.style.borderColor = COLORS.border}
+                    />
+                    <input
+                      placeholder="Setlist URL (1001Tracklists, etc.)"
+                      value={logbook.setlist_url}
+                      onChange={e => setLogbook(l => ({ ...l, setlist_url: e.target.value }))}
+                      style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: "7px 10px", color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}
+                      onFocus={e => e.target.style.borderColor = COLORS.purple}
+                      onBlur={e => e.target.style.borderColor = COLORS.border}
+                    />
+                    <input
+                      placeholder="Recording URL (Mixcloud, SoundCloud, etc.)"
+                      value={logbook.recording_url}
+                      onChange={e => setLogbook(l => ({ ...l, recording_url: e.target.value }))}
+                      style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: "7px 10px", color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}
+                      onFocus={e => e.target.style.borderColor = COLORS.purple}
+                      onBlur={e => e.target.style.borderColor = COLORS.border}
+                    />
+                    <button onClick={saveLogbook} disabled={logbookSaving}
+                      style={{ padding: "8px", background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 8, color: COLORS.purpleLight, fontSize: 12, fontWeight: 700, cursor: logbookSaving ? "wait" : "pointer" }}>
+                      {logbookSaving ? "Saving..." : "Save Logbook"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={async () => {
                 const newStatus = selected.status === "confirmed" ? "pending" : "confirmed";
@@ -7354,29 +7464,23 @@ function PublicBookingForm({ supabase }) {
   const handleSubmit = async () => {
     if (!form.venue || !form.contact_email) return;
     setSubmitting(true);
-    await supabase.from('leads').insert({
-      user_id: djProfile.id, name: form.venue, contact: form.contact_email,
-      instagram: form.instagram, stage: 'replied', tag: form.event_type || null, is_inbound: true,
-      notes: [form.message, form.date ? 'Date: ' + form.date : '', form.fee_offer ? 'Fee offer: EUR' + form.fee_offer : ''].filter(Boolean).join(' | '),
-      last_contact: new Date().toISOString().split('T')[0],
-    });
-    // Fire notification emails (non-blocking)
     try {
-      await fetch('https://ckttttvgvpvflgjzkbmy.supabase.co/functions/v1/booking-notify', {
+      const res = await fetch('https://ckttttvgvpvflgjzkbmy.supabase.co/functions/v1/booking-inquiry', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + 'sb_publishable_77AjzPzfXgMSvku0fRFD9w_l4hHVMvo' },
-        body: JSON.stringify({
-          venue: form.venue,
-          contact_email: form.contact_email,
-          instagram: form.instagram,
-          event_type: form.event_type,
-          date: form.date,
-          fee_offer: form.fee_offer,
-          message: form.message,
-          dj_user_id: djProfile.id,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, ...form }),
       });
-    } catch (e) { console.warn('Notify failed', e); }
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        console.error('Booking inquiry failed:', data);
+        setSubmitting(false);
+        return;
+      }
+    } catch (e) {
+      console.error('Booking inquiry error:', e);
+      setSubmitting(false);
+      return;
+    }
     setSubmitting(false);
     setStep('success');
   };
