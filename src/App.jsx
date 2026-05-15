@@ -8,7 +8,7 @@ import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsA
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
 const BTN = {
-  primary:   { padding: "10px 20px", background: "#8b5cf6", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" },
+  primary:   { padding: "10px 20px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" },
   secondary: { padding: "10px 20px", background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, color: "#a1a1aa", fontSize: 13, fontWeight: 500, cursor: "pointer" },
   ghost:     { padding: "10px 20px", background: "transparent", border: "none", borderRadius: 8, color: "#a1a1aa", fontSize: 13, cursor: "pointer" },
   danger:    { padding: "10px 20px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, color: "#ef4444", fontSize: 13, fontWeight: 600, cursor: "pointer" },
@@ -116,7 +116,7 @@ function LoginScreen({ onAuth }) {
         position: "absolute", top: "50%", left: "50%",
         transform: "translate(-50%, -60%)",
         width: 700, height: 500,
-        background: "radial-gradient(ellipse, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.03) 50%, transparent 70%)",
+        background: "radial-gradient(ellipse, rgba(14,116,144,0.12) 0%, rgba(14,116,144,0.03) 50%, transparent 70%)",
         pointerEvents: "none", animation: "authGlow 4s ease infinite",
       }} />
 
@@ -237,7 +237,7 @@ function LoginScreen({ onAuth }) {
               fontFamily: "'DM Sans', sans-serif",
               cursor: loading ? "not-allowed" : "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              boxShadow: loading ? "none" : "0 4px 20px rgba(139,92,246,0.35)",
+              boxShadow: loading ? "none" : "0 4px 20px rgba(14,116,144,0.30)",
               transition: "all 0.15s",
             }}>
               {loading ? (
@@ -440,15 +440,15 @@ function Logo({ size = 24 }) {
       <path d="M3 23V9h2.8l5.6 9.2V9H14v14h-2.8L5.6 13.8V23H3z" fill="url(#nl)"/>
       {/* R */}
       <path d="M16 9h5.2c2.1 0 3.8 1.7 3.8 3.8 0 1.5-.8 2.8-2.1 3.4L26 23h-3.2l-2.6-7.4H19V23h-3V9z M19 11.8v3.4h2.1c.7 0 1.3-.6 1.3-1.3v-.8c0-.7-.6-1.3-1.3-1.3H19z" fill="url(#rl)"/>
-      <line x1="10" y1="16" x2="22" y2="16" stroke="#8b5cf6" strokeWidth="1.2" strokeOpacity="0.7"/>
+      <line x1="10" y1="16" x2="22" y2="16" stroke={COLORS.purple} strokeWidth="1.2" strokeOpacity="0.7"/>
       <defs>
         <linearGradient id="nl" x1="3" y1="9" x2="14" y2="23" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#a78bfa"/>
-          <stop offset="100%" stopColor="#8b5cf6"/>
+          <stop offset="0%" stopColor={COLORS.purpleLight}/>
+          <stop offset="100%" stopColor={COLORS.purple}/>
         </linearGradient>
         <linearGradient id="rl" x1="16" y1="9" x2="26" y2="23" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#a78bfa"/>
-          <stop offset="100%" stopColor="#8b5cf6"/>
+          <stop offset="0%" stopColor={COLORS.purpleLight}/>
+          <stop offset="100%" stopColor={COLORS.purple}/>
         </linearGradient>
       </defs>
     </svg>
@@ -731,11 +731,11 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           onSelect(isSelected ? null : lead);
         }} style={{
 
-      background: isBulkSelected ? COLORS.purpleBg : isSelected ? "rgba(14,116,144,0.14)" : COLORS.surface,
-      border: `1px solid ${isBulkSelected ? COLORS.purpleLight : isSelected ? COLORS.purple : isOverdue && !lead.archived ? COLORS.amber : COLORS.purpleDim}`,
+      background: (isBulkSelected || isSelected) ? COLORS.purpleBg : COLORS.surface,
+      border: `1px solid ${isOverdue && !lead.archived ? COLORS.amber : (isBulkSelected || isSelected) ? COLORS.purple : COLORS.purpleDim}`,
       boxShadow: isSelected
         ? `inset 3px 0 0 ${COLORS.purple}, 0 4px 16px rgba(0,0,0,0.5)`
-        : `0 2px 12px rgba(0,0,0,0.35), 0 0 0 0 transparent`,
+        : `0 2px 12px rgba(0,0,0,0.35)`,
       borderRadius: 10, padding: "14px 16px", cursor: "pointer",
       transition: "all 0.15s ease", position: "relative", overflow: "hidden",
       opacity: lead.archived ? 0.45 : 1,
@@ -751,14 +751,15 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           position: "absolute",
           top: 8,
           right: 8,
-          background: COLORS.purpleLight,
-          color: "#FFFFFF",
-          fontSize: 10,
-          fontWeight: 800,
-          padding: "4px 8px",
+          background: COLORS.purpleBg,
+          color: COLORS.purpleLight,
+          border: `1px solid ${COLORS.purpleDim}`,
+          fontSize: 9,
+          fontWeight: 700,
+          padding: "3px 8px",
           borderRadius: 999,
-          letterSpacing: "0.04em",
-          boxShadow: "0 4px 12px rgba(139,79,228,0.28)",
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
           zIndex: 2
         }}>
           Selected
@@ -785,7 +786,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
               border: isBulkSelected ? `2px solid ${COLORS.purple}` : `2px solid ${COLORS.text3}`,
               background: isBulkSelected ? COLORS.purple : COLORS.surface2,
               boxShadow: isBulkSelected
-                ? `0 0 0 2px ${COLORS.purpleDim}, inset 0 0 0 1px rgba(255,255,255,0.12), 0 4px 12px rgba(139,92,246,0.28)`
+                ? `0 0 0 2px ${COLORS.purpleDim}, inset 0 0 0 1px rgba(255,255,255,0.12)`
                 : "inset 0 0 0 1px rgba(255,255,255,0.04)",
               display: "inline-flex",
               alignItems: "center",
@@ -1215,7 +1216,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
               <button
                 onClick={handleSave}
                 disabled={saving}
-                style={{ fontSize: 11, padding: "4px 10px", background: COLORS.purple, color: COLORS.btnText, border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}
+                style={{ fontSize: 11, padding: "4px 10px", background: COLORS.purple, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}
               >
                 {saving ? "…" : "Save"}
               </button>
@@ -1275,7 +1276,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                   detail: { venue: lead.name, tag: lead.tag }
                 }));
               }}
-              style={{ width: "100%", marginBottom: 12, padding: "10px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+              style={{ width: "100%", marginBottom: 12, padding: "10px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
             >
               <span>📅</span>
               <span>Create Gig in Calendar</span>
@@ -1334,7 +1335,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {!lead.archived && lead.stage === "target" && (
         <button
           onClick={() => onMove(lead.id, "contacted")}
-          style={{ width: "100%", padding: "8px 0", background: COLORS.purple, color: COLORS.btnText, border: "none", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, marginBottom: 12 }}
+          style={{ width: "100%", padding: "8px 0", background: COLORS.purple, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, marginBottom: 12 }}
         >
           Mark as Contacted
           <div style={{ fontSize: 10, fontWeight: 400, opacity: 0.8 }}>Follow-up reminder in 5 days</div>
@@ -1606,7 +1607,7 @@ function AddGenreRow({ onAdd }) {
           placeholder="e.g. Afrobeats, Reggaeton…"
           style={{ flex: 1, padding: "9px 12px", background: COLORS.bg, border: `1px solid ${error ? COLORS.red : COLORS.purple}`, borderRadius: 8, color: COLORS.text, fontSize: 13, outline: "none", fontFamily: "inherit" }}
         />
-        <button onClick={handle} style={{ padding: "9px 16px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>Add</button>
+        <button onClick={handle} style={{ padding: "9px 16px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>Add</button>
         <button onClick={() => { setAdding(false); setInput(""); setError(""); }} style={{ padding: "9px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textSecondary, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>✕</button>
       </div>
       {error && <div style={{ fontSize: 11, color: COLORS.red, marginTop: 5 }}>{error}</div>}
@@ -1654,7 +1655,7 @@ function GenreSelector({ tags, value, onChange, TAG_COLORS, onAddTag }) {
             placeholder="e.g. Afrobeats"
             style={{ padding: "5px 10px", background: COLORS.bg, border: `1px solid ${COLORS.purple}`, borderRadius: 20, color: COLORS.text, fontSize: 12, outline: "none", width: 110, fontFamily: "inherit" }}
           />
-          <button onClick={handleAdd} style={{ padding: "5px 10px", background: COLORS.purple, border: "none", borderRadius: 20, color: COLORS.btnText, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Add</button>
+          <button onClick={handleAdd} style={{ padding: "5px 10px", background: COLORS.purple, border: "none", borderRadius: 20, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Add</button>
           <button onClick={() => { setAdding(false); setInput(""); }} style={{ padding: "5px 8px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 20, color: COLORS.textSecondary, fontSize: 11, cursor: "pointer" }}>✕</button>
         </div>
       ) : (
@@ -1681,7 +1682,7 @@ function AddLeadModal({ onClose, onAdd, customTags, TAG_COLORS, onAddTag }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 18, width: 480, maxWidth: "95vw", boxShadow: "0 0 60px rgba(123,63,228,0.15), 0 24px 80px rgba(0,0,0,0.6)", overflow: "hidden", animation: "slideUp 0.2s ease" }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 18, width: 480, maxWidth: "95vw", boxShadow: "0 0 60px rgba(14,116,144,0.12), 0 24px 80px rgba(0,0,0,0.6)", overflow: "hidden", animation: "slideUp 0.2s ease" }}>
         <style>{`@keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }`}</style>
         <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1747,8 +1748,8 @@ function AddLeadModal({ onClose, onAdd, customTags, TAG_COLORS, onAddTag }) {
             ? <button onClick={onClose}      style={{ padding: "10px 20px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 13, cursor: "pointer" }}>Cancel</button>
             : <button onClick={() => setStep(1)} style={{ padding: "10px 20px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 13, cursor: "pointer" }}>← Back</button>}
           {step === 1
-            ? <button onClick={handleNext}   style={{ padding: "10px 28px", background: COLORS.purple, border: "none", borderRadius: 9, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Next →</button>
-            : <button onClick={handleSubmit} style={{ padding: "10px 28px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 9, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>Add to Pipeline ✓</button>}
+            ? <button onClick={handleNext}   style={{ padding: "10px 28px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Next →</button>
+            : <button onClick={handleSubmit} style={{ padding: "10px 28px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(14,116,144,0.35)" }}>Add to Pipeline ✓</button>}
         </div>
       </div>
     </div>
@@ -1996,7 +1997,7 @@ function FollowUpsView({ leads, onNavigate }) {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 11, color: COLORS.amber, fontWeight: 700, marginBottom: 6 }}>Follow up today</div>
-                  <button onClick={() => onNavigate("outreach")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 7, color: COLORS.btnText, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Get Template →</button>
+                  <button onClick={() => onNavigate("outreach")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Get Template →</button>
                 </div>
               </div>
             ))}
@@ -2215,7 +2216,7 @@ function AssetsView({ supabase, userId }) {
             <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 3 }}>Complete your asset kit</div>
             <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.5 }}>Venues will ask for your EPK, mix link, and booking email. Fill these in once and they're ready to paste into any outreach.</div>
           </div>
-          <button onClick={() => setActiveSection("epk")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Fill in now →</button>
+          <button onClick={() => setActiveSection("epk")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Fill in now →</button>
         </div>
       )}
 
@@ -2336,7 +2337,7 @@ function UpgradeModal({ onClose, onUpgrade, reason }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 440, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(123,63,228,0.2), 0 32px 80px rgba(0,0,0,0.7)`, animation: "slideUp 0.2s ease" }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 440, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(14,116,144,0.15), 0 32px 80px rgba(0,0,0,0.7)`, animation: "slideUp 0.2s ease" }}>
         {/* Top accent */}
         <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.purple}, ${COLORS.purpleLight})` }} />
 
@@ -2375,7 +2376,7 @@ function UpgradeModal({ onClose, onUpgrade, reason }) {
 
         {/* Actions */}
         <div style={{ padding: "0 28px 28px", display: "flex", flexDirection: "column", gap: 10 }}>
-          <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "14px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: COLORS.btnText, fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 24px rgba(123,63,228,0.45)", letterSpacing: "0.01em" }}>
+          <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "14px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 24px rgba(14,116,144,0.40)", letterSpacing: "0.01em" }}>
             Upgrade to Pro →
           </button>
           <button onClick={onClose} style={{ width: "100%", padding: "10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 12, color: COLORS.textMuted, fontSize: 12, cursor: "pointer" }}>
@@ -2603,7 +2604,7 @@ function WelcomeNewUserModal({ onClose }) {
             { num: "03", title: "Fill your Booking Kit", text: "Add your EPK, SoundCloud, and booking email. When a lead replies — you respond in seconds." },
           ].map(s => (
             <div key={s.num} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(107,47,212,0.15)", border: `1px solid rgba(107,47,212,0.3)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purple, flexShrink: 0, fontFamily: "monospace" }}>{s.num}</div>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(14,116,144,0.10)", border: `1px solid rgba(14,116,144,0.25)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.purple, flexShrink: 0, fontFamily: "monospace" }}>{s.num}</div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, marginBottom: 2 }}>{s.title}</div>
                 <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6 }}>{s.text}</div>
@@ -2612,7 +2613,7 @@ function WelcomeNewUserModal({ onClose }) {
           ))}
         </div>
 
-        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: COLORS.btnText, fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
           Let's go →
         </button>
 
@@ -2656,7 +2657,7 @@ function ProWelcomeModal({ onClose }) {
           ))}
         </div>
 
-        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: COLORS.purple, border: "none", borderRadius: 10, color: COLORS.btnText, fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+        <button onClick={onClose} style={{ width: "100%", padding: "13px", background: COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
           Start using Pro →
         </button>
       </div>
@@ -2745,7 +2746,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
 
   return (
     <div style={{ maxWidth: 560 }}>
-      <style>{`input[type=range]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: ${COLORS.purple}; border: 2px solid ${COLORS.purpleLight}; box-shadow: 0 0 8px rgba(123,63,228,0.5); cursor: pointer; }`}</style>
+      <style>{`input[type=range]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: ${COLORS.purple}; border: 2px solid ${COLORS.purpleLight}; box-shadow: 0 0 8px rgba(14,116,144,0.40); cursor: pointer; }`}</style>
 
       {/* Booking Link */}
       <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
@@ -2888,7 +2889,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
 
         {/* Save */}
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button onClick={handleSave} style={{ padding: "11px 28px", background: isDirty ? COLORS.purple : COLORS.border, border: "none", borderRadius: 10, color: isDirty ? "#fff" : COLORS.textMuted, fontSize: 13, fontWeight: 700, cursor: isDirty ? "pointer" : "default", transition: "all 0.2s", boxShadow: isDirty ? "0 4px 20px rgba(123,63,228,0.35)" : "none" }}>
+          <button onClick={handleSave} style={{ padding: "11px 28px", background: isDirty ? COLORS.purple : COLORS.border, border: "none", borderRadius: 10, color: isDirty ? "#fff" : COLORS.textMuted, fontSize: 13, fontWeight: 700, cursor: isDirty ? "pointer" : "default", transition: "all 0.2s", boxShadow: isDirty ? "0 4px 20px rgba(14,116,144,0.28)" : "none" }}>
             {saved ? "✓ Saved" : "Save Settings"}
           </button>
           {isDirty && (
@@ -3104,17 +3105,17 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 <div>
     {/* Share banner */}
     {shareUsername && confirmedUpcoming > 0 && (
-      <div style={{ background: "linear-gradient(90deg, rgba(139,92,246,0.12), rgba(99,102,241,0.08))", border: `1px solid rgba(139,92,246,0.25)`, borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+      <div style={{ background: "linear-gradient(90deg, rgba(14,116,144,0.10), rgba(99,102,241,0.08))", border: `1px solid rgba(14,116,144,0.25)`, borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#a78bfa", marginBottom: 2 }}>📅 {confirmedUpcoming} confirmed gig{confirmedUpcoming > 1 ? "s" : ""} — share your schedule</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.purpleLight, marginBottom: 2 }}>📅 {confirmedUpcoming} confirmed gig{confirmedUpcoming > 1 ? "s" : ""} — share your schedule</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>app.noxreach.com/gigs/{shareUsername}</div>
         </div>
         <button onClick={copyGigListLink}
-          style={{ padding: "9px 18px", background: shareCopied ? "rgba(74,222,128,0.15)" : "rgba(139,92,246,0.2)", border: `1px solid ${shareCopied ? "rgba(74,222,128,0.4)" : "rgba(139,92,246,0.4)"}`, borderRadius: 8, color: shareCopied ? "#4ade80" : "#a78bfa", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+          style={{ padding: "9px 18px", background: shareCopied ? "rgba(74,222,128,0.15)" : "rgba(14,116,144,0.15)", border: `1px solid ${shareCopied ? "rgba(74,222,128,0.4)" : "rgba(14,116,144,0.35)"}`, borderRadius: 8, color: shareCopied ? "#4ade80" : COLORS.purpleLight, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
           {shareCopied ? "✓ Copied!" : "🔗 Copy link"}
         </button>
         <a href={`/gigs/${shareUsername}`} target="_blank" rel="noopener noreferrer"
-          style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap" }}>
+          style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap" }}>
           Preview →
         </a>
       </div>
@@ -3287,7 +3288,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
               <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: "9px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textSecondary, fontSize: 12, cursor: "pointer" }}>Cancel</button>
-              <button onClick={addGig} style={{ flex: 2, padding: "9px", background: COLORS.purple, border: "none", borderRadius: 8, color: COLORS.btnText, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Add to Calendar ✓</button>
+              <button onClick={addGig} style={{ flex: 2, padding: "9px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Add to Calendar ✓</button>
             </div>
           </div>
         ) : selected ? (
@@ -3387,7 +3388,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
               </div>
             )}
             <button onClick={() => !isPro && gigs.length >= FREE_LIMITS.gigs ? onUpgradeClick("gigs") : setShowAdd(true)}
-              style={{ padding: "9px 20px", background: COLORS.purple, border: "none", borderRadius: 9, color: COLORS.btnText, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              style={{ padding: "9px 20px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               {!isPro && gigs.length >= FREE_LIMITS.gigs ? "Upgrade to Add More" : "+ Add Gig"}
             </button>
           </div>
@@ -3596,7 +3597,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
                   style={{ width: "100%", padding: "14px 16px", background: "transparent", border: "none", color: COLORS.text, fontSize: 13, outline: "none", fontFamily: "inherit", lineHeight: 1.7, resize: "none" }} />
                 <div style={{ padding: "10px 16px", borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ fontSize: 11, color: COLORS.textMuted }}>Copy to send via email or Instagram</div>
-                  <button onClick={copyReply} style={{ padding: "7px 16px", background: COLORS.purple, border: "none", borderRadius: 7, color: COLORS.btnText, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Copy Reply</button>
+                  <button onClick={copyReply} style={{ padding: "7px 16px", background: COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Copy Reply</button>
                 </div>
               </div>
             </div>
@@ -3666,7 +3667,7 @@ function PricingView({ isPro, onUpgrade }) {
         </div>
 
         {/* Pro */}
-        <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 16, padding: 24, position: "relative", boxShadow: "0 0 40px rgba(123,63,228,0.12)" }}>
+        <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 16, padding: 24, position: "relative", boxShadow: "0 0 40px rgba(14,116,144,0.10)" }}>
           {!isPro && (
             <div style={{ position: "absolute", top: -10, right: 16, background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 800, color: "#fff", letterSpacing: "0.05em" }}>RECOMMENDED</div>
           )}
@@ -3692,7 +3693,7 @@ function PricingView({ isPro, onUpgrade }) {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "12px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: COLORS.btnText, fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>
+              <button onClick={() => onUpgrade("monthly")} style={{ width: "100%", padding: "12px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 10, color: "#fff", fontSize: 13, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(14,116,144,0.35)" }}>
                 Upgrade to Pro — €19/mo →
               </button>
               <button onClick={() => onUpgrade("yearly")} style={{ width: "100%", padding: "10px", background: "transparent", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 10, color: COLORS.purpleLight, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
@@ -4128,7 +4129,7 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
                 >
                   Cancel
                 </button>
-                <button onClick={handleImport} disabled={!mapping.name || !mapping.contact || importing} style={{ flex: 1, padding: '12px 20px', background: COLORS.purple, border: 'none', borderRadius: 8, color: COLORS.btnText, fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!mapping.name || !mapping.contact || importing) ? 0.5 : 1 }}>
+                <button onClick={handleImport} disabled={!mapping.name || !mapping.contact || importing} style={{ flex: 1, padding: '12px 20px', background: COLORS.purple, border: 'none', borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: (!mapping.name || !mapping.contact || importing) ? 0.5 : 1 }}>
                   {importing ? 'Importing...' : `Import ${preview.totalRows} Leads`}
                 </button>
               </div>
@@ -4154,7 +4155,7 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
                   <div style={{ fontSize: 48, marginBottom: 16 }}>✕</div>
                   <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: COLORS.red }}>Import Failed</div>
                   <div style={{ fontSize: 14, color: COLORS.textSecondary, marginBottom: 20 }}>{result.error}</div>
-                  <button onClick={onClose} style={{ padding: '12px 24px', background: COLORS.purple, border: 'none', borderRadius: 8, color: COLORS.btnText, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  <button onClick={onClose} style={{ padding: '12px 24px', background: COLORS.purple, border: 'none', borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                     Close
                   </button>
                 </div>
@@ -6376,7 +6377,7 @@ function OutreachMethodModal({ lead, onClose, onSelect, templates }) {
         background: COLORS.surface, border: "1px solid " + COLORS.purpleDim,
         borderRadius: 20, width: 400, maxWidth: "95vw",
         overflow: "hidden", animation: "slideUp 0.2s ease",
-        boxShadow: "0 0 60px rgba(107,47,212,0.15), 0 32px 80px rgba(0,0,0,0.7)",
+        boxShadow: "0 0 60px rgba(14,116,144,0.10), 0 32px 80px rgba(0,0,0,0.7)",
       }}>
         <div style={{ height: 3, background: "linear-gradient(90deg, " + COLORS.purple + ", " + COLORS.purpleLight + ")" }} />
         <div style={{ padding: "28px 28px 24px" }}>
@@ -6930,7 +6931,7 @@ const activeLeads = leads.filter(l => !l.archived);
       {showWelcomePro && (
         <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
           onClick={() => setShowWelcomePro(false)}>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 420, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(123,63,228,0.2)` }}
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 420, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(14,116,144,0.15)` }}
             onClick={e => e.stopPropagation()}>
             <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.purple}, ${COLORS.purpleLight})` }} />
             <div style={{ padding: "32px 28px" }}>
@@ -6956,7 +6957,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   </div>
                 ))}
               </div>
-              <button onClick={() => setShowWelcomePro(false)} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: COLORS.btnText, fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(123,63,228,0.4)" }}>
+              <button onClick={() => setShowWelcomePro(false)} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(14,116,144,0.35)" }}>
                 Let's go →
               </button>
             </div>
@@ -7099,7 +7100,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   ⏰ {dueCount} follow-up{dueCount > 1 ? "s" : ""} due
                 </div>
               )}
-              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: COLORS.btnText, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
+              <button onClick={() => setShowAddModal(true)} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
                 <IconPlus size={14} color="#fff" /> Add Lead
               </button>
               <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.purple}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
