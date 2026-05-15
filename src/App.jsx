@@ -2976,6 +2976,8 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
   const [addForm,   setAddForm]   = useState({ venue: "", city: "", date: "", status: "confirmed", fee: "", tag: "Tech-House", notes: "" });
   const [logbook,   setLogbook]   = useState({ recap: "", crowd_rating: null, promoter_rating: null, setlist_url: "", recording_url: "" });
   const [logbookSaving, setLogbookSaving] = useState(false);
+  const [shareUsername, setShareUsername] = useState(null);
+  const [shareCopied,   setShareCopied]   = useState(false);
 
   // Listen for "Add to Calendar" from Booked modal
   useEffect(() => {
@@ -3075,10 +3077,44 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
   const upcoming = gigs.filter(g => new Date(g.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date));
   const past     = gigs.filter(g => new Date(g.date) < today).sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  // Fetch username for shareable gig list link
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("profiles").select("username").eq("id", userId).single()
+      .then(({ data }) => { if (data?.username) setShareUsername(data.username); });
+  }, [userId]);
+
+  const copyGigListLink = () => {
+    if (!shareUsername) return;
+    navigator.clipboard.writeText(`https://app.noxreach.com/gigs/${shareUsername}`);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2500);
+  };
+
   // Booked leads that aren't gigs yet
   const bookedLeads = leads.filter(l => l.stage === "booked" && !l.archived);
 
+  const confirmedUpcoming = gigs.filter(g => g.status === "confirmed" && new Date(g.date) >= today).length;
+
   return (
+    <div>
+    {/* Share banner */}
+    {shareUsername && confirmedUpcoming > 0 && (
+      <div style={{ background: "linear-gradient(90deg, rgba(139,92,246,0.12), rgba(99,102,241,0.08))", border: `1px solid rgba(139,92,246,0.25)`, borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#a78bfa", marginBottom: 2 }}>📅 {confirmedUpcoming} confirmed gig{confirmedUpcoming > 1 ? "s" : ""} — share your schedule</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>app.noxreach.com/gigs/{shareUsername}</div>
+        </div>
+        <button onClick={copyGigListLink}
+          style={{ padding: "9px 18px", background: shareCopied ? "rgba(74,222,128,0.15)" : "rgba(139,92,246,0.2)", border: `1px solid ${shareCopied ? "rgba(74,222,128,0.4)" : "rgba(139,92,246,0.4)"}`, borderRadius: 8, color: shareCopied ? "#4ade80" : "#a78bfa", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+          {shareCopied ? "✓ Copied!" : "🔗 Copy link"}
+        </button>
+        <a href={`/gigs/${shareUsername}`} target="_blank" rel="noopener noreferrer"
+          style={{ padding: "9px 18px", background: "#D4AF37", border: "none", borderRadius: 8, color: "#0a0a0a", fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap" }}>
+          Preview →
+        </a>
+      </div>
+    )}
     <div style={{ display: "grid", gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "1fr 300px", gap: 20 }}>
       {/* Left: Calendar + upcoming list */}
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -3375,6 +3411,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }
@@ -7544,7 +7581,123 @@ function PublicBookingForm({ supabase }) {
   );
 }
 
+// ── Public shareable gig list ─────────────────────────────────────────────────
+function PublicGigList({ supabase }) {
+  const username = window.location.pathname.split('/gigs/')[1]?.toLowerCase().trim();
+  const [profile,  setProfile]  = useState(null);
+  const [gigs,     setGigs]     = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [copied,   setCopied]   = useState(false);
+
+  useEffect(() => {
+    if (!username) { setNotFound(true); setLoading(false); return; }
+    (async () => {
+      const { data: prof, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, username')
+        .eq('username', username)
+        .single();
+      if (error || !prof) { setNotFound(true); setLoading(false); return; }
+      setProfile(prof);
+
+      const { data: gigData } = await supabase.rpc('get_public_gigs', { p_username: username });
+      setGigs(gigData || []);
+      setLoading(false);
+    })();
+  }, [username]);
+
+  const share = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>Loading...</div>
+    </div>
+  );
+
+  if (notFound) return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, sans-serif' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 48, color: '#fff', marginBottom: 16 }}>404</div>
+        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 16 }}>Artist page not found</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '48px 24px 80px' }}>
+      <div style={{ maxWidth: 560, margin: '0 auto' }}>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '3px', color: '#8b5cf6', marginBottom: 24, textTransform: 'uppercase' }}>NOXREACH</div>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🎧</div>
+          <h1 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{profile.display_name}</h1>
+          <p style={{ margin: '0 0 24px', fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Upcoming confirmed shows</p>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={share}
+              style={{ padding: '10px 20px', background: copied ? 'rgba(74,222,128,0.15)' : 'rgba(139,92,246,0.15)', border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : 'rgba(139,92,246,0.4)'}`, borderRadius: 8, color: copied ? '#4ade80' : '#a78bfa', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              {copied ? '✓ Link copied' : '🔗 Share'}
+            </button>
+            <a href={`/book/${username}`}
+              style={{ padding: '10px 20px', background: '#D4AF37', border: 'none', borderRadius: 8, color: '#0a0a0a', fontSize: 13, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
+              Book this artist →
+            </a>
+          </div>
+        </div>
+
+        {/* Gig list */}
+        {gigs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 24px', background: '#111', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16 }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📅</div>
+            <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)' }}>No upcoming shows announced yet</div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {gigs.map((gig, i) => {
+              const d = new Date(gig.gig_date);
+              return (
+                <div key={i} style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 18 }}>
+                  {/* Date badge */}
+                  <div style={{ textAlign: 'center', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 10, padding: '10px 14px', minWidth: 52, flexShrink: 0 }}>
+                    <div style={{ fontSize: 10, color: '#a78bfa', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{MONTH_ABBR[d.getMonth()]}</div>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', lineHeight: 1.1, fontFamily: 'monospace' }}>{d.getDate()}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{d.getFullYear()}</div>
+                  </div>
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{gig.venue}</div>
+                    {gig.city && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>📍 {gig.city}</div>}
+                  </div>
+                  {/* Tag */}
+                  {gig.tag && (
+                    <div style={{ flexShrink: 0, padding: '4px 10px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 6, fontSize: 11, color: '#a78bfa', fontWeight: 600 }}>{gig.tag}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: 48 }}>
+          <a href="https://noxreach.com" style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', textDecoration: 'none', letterSpacing: '0.05em' }}>
+            Powered by <span style={{ color: '#8b5cf6', fontWeight: 700 }}>NOXREACH</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function NoxReach() {
+  if (window.location.pathname.startsWith('/gigs/')) return <PublicGigList supabase={supabase} />;
   if (window.location.pathname.startsWith('/book/')) return <PublicBookingForm supabase={supabase} />;
   if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy.html') {
     window.location.href = 'https://noxreach.com/privacy.html';
