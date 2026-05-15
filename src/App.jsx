@@ -379,7 +379,7 @@ const FREE_LIMITS = { leads: 15, gigs: 10, templates: 2 };
 
 const STORAGE_KEY_TAGS = "noxreach_tags_v1";
 const DEFAULT_TAGS = ["Tech-House", "Disco", "Festival"];
-const TAG_PALETTE   = ["#7B3FE4","#3B82F6","#EC4899","#F59E0B","#F43F5E","#22C55E","#F97316","#14B8A6","#8B5CF6","#EAB308"];
+const TAG_PALETTE   = ["#F59E0B","#3B82F6","#EC4899","#22C55E","#F97316","#14B8A6","#EAB308","#F43F5E","#06B6D4","#A78BFA","#84CC16","#FB923C"];
 function tagColor(tag) {
   let hash = 0;
   for (let i = 0; i < tag.length; i++) hash = tag.charCodeAt(i) + ((hash << 5) - hash);
@@ -1597,17 +1597,21 @@ function AddGenreRow({ onAdd }) {
     </button>
   );
 
+  const previewColor = input.trim() ? tagColor(input.trim()) : null;
   return (
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <input
-          autoFocus
-          value={input}
-          onChange={e => { setInput(e.target.value); setError(""); }}
-          onKeyDown={e => { if (e.key === "Enter") handle(); if (e.key === "Escape") { setAdding(false); setInput(""); setError(""); } }}
-          placeholder="e.g. Afrobeats, Reggaeton…"
-          style={{ flex: 1, padding: "9px 12px", background: COLORS.bg, border: `1px solid ${error ? COLORS.red : COLORS.purple}`, borderRadius: 8, color: COLORS.text, fontSize: 13, outline: "none", fontFamily: "inherit" }}
-        />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", background: COLORS.bg, border: `1px solid ${error ? COLORS.red : previewColor || COLORS.purple}`, borderLeft: previewColor ? `3px solid ${previewColor}` : `1px solid ${COLORS.purple}`, borderRadius: 8, overflow: "hidden", transition: "border-color 0.2s" }}>
+          {previewColor && <div style={{ width: 8, height: 8, borderRadius: "50%", background: previewColor, marginLeft: 10, flexShrink: 0, boxShadow: `0 0 6px ${previewColor}88` }} />}
+          <input
+            autoFocus
+            value={input}
+            onChange={e => { setInput(e.target.value); setError(""); }}
+            onKeyDown={e => { if (e.key === "Enter") handle(); if (e.key === "Escape") { setAdding(false); setInput(""); setError(""); } }}
+            placeholder="e.g. Afrobeats, Reggaeton…"
+            style={{ flex: 1, padding: "9px 12px", background: "transparent", border: "none", color: COLORS.text, fontSize: 13, outline: "none", fontFamily: "inherit" }}
+          />
+        </div>
         <button onClick={handle} style={{ padding: "9px 16px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>Add</button>
         <button onClick={() => { setAdding(false); setInput(""); setError(""); }} style={{ padding: "9px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textSecondary, fontSize: 12, cursor: "pointer", flexShrink: 0 }}>✕</button>
       </div>
@@ -2867,9 +2871,9 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
                 const isDefault = defaultTags.includes(tag);
                 const color = tagColor(tag);
                 return (
-                  <div key={tag} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
+                  <div key={tag} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: color + "12", border: `1px solid ${color}40`, borderLeft: `3px solid ${color}`, borderRadius: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0, boxShadow: `0 0 6px ${color}88` }} />
                       <span style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>{tag}</span>
                       {isDefault && <span style={{ fontSize: 9, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", background: COLORS.border, padding: "1px 6px", borderRadius: 3 }}>default</span>}
                     </div>
