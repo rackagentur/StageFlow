@@ -6474,18 +6474,16 @@ const loadAdminUsers = async () => {
   }, [activeTab]);
 
   const loadUserLeads = async (userId) => {
-  try {
-    const { data } = await supabase
-      .from("leads")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-    setSelectedUserLeads(data || []);
-  } catch (err) {
-    console.error("Failed to load user leads:", err);
-    setSelectedUserLeads([]);
-  }
-};
+    setSelectedUserLeads([]); // clear previous user's leads immediately
+    try {
+      const { data, error } = await supabase.rpc("admin_get_user_leads", { p_user_id: userId });
+      if (error) throw error;
+      setSelectedUserLeads((data || []).map(dbToLead));
+    } catch (err) {
+      console.error("Failed to load user leads:", err);
+      setSelectedUserLeads([]);
+    }
+  };
   
   const [selectedLeads, setSelectedLeads] = useState(new Set());
   const [showBulkBar, setShowBulkBar] = useState(false);
