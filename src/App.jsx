@@ -7256,7 +7256,12 @@ const activeLeads = leads.filter(l => !l.archived);
                                 </td>
                                 <td style={{ padding: "12px 16px", fontSize: 12, color: COLORS.textSecondary }}>{joined}</td>
                                 <td style={{ padding: "12px 16px" }}>
-                                  <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, background: u.is_pro ? COLORS.purpleBg : COLORS.border, color: u.is_pro ? COLORS.purpleLight : COLORS.textSecondary }}>
+                                  <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                    background: u.is_pro ? COLORS.purpleBg : "transparent",
+                                    color: u.is_pro ? COLORS.purpleLight : COLORS.textSecondary,
+                                    border: u.is_pro ? `1px solid ${COLORS.purpleDim}` : `1px solid ${COLORS.borderHover}`,
+                                    letterSpacing: "0.04em",
+                                  }}>
                                     {u.is_pro ? "Pro" : "Free"}
                                   </span>
                                 </td>
