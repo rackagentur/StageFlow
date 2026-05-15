@@ -2174,6 +2174,14 @@ function AssetsView({ supabase, userId }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeSection, setActiveSection] = useState("epk");
+  const [kitUsername, setKitUsername] = useState(null);
+  const [kitCopied, setKitCopied] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("profiles").select("username").eq("id", userId).single()
+      .then(({ data }) => { if (data?.username) setKitUsername(data.username); });
+  }, [userId]);
 
   const SECTIONS = [
     { id: "epk",   label: "EPK",         icon: "📄" },
@@ -2236,6 +2244,14 @@ function AssetsView({ supabase, userId }) {
           <button onClick={save} disabled={saving} style={{ marginTop: 12, padding: "10px", background: saved ? COLORS.green : COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
             {saving ? "Saving..." : saved ? "✓ Saved" : "Save Assets"}
           </button>
+          {kitUsername && (
+            <button onClick={() => {
+              navigator.clipboard.writeText(`https://app.noxreach.com/kit/${kitUsername}`);
+              setKitCopied(true); setTimeout(() => setKitCopied(false), 2000);
+            }} style={{ marginTop: 8, padding: "10px", background: kitCopied ? COLORS.green + "22" : "transparent", border: `1px solid ${kitCopied ? COLORS.green : COLORS.border}`, borderRadius: 10, color: kitCopied ? COLORS.green : COLORS.textSecondary, fontSize: 12, fontWeight: 600, cursor: "pointer", width: "100%" }}>
+              {kitCopied ? "✓ Link copied!" : "🔗 Share Kit"}
+            </button>
+          )}
         </div>
 
         <div>
@@ -6924,6 +6940,20 @@ const dueCount     = leads.filter(l => !l.archived && l.followUpDate && new Date
   }, [leads]);
 const activeLeads = leads.filter(l => !l.archived);
   const hasFilter   = search || filters.tier || filters.tag || filters.stage;
+
+  const exportCSV = () => {
+    const cols = ["Venue", "Contact Email", "Instagram", "Stage", "Tier", "Genre", "Fee", "Follow-up Date", "Notes", "Contact Log"];
+    const rows = activeLeads.map(l => [
+      l.name, l.contact, l.instagram, l.stage, l.tier, l.tag,
+      l.fee || "", l.followUpDate || "", l.notes, l.contactLog,
+    ].map(v => `"${String(v || "").replace(/"/g, '""')}"`));
+    const csv = [cols.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `noxreach-leads-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
   // ── Loading screen while fetching user data ────────────────────────────────
   if (dataLoading) {
     return (
@@ -7147,6 +7177,11 @@ const activeLeads = leads.filter(l => !l.archived);
               <button onClick={() => setShowCSVImport(true)} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.purple}`, borderRadius: 9, color: COLORS.text, fontSize: 13, fontWeight: 600, cursor: "pointer", display: isMobile ? "none" : "flex", alignItems: "center", gap: 8 }}>
                 <IconUpload size={14} color={COLORS.purpleLight} /> Import CSV
               </button>
+              {activeLeads.length > 0 && (
+                <button onClick={exportCSV} style={{ padding: "10px 18px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", display: isMobile ? "none" : "flex", alignItems: "center", gap: 8 }}>
+                  ⬇ Export CSV
+                </button>
+              )}
             </div>
           </div>
 
@@ -7198,6 +7233,16 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "templates" && <TemplatesView supabase={supabase} user={user} />}
           {activeTab === "pipeline"  && (
             <>
+              {!isPro && activeLeads.length >= FREE_LIMITS.leads && (
+                <div style={{ background: "rgba(14,116,144,0.08)", border: `1px solid ${COLORS.purpleDim}`, borderRadius: 12, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: 20 }}>⚡</div>
+                  <div style={{ flex: 1, minWidth: 180 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.purpleLight, marginBottom: 2 }}>You've hit the free tier limit ({FREE_LIMITS.leads} leads)</div>
+                    <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>Upgrade to Pro to keep adding venues — no cap, no friction.</div>
+                  </div>
+                  <button onClick={() => requestUpgrade("leads")} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Upgrade to Pro →</button>
+                </div>
+              )}
               <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
@@ -7484,6 +7529,90 @@ const activeLeads = leads.filter(l => !l.archived);
 }
 
 // ── Export default: wraps everything in AuthGate ──────────────────────────────
+function PublicAssetKit({ supabase }) {
+  const username = window.location.pathname.split('/kit/')[1]?.toLowerCase().trim();
+  const [kit, setKit] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!username) { setNotFound(true); setLoading(false); return; }
+    supabase.rpc('get_public_kit', { p_username: username }).then(({ data, error }) => {
+      if (error || !data || data.length === 0) { setNotFound(true); setLoading(false); return; }
+      setKit(data[0]); setLoading(false);
+    });
+  }, [username]);
+
+  const share = () => { navigator.clipboard.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const s = { minHeight: '100vh', background: '#0a0a0a', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' };
+
+  if (loading) return <div style={{ ...s, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>Loading...</div></div>;
+  if (notFound) return <div style={{ ...s, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ textAlign: 'center' }}><div style={{ fontSize: 48, color: '#fff', marginBottom: 16 }}>404</div><div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 16 }}>Artist kit not found</div></div></div>;
+
+  const link = (label, href) => href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer"
+      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+      <span style={{ flex: 1 }}>{label}</span>
+      <span style={{ color: '#22D3EE', fontSize: 12 }}>→</span>
+    </a>
+  ) : null;
+
+  return (
+    <div style={s}>
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '48px 24px 80px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <img src="https://noxreach.com/public/nr-icon.png" width="40" height="40" style={{ borderRadius: 10, marginBottom: 20, opacity: 0.7 }} alt="NR" />
+          <h1 style={{ margin: '0 0 6px', fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>{kit.artist_name || username}</h1>
+          {kit.tagline && <p style={{ margin: '0 0 6px', fontSize: 15, color: '#22D3EE', fontWeight: 600 }}>{kit.tagline}</p>}
+          {kit.location && <p style={{ margin: '0 0 4px', fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>📍 {kit.location}</p>}
+          {kit.genres && <p style={{ margin: '0 0 20px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{kit.genres}</p>}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={share} style={{ padding: '10px 20px', background: copied ? 'rgba(34,197,94,0.15)' : 'rgba(14,116,144,0.15)', border: `1px solid ${copied ? 'rgba(34,197,94,0.4)' : 'rgba(14,116,144,0.4)'}`, borderRadius: 8, color: copied ? '#4ade80' : '#22D3EE', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              {copied ? '✓ Link copied' : '🔗 Share Kit'}
+            </button>
+            {kit.booking_email && (
+              <a href={`mailto:${kit.booking_email}`} style={{ padding: '10px 20px', background: '#D4AF37', border: 'none', borderRadius: 8, color: '#0a0a0a', fontSize: 13, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>📩 Book this artist</a>
+            )}
+          </div>
+        </div>
+
+        {kit.bio && (
+          <div style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 22px', marginBottom: 20 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>About</div>
+            <p style={{ margin: 0, fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7 }}>{kit.bio}</p>
+          </div>
+        )}
+
+        {(kit.epk_url || kit.soundcloud || kit.spotify || kit.mix_link_1 || kit.mix_link_2 || kit.website || kit.press_photos_url) && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Links</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {link('📄 EPK / Press Kit', kit.epk_url)}
+              {link('☁ SoundCloud', kit.soundcloud)}
+              {link('🎵 Spotify', kit.spotify)}
+              {link('🎧 Mix 1', kit.mix_link_1)}
+              {link('🎧 Mix 2', kit.mix_link_2)}
+              {link('🌐 Website', kit.website)}
+              {link('📸 Press Photos', kit.press_photos_url)}
+            </div>
+          </div>
+        )}
+
+        <div style={{ background: 'rgba(14,116,144,0.08)', border: '1px solid rgba(14,116,144,0.25)', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#22D3EE', marginBottom: 3 }}>Upcoming shows</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Check confirmed gig dates</div>
+          </div>
+          <a href={`/gigs/${username}`} style={{ padding: '9px 16px', background: 'rgba(14,116,144,0.2)', border: '1px solid rgba(14,116,144,0.35)', borderRadius: 8, color: '#22D3EE', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>View schedule →</a>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 48, fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Powered by <span style={{ color: '#22D3EE', fontWeight: 700 }}>NoxReach</span></div>
+      </div>
+    </div>
+  );
+}
+
 function PublicBookingForm({ supabase }) {
   const username = window.location.pathname.split('/book/')[1]?.toLowerCase().trim();
   const [step, setStep] = useState('form');
@@ -7767,7 +7896,8 @@ function PublicGigList({ supabase }) {
 }
 
 export default function NoxReach() {
-  if (window.location.pathname.startsWith('/gigs/')) return <PublicGigList supabase={supabase} />;
+  if (window.location.pathname.startsWith('/kit/'))  return <PublicAssetKit  supabase={supabase} />;
+  if (window.location.pathname.startsWith('/gigs/')) return <PublicGigList   supabase={supabase} />;
   if (window.location.pathname.startsWith('/book/')) return <PublicBookingForm supabase={supabase} />;
   if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy.html') {
     window.location.href = 'https://noxreach.com/privacy.html';
