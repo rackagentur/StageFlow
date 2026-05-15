@@ -2203,23 +2203,24 @@ function AssetsView({ supabase, userId }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 20 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, padding: "0 4px" }}>Your Assets</div>
+      <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 24 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6, padding: "0 2px" }}>Sections</div>
           {SECTIONS.map(s => (
-            <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ padding: "12px 14px", borderRadius: 10, textAlign: "left", cursor: "pointer", background: activeSection === s.id ? COLORS.purpleBg : COLORS.surface, border: `1px solid ${activeSection === s.id ? COLORS.purple : COLORS.border}`, color: activeSection === s.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeSection === s.id ? 700 : 500, display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
-              <span>{s.icon}</span>{s.label}
+            <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ padding: "10px 14px", borderRadius: 9, textAlign: "left", cursor: "pointer", background: activeSection === s.id ? COLORS.purpleBg : "transparent", border: `1px solid ${activeSection === s.id ? COLORS.purple : "transparent"}`, color: activeSection === s.id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: activeSection === s.id ? 700 : 500, display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s", width: "100%" }}>
+              <span style={{ fontSize: 14 }}>{s.icon}</span>{s.label}
             </button>
           ))}
-          <button onClick={save} disabled={saving} style={{ marginTop: 12, padding: "10px", background: saved ? COLORS.green : COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-            {saving ? "Saving..." : saved ? "✓ Saved" : "Save Assets"}
+          <div style={{ height: 1, background: COLORS.border, margin: "10px 0" }} />
+          <button onClick={save} disabled={saving} style={{ padding: "10px 14px", background: saved ? COLORS.green + "22" : COLORS.purple, border: `1px solid ${saved ? COLORS.green : "transparent"}`, borderRadius: 9, color: saved ? COLORS.green : "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "100%", textAlign: "center" }}>
+            {saving ? "Saving…" : saved ? "✓ Saved" : "Save Assets"}
           </button>
           {kitUsername && (
             <button onClick={() => {
               navigator.clipboard.writeText(`https://app.noxreach.com/kit/${kitUsername}`);
               setKitCopied(true); setTimeout(() => setKitCopied(false), 2000);
-            }} style={{ marginTop: 8, padding: "10px", background: kitCopied ? COLORS.green + "22" : "transparent", border: `1px solid ${kitCopied ? COLORS.green : COLORS.border}`, borderRadius: 10, color: kitCopied ? COLORS.green : COLORS.textSecondary, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-              {kitCopied ? "✓ Link copied!" : "🔗 Share Kit"}
+            }} style={{ padding: "10px 14px", background: kitCopied ? COLORS.green + "22" : "transparent", border: `1px solid ${kitCopied ? COLORS.green : COLORS.border}`, borderRadius: 9, color: kitCopied ? COLORS.green : COLORS.textSecondary, fontSize: 13, fontWeight: 600, cursor: "pointer", width: "100%", textAlign: "center" }}>
+              {kitCopied ? "✓ Copied!" : "🔗 Share Kit"}
             </button>
           )}
         </div>
