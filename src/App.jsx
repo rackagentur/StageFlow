@@ -7026,7 +7026,7 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "transparent", border: "1px solid rgba(255,255,255,0.28)", color: COLORS.textSecondary, letterSpacing: "0.08em" }}>FREE</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.5)", color: COLORS.text, letterSpacing: "0.08em" }}>FREE</div>
                   <span style={{ fontSize: 10, color: COLORS.textMuted }}>{leads.filter(l => !l.archived).length} / {FREE_LIMITS.leads} leads</span>
                 </div>
                 <button onClick={() => requestUpgrade("leads")} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Upgrade</button>
@@ -7257,9 +7257,9 @@ const activeLeads = leads.filter(l => !l.archived);
                                 <td style={{ padding: "12px 16px", fontSize: 12, color: COLORS.textSecondary }}>{joined}</td>
                                 <td style={{ padding: "12px 16px" }}>
                                   <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700,
-                                    background: u.is_pro ? COLORS.purpleBg : "transparent",
-                                    color: u.is_pro ? COLORS.purpleLight : COLORS.textSecondary,
-                                    border: u.is_pro ? `1px solid ${COLORS.purple}` : `1px solid ${COLORS.borderHover}`,
+                                    background: u.is_pro ? COLORS.purpleBg : "rgba(255,255,255,0.06)",
+                                    color: u.is_pro ? COLORS.purpleLight : COLORS.text,
+                                    border: u.is_pro ? `1px solid ${COLORS.purple}` : "1px solid rgba(255,255,255,0.5)",
                                     letterSpacing: "0.06em",
                                   }}>
                                     {u.is_pro ? "Pro" : "Free"}
