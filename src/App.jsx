@@ -741,7 +741,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
         lead.stage === "booked"  && !lead.archived ? "rgba(34,197,94,0.04)" :
         lead.stage === "replied" && !lead.archived ? `${COLORS.purpleLight}08` :
         COLORS.surface,
-      border: (isBulkSelected || isSelected) ? `2px solid rgba(255,255,255,0.75)` : `1px solid ${
+      border: (isBulkSelected || isSelected) ? `2px solid rgba(255,255,255,0.70)` : `1px solid ${
         lead.archived                     ? COLORS.purpleDim :
         isOverdue                         ? COLORS.amber :
         lead.stage === "booked"           ? "rgba(34,197,94,0.5)" :
@@ -750,14 +750,14 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
         lead.stage === "contacted"        ? "rgba(255,255,255,0.22)" :
         COLORS.purpleDim
       }`,
-      borderLeft: (isBulkSelected || isSelected) ? `3px solid ${COLORS.purpleLight}` :
+      borderLeft: (isBulkSelected || isSelected) ? undefined :
         lead.stage === "booked"    && !lead.archived ? "3px solid rgba(34,197,94,0.6)" :
         lead.stage === "replied"   && !lead.archived ? `3px solid ${COLORS.purpleLight}` :
         (lead.stage === "followup1" || lead.stage === "followup2") && !lead.archived ? `3px solid ${COLORS.purple}` :
         lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" :
         undefined,
       boxShadow: (isBulkSelected || isSelected)
-        ? `0 0 16px rgba(34,211,238,0.18), 0 4px 16px rgba(0,0,0,0.5)`
+        ? `inset 4px 0 0 ${COLORS.purpleLight}, 0 0 16px rgba(34,211,238,0.18), 0 4px 16px rgba(0,0,0,0.5)`
         : lead.stage === "booked" && !lead.archived
         ? `0 0 8px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.35)`
         : lead.stage === "replied" && !lead.archived
