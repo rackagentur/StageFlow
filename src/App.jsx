@@ -1328,33 +1328,6 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
               );
             })}
             
-            {/* Add to Calendar CTA */}
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('switchToCalendar', { 
-                  detail: { venue: lead.name, tag: lead.tag } 
-                }));
-              }}
-              style={{
-                width: "100%",
-                marginTop: 12,
-                padding: "10px 14px",
-                background: COLORS.purpleBg,
-                border: `1px solid ${COLORS.purple}`,
-                borderRadius: 8,
-                color: COLORS.purpleLight,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-              }}
-            >
-              <span>📅</span>
-              <span>Add to Calendar</span>
-            </button>
           </div>
         );
       })()}
@@ -7609,7 +7582,108 @@ function PublicBookingForm({ supabase }) {
   );
 }
 
+function PublicGigList({ supabase }) {
+  const username = window.location.pathname.split('/gigs/')[1]?.toLowerCase().trim();
+  const [djProfile, setDjProfile] = useState(null);
+  const [gigs, setGigs]           = useState([]);
+  const [status, setStatus]       = useState('loading'); // loading | ready | notfound
+
+  useEffect(() => {
+    if (!username) { setStatus('notfound'); return; }
+    supabase.from('profiles').select('id, display_name, username').eq('username', username).single()
+      .then(({ data, error }) => {
+        if (error || !data) { setStatus('notfound'); return; }
+        setDjProfile(data);
+        return supabase.from('gigs')
+          .select('venue, city, date, status, tag')
+          .eq('user_id', data.id)
+          .eq('status', 'confirmed')
+          .gte('date', new Date().toISOString().split('T')[0])
+          .order('date', { ascending: true });
+      })
+      .then(res => {
+        if (!res) return;
+        if (res.error) { setStatus('ready'); return; }
+        setGigs(res.data || []);
+        setStatus('ready');
+      })
+      .catch(() => setStatus('notfound'));
+  }, [username]);
+
+  const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  if (status === 'loading') return (
+    <div style={{ minHeight:'100vh', background:'#0a0a0a', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <div style={{ color:'rgba(255,255,255,0.3)', fontSize:14 }}>Loading...</div>
+    </div>
+  );
+
+  if (status === 'notfound') return (
+    <div style={{ minHeight:'100vh', background:'#0a0a0a', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'-apple-system, sans-serif' }}>
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontSize:48, color:'#fff', marginBottom:16 }}>404</div>
+        <div style={{ color:'rgba(255,255,255,0.4)', fontSize:16 }}>Gig schedule not found</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight:'100vh', background:'#0a0a0a', fontFamily:'-apple-system, sans-serif', padding:'40px 24px' }}>
+      <div style={{ maxWidth:560, margin:'0 auto' }}>
+        {/* Header */}
+        <div style={{ textAlign:'center', marginBottom:40 }}>
+          <img src="https://noxreach.com/public/nr-icon.png" width="44" height="44" style={{ borderRadius:11, marginBottom:16 }} alt="NR" />
+          <div style={{ fontSize:26, fontWeight:800, color:'#fff', marginBottom:6 }}>{djProfile?.display_name}</div>
+          <div style={{ fontSize:13, color:'rgba(255,255,255,0.35)', letterSpacing:'0.05em', textTransform:'uppercase' }}>Upcoming Shows</div>
+        </div>
+
+        {/* Gig list */}
+        {gigs.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'60px 0', color:'rgba(255,255,255,0.25)', fontSize:15 }}>No upcoming shows scheduled</div>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {gigs.map((g, i) => {
+              const d = new Date(g.date + 'T00:00:00');
+              return (
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:16, background:'#111', border:'1px solid rgba(255,255,255,0.08)', borderLeft:'3px solid rgba(34,197,94,0.6)', borderRadius:12, padding:'14px 18px' }}>
+                  {/* Date badge */}
+                  <div style={{ flexShrink:0, textAlign:'center', minWidth:44 }}>
+                    <div style={{ fontSize:20, fontWeight:800, color:'#fff', lineHeight:1 }}>{String(d.getDate()).padStart(2,'0')}</div>
+                    <div style={{ fontSize:10, fontWeight:700, color:'rgba(34,197,94,0.8)', letterSpacing:'0.1em', textTransform:'uppercase', marginTop:2 }}>{MONTH_SHORT[d.getMonth()]} {d.getFullYear()}</div>
+                  </div>
+                  {/* Divider */}
+                  <div style={{ width:1, height:36, background:'rgba(255,255,255,0.08)', flexShrink:0 }} />
+                  {/* Details */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:15, fontWeight:700, color:'#fff', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{g.venue}</div>
+                    {g.city && <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)' }}>{g.city}</div>}
+                  </div>
+                  {/* Tag */}
+                  {g.tag && (
+                    <div style={{ flexShrink:0, fontSize:10, fontWeight:700, padding:'3px 9px', borderRadius:5, background:'rgba(14,116,144,0.15)', border:'1px solid rgba(14,116,144,0.3)', color:'#22D3EE', letterSpacing:'0.06em', textTransform:'uppercase', whiteSpace:'nowrap' }}>{g.tag}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Book CTA */}
+        <div style={{ textAlign:'center', marginTop:40 }}>
+          <a href={`/book/${username}`}
+            style={{ display:'inline-block', padding:'13px 32px', background:'#D4AF37', color:'#0a0a0a', borderRadius:10, fontSize:14, fontWeight:800, textDecoration:'none', letterSpacing:'0.02em' }}>
+            Book {djProfile?.display_name}
+          </a>
+        </div>
+
+        <div style={{ textAlign:'center', marginTop:24, fontSize:11, color:'rgba(255,255,255,0.18)' }}>Powered by NoxReach</div>
+      </div>
+    </div>
+  );
+}
+
 export default function NoxReach() {
+  if (window.location.pathname.startsWith('/gigs/')) return <PublicGigList supabase={supabase} />;
   if (window.location.pathname.startsWith('/book/')) return <PublicBookingForm supabase={supabase} />;
   if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy.html') {
     window.location.href = 'https://noxreach.com/privacy.html';
