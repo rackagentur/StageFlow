@@ -6999,7 +6999,7 @@ const activeLeads = leads.filter(l => !l.archived);
             const isActive = activeTab === tab.id;
             const TabIcon  = TAB_ICONS[tab.id];
             return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: isActive ? COLORS.purpleBg : "transparent", border: `1px solid ${isActive ? COLORS.purpleDim : "transparent"}`, color: isActive ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: isActive ? COLORS.purpleBg : "transparent", border: `1px solid ${isActive ? COLORS.purple : "transparent"}`, color: isActive ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
                 {TabIcon && <TabIcon size={15} color={isActive ? COLORS.purpleLight : COLORS.textSecondary} />}
                 {tab.label}
                 {tab.badge > 0 && <span style={{ marginLeft: "auto", background: COLORS.purple, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800 }}>{tab.badge}</span>}
@@ -7012,7 +7012,7 @@ const activeLeads = leads.filter(l => !l.archived);
             const isActive = activeTab === tab.id;
             const TabIcon  = TAB_ICONS[tab.id];
             return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: isActive ? COLORS.purpleBg : "transparent", border: `1px solid ${isActive ? COLORS.purpleDim : "transparent"}`, color: isActive ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ width: "100%", padding: "10px 12px", borderRadius: 9, marginBottom: 4, background: isActive ? COLORS.purpleBg : "transparent", border: `1px solid ${isActive ? COLORS.purple : "transparent"}`, color: isActive ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 13, fontWeight: isActive ? 700 : 500, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, transition: "all 0.15s" }}>
                 {TabIcon && <TabIcon size={15} color={isActive ? COLORS.purpleLight : COLORS.textSecondary} />}
                 {tab.label}
                 {tab.badge > 0 && <span style={{ marginLeft: "auto", background: COLORS.purple, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800 }}>{tab.badge}</span>}
@@ -7026,7 +7026,7 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "transparent", border: `1px solid ${COLORS.borderHover}`, color: COLORS.textSecondary, letterSpacing: "0.08em" }}>FREE</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "transparent", border: "1px solid rgba(255,255,255,0.28)", color: COLORS.textSecondary, letterSpacing: "0.08em" }}>FREE</div>
                   <span style={{ fontSize: 10, color: COLORS.textMuted }}>{leads.filter(l => !l.archived).length} / {FREE_LIMITS.leads} leads</span>
                 </div>
                 <button onClick={() => requestUpgrade("leads")} style={{ fontSize: 10, fontWeight: 700, color: COLORS.purple, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Upgrade</button>
