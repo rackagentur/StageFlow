@@ -3333,6 +3333,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
         )}
       </div>
     </div>
+  </div>
   );
 }
 
@@ -7113,8 +7114,11 @@ const activeLeads = leads.filter(l => !l.archived);
                         <div style={{ fontSize: 13, color: COLORS.textSecondary, marginBottom: 8 }}>{card.label}</div>
                         <div style={{ fontSize: 24, fontWeight: 500 }}>{card.value}</div>
                       </div>
-{/* Email sends */}
-                      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20 }}>
+                    ))}
+                  </div>
+
+                  {/* Email sends */}
+                  <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: COLORS.text }}>Behavioral Emails Sent</div>
                         <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 16 }}>{emailTotal} total</div>
                         {adminEmailSends.length === 0 ? (
@@ -7144,7 +7148,6 @@ const activeLeads = leads.filter(l => !l.archived);
                           </div>
                         )}
                       </div>
-                    </div>
 
                     {/* ── User table ── */}
                     <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
@@ -7199,8 +7202,7 @@ const activeLeads = leads.filter(l => !l.archived);
                       </table>
                     </div>
                   </>
-                );
-              })()}
+              )}
 
               {!loadingAdminData && selectedUser && (() => {
                 const [adminDetailTab, setAdminDetailTab] = [
@@ -7310,90 +7312,8 @@ const activeLeads = leads.filter(l => !l.archived);
                         </div>
                       </div>
                     )}                  </div>
-
-                  <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr style={{ borderBottom: `1px solid ${COLORS.border}` }}>
-                          {["User", "Status", "Health", "Leads", "Gigs", ""].map(h => (
-                            <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 12, fontWeight: 500, color: COLORS.textSecondary, textTransform: "uppercase" }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {adminUsers.map(u => {
-                          const healthColor = {
-                            active:              { bg: "rgba(0,212,170,0.15)",  fg: "#00D4AA" },
-                            no_leads_added:      { bg: "rgba(255,165,0,0.15)",  fg: "#FFA500" },
-                            leads_not_contacted: { bg: "rgba(255,215,0,0.15)",  fg: "#FFD700" },
-                            replies_no_bookings: { bg: "rgba(0,212,255,0.15)",  fg: "#00D4FF" },
-                          }[u.health_status] || { bg: "rgba(255,68,68,0.15)", fg: "#FF4444" };
-                          return (
-                            <tr key={u.id} style={{ borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer" }} onClick={() => setSelectedUser(u)}>
-                              <td style={{ padding: "14px 16px" }}>
-                                <div style={{ fontWeight: 500, marginBottom: 2 }}>{u.display_name || u.username || u.id}</div>
-                                <div style={{ fontSize: 12, color: COLORS.textSecondary }}>{u.username}</div>
-                              </td>
-                              <td style={{ padding: "14px 16px" }}>
-                                <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 500, textTransform: "uppercase", background: u.is_pro ? "linear-gradient(135deg,#D4AF37,#F4D03F)" : COLORS.border, color: u.is_pro ? "#2C2C2A" : COLORS.textSecondary }}>
-                                  {u.is_pro ? "Pro" : "Free"}
-                                </span>
-                              </td>
-                              <td style={{ padding: "14px 16px" }}>
-                                <span style={{ display: "inline-block", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 500, background: healthColor.bg, color: healthColor.fg }}>
-                                  {u.health_status || "active"}
-                                </span>
-                              </td>
-                              <td style={{ padding: "14px 16px", fontWeight: 500 }}>{u.leadCount}</td>
-                              <td style={{ padding: "14px 16px", fontWeight: 500 }}>{u.gigCount}</td>
-                              <td style={{ padding: "14px 16px" }}>
-                               <button style={{ padding: "6px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.purple, fontSize: 13, cursor: "pointer" }} onClick={() => { setSelectedUser(u); loadUserLeads(u.id); }}>
-                                  View →
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
-
-             {!loadingAdminData && selectedUser && (
-  <div>
-    <button onClick={() => setSelectedUser(null)} style={{ padding: "8px 0", background: "none", border: "none", color: COLORS.purple, fontSize: 14, cursor: "pointer", marginBottom: 16 }}>
-      ← Back to user list
-    </button>
-    <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>{selectedUser.display_name || selectedUser.username}</h2>
-      <div style={{ fontSize: 13, color: COLORS.textSecondary }}>@{selectedUser.username}</div>
-      <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 13, color: COLORS.textSecondary }}>
-        <span>{selectedUser.leadCount} leads</span>
-        <span>{selectedUser.gigCount} gigs</span>
-        <span>{selectedUser.is_pro ? "Pro" : "Free"}</span>
-        <span>Health: {selectedUser.health_status || "active"}</span>
-      </div>
-    </div>
-    <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>User's Pipeline (Read-Only)</div>
-    <div style={{ opacity: 0.7, pointerEvents: "none" }}>
-      <PipelineView 
-        leads={selectedUserLeads} 
-        onMove={() => {}} 
-        onSelect={() => {}} 
-        selectedLead={null} 
-        onArchive={() => {}} 
-        search="" 
-        filters={{}} 
-        TAG_COLORS={TAG_COLORS} 
-        customTags={customTags} 
-        onUpdateLead={() => {}} 
-        isMobile={isMobile} 
-        onOpenNewLead={() => {}} 
-      />
-    </div>
-  </div>
-)}
+                );
+              })()}
             </div>
           )}
         </div>
