@@ -737,11 +737,13 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           onSelect(isSelected ? null : lead);
         }} style={{
 
-      background: lead.stage === "booked" && !lead.archived ? "rgba(34,197,94,0.04)" : (isBulkSelected || isSelected) ? COLORS.purpleBg : COLORS.surface,
-      border: `1px solid ${lead.stage === "booked" && !lead.archived ? "rgba(34,197,94,0.5)" : isOverdue && !lead.archived ? COLORS.amber : (isBulkSelected || isSelected) ? COLORS.purple : COLORS.purpleDim}`,
-      borderLeft: lead.stage === "booked" && !lead.archived ? "3px solid rgba(34,197,94,0.6)" : undefined,
+      background: lead.stage === "booked" && !lead.archived ? "rgba(34,197,94,0.04)" : lead.stage === "contacted" && !lead.archived ? COLORS.purpleBg : (isBulkSelected || isSelected) ? COLORS.purpleBg : COLORS.surface,
+      border: `1px solid ${lead.stage === "booked" && !lead.archived ? "rgba(34,197,94,0.5)" : lead.stage === "contacted" && !lead.archived ? COLORS.purple : isOverdue && !lead.archived ? COLORS.amber : (isBulkSelected || isSelected) ? COLORS.purple : COLORS.purpleDim}`,
+      borderLeft: lead.stage === "booked" && !lead.archived ? "3px solid rgba(34,197,94,0.6)" : lead.stage === "contacted" && !lead.archived ? `3px solid ${COLORS.purple}` : undefined,
       boxShadow: lead.stage === "booked" && !lead.archived
         ? `0 0 8px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.35)`
+        : lead.stage === "contacted" && !lead.archived
+        ? `0 0 8px rgba(14,116,144,0.10), 0 2px 12px rgba(0,0,0,0.35)`
         : isSelected
         ? `inset 3px 0 0 ${COLORS.purple}, 0 4px 16px rgba(0,0,0,0.5)`
         : `0 2px 12px rgba(0,0,0,0.35)`,
