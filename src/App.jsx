@@ -2937,6 +2937,181 @@ function ProGate({ children, isPro, reason, onUpgradeClick, label = "Pro feature
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
+// ── ContactsView ──────────────────────────────────────────────────────────────
+// Flat searchable address-book of all leads, independent of pipeline stage.
+function ContactsView({ leads, onOpenLead, TAG_COLORS, isMobile }) {
+  const [search, setSearch]     = useState("");
+  const [sortBy, setSortBy]     = useState("name");   // name | stage | updated | tier
+  const [showArchived, setShowArchived] = useState(false);
+
+  const STAGE_META = {
+    target:    { label: "Target",    color: COLORS.text3 },
+    contacted: { label: "Contacted", color: COLORS.purple },
+    followup1: { label: "Follow-up", color: COLORS.purpleLight },
+    followup2: { label: "Follow-up", color: COLORS.purpleLight },
+    replied:   { label: "Replied",   color: COLORS.violetLight },
+    booked:    { label: "Booked",    color: COLORS.green },
+  };
+
+  const TIER_ORDER = { A1: 0, A2: 1, A3: 2 };
+  const STAGE_ORDER = { target: 0, contacted: 1, followup1: 2, followup2: 3, replied: 4, booked: 5 };
+
+  const filtered = leads
+    .filter(l => l.archived === showArchived)
+    .filter(l => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return [l.name, l.contact, l.instagram, l.tag, l.notes].some(f => f && f.toLowerCase().includes(q));
+    })
+    .sort((a, b) => {
+      if (sortBy === "name")    return a.name.localeCompare(b.name);
+      if (sortBy === "tier")    return (TIER_ORDER[a.tier] ?? 9) - (TIER_ORDER[b.tier] ?? 9);
+      if (sortBy === "stage")   return (STAGE_ORDER[a.stage] ?? 9) - (STAGE_ORDER[b.stage] ?? 9);
+      if (sortBy === "updated") return (b.updatedAt || "").localeCompare(a.updatedAt || "");
+      return 0;
+    });
+
+  const total = leads.filter(l => !l.archived).length;
+
+  return (
+    <div>
+      {/* Header row */}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
+        {/* Search */}
+        <div style={{ flex: 1, minWidth: 180, position: "relative" }}>
+          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: COLORS.textMuted, fontSize: 14, pointerEvents: "none" }}>⌕</span>
+          <input
+            value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search contacts…"
+            style={{ width: "100%", padding: "9px 12px 9px 34px", background: COLORS.surface, border: `1px solid ${search ? COLORS.purple : COLORS.border}`, borderRadius: 9, color: COLORS.text, fontSize: 13, outline: "none", fontFamily: "inherit" }}
+            onFocus={e => e.target.style.borderColor = COLORS.purple}
+            onBlur={e => { if (!search) e.target.style.borderColor = COLORS.border; }}
+          />
+          {search && <button onClick={() => setSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: COLORS.textSecondary, cursor: "pointer", fontSize: 16 }}>×</button>}
+        </div>
+
+        {/* Sort */}
+        <select
+          value={sortBy} onChange={e => setSortBy(e.target.value)}
+          style={{ padding: "9px 12px", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.text2, fontSize: 12, outline: "none", cursor: "pointer" }}
+        >
+          <option value="name">Sort: Name</option>
+          <option value="stage">Sort: Stage</option>
+          <option value="tier">Sort: Tier</option>
+          <option value="updated">Sort: Recently updated</option>
+        </select>
+
+        {/* Archive toggle */}
+        <div style={{ display: "flex", gap: 4, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 9, padding: 3 }}>
+          {[{ val: false, label: `Active (${total})` }, { val: true, label: "Archived" }].map(({ val, label }) => (
+            <button key={String(val)} onClick={() => setShowArchived(val)} style={{ padding: "6px 12px", borderRadius: 6, border: "none", background: showArchived === val ? COLORS.purpleBg : "transparent", color: showArchived === val ? COLORS.purpleLight : COLORS.text2, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Empty state */}
+      {filtered.length === 0 && (
+        <div style={{ textAlign: "center", padding: "56px 24px" }}>
+          <div style={{ fontSize: 22, marginBottom: 12, opacity: 0.35 }}>◎</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text, marginBottom: 6 }}>
+            {search ? "No contacts match" : showArchived ? "No archived contacts" : "No contacts yet"}
+          </div>
+          <div style={{ fontSize: 12, color: COLORS.text2 }}>
+            {search ? "Try a different search term." : "Add leads from the Pipeline tab to see them here."}
+          </div>
+        </div>
+      )}
+
+      {/* Contact list */}
+      {filtered.length > 0 && (
+        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
+          {/* Column headers — desktop only */}
+          {!isMobile && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 80px 90px 120px 32px", gap: 0, padding: "10px 16px", borderBottom: `1px solid ${COLORS.border}` }}>
+              {["Contact", "Tag", "Tier", "Stage", "Instagram / Email", ""].map(h => (
+                <div key={h} style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{h}</div>
+              ))}
+            </div>
+          )}
+
+          {filtered.map((lead, i) => {
+            const stage = STAGE_META[lead.stage] || { label: lead.stage, color: COLORS.text2 };
+            const tierColor = { A1: COLORS.purpleLight, A2: COLORS.purple, A3: COLORS.textSecondary }[lead.tier] || COLORS.textSecondary;
+            const tagColor = TAG_COLORS[lead.tag] || COLORS.purple;
+
+            return (
+              <div
+                key={lead.id}
+                onClick={() => onOpenLead(lead)}
+                style={{
+                  display: isMobile ? "flex" : "grid",
+                  gridTemplateColumns: isMobile ? undefined : "1fr 100px 80px 90px 120px 32px",
+                  flexDirection: isMobile ? "column" : undefined,
+                  gap: isMobile ? 6 : 0,
+                  padding: isMobile ? "14px 16px" : "12px 16px",
+                  borderBottom: i < filtered.length - 1 ? `1px solid ${COLORS.border}` : "none",
+                  cursor: "pointer",
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = COLORS.surface2}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                {/* Name + contact person */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 2, justifyContent: "center", minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.name}</div>
+                  {lead.contact && <div style={{ fontSize: 11, color: COLORS.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.contact}</div>}
+                </div>
+
+                {isMobile ? (
+                  /* Mobile: single row of badges + contact info */
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: tagColor, background: tagColor + "22", border: `1px solid ${tagColor}44`, borderRadius: 20, padding: "2px 7px" }}>{lead.tag}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: tierColor, background: tierColor + "22", borderRadius: 20, padding: "2px 7px" }}>{lead.tier}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: stage.color, background: stage.color + "22", border: `1px solid ${stage.color}44`, borderRadius: 20, padding: "2px 7px" }}>{stage.label}</span>
+                    {lead.instagram && <span style={{ fontSize: 11, color: COLORS.text2 }}>{lead.instagram.startsWith("@") ? lead.instagram : `@${lead.instagram}`}</span>}
+                  </div>
+                ) : (
+                  <>
+                    {/* Tag */}
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: tagColor, background: tagColor + "22", border: `1px solid ${tagColor}44`, borderRadius: 20, padding: "3px 8px" }}>{lead.tag}</span>
+                    </div>
+                    {/* Tier */}
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: tierColor }}>{lead.tier}</span>
+                    </div>
+                    {/* Stage */}
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: stage.color, background: stage.color + "18", border: `1px solid ${stage.color}33`, borderRadius: 20, padding: "3px 8px" }}>{stage.label}</span>
+                    </div>
+                    {/* Instagram / contact email */}
+                    <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                      {lead.instagram
+                        ? <span style={{ fontSize: 11, color: COLORS.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.instagram.startsWith("@") ? lead.instagram : `@${lead.instagram}`}</span>
+                        : lead.contact && lead.contact.includes("@")
+                          ? <span style={{ fontSize: 11, color: COLORS.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.contact}</span>
+                          : <span style={{ fontSize: 11, color: COLORS.textMuted }}>—</span>}
+                    </div>
+                    {/* Chevron */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", color: COLORS.textMuted, fontSize: 12 }}>›</div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Count footer */}
+      {filtered.length > 0 && (
+        <div style={{ marginTop: 10, fontSize: 11, color: COLORS.textMuted, textAlign: "right" }}>
+          {filtered.length} {filtered.length === 1 ? "contact" : "contacts"}{search ? ` matching "${search}"` : ""}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function InboundView({ leads, user, supabase }) {
   const inbound = leads.filter(l => !l.archived && l.stage === "replied" && l.contact && l.contact.includes("@"));
   const [username, setUsername] = useState(null);
@@ -7351,6 +7526,7 @@ const activeLeads = leads.filter(l => !l.archived);
     { id: "dashboard", label: "Dashboard",  icon: "▣",  group: "main" },
     { id: "analytics", label: "Analytics", icon: "📊", group: "main" },
     { id: "pipeline",  label: "Pipeline",   icon: "⬛", group: "main" },
+    { id: "contacts",  label: "Contacts",   icon: "◎", group: "main" },
     { id: "followups", label: "Follow-ups", icon: "⏰", badge: dueCount, group: "main" },
     { id: "bookingdesk",  label: "Reply Hub",  icon: "✉",  badge: unreadCount, group: "main" },
     { id: "calendar",  label: "Calendar",   icon: "📅", group: "main" },
@@ -7508,6 +7684,7 @@ const activeLeads = leads.filter(l => !l.archived);
               <div style={{ fontSize: isMobile ? 17 : 20, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.02em" }}>{TABS.find(t => t.id === activeTab)?.label}</div>
               <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: isMobile ? "60vw" : undefined }}>
                 {activeTab === "pipeline"  && `${activeLeads.length} leads${hasFilter ? ` · filtered` : ""}`}
+                {activeTab === "contacts"  && `${leads.filter(l => !l.archived).length} contacts`}
                 {activeTab === "followups" && `${dueCount} due today`}
                 {activeTab === "outreach"  && (isPro ? "4 templates ready" : "2 / 4 templates · Upgrade for all")}
                 {activeTab === "dashboard" && "Your booking overview"}
@@ -7606,6 +7783,7 @@ const activeLeads = leads.filter(l => !l.archived);
               {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} />}
             </>
           )}
+          {activeTab === "contacts"  && <ContactsView leads={leads} TAG_COLORS={TAG_COLORS} isMobile={isMobile} onOpenLead={(lead) => { setSelectedLead(lead); setActiveTab("pipeline"); }} />}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} onOpenLead={(lead) => { setSelectedLead(lead); setActiveTab("pipeline"); }} />}
           {activeTab === "outreach"  && <OutreachView isPro={isPro} onUpgradeClick={requestUpgrade} supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
