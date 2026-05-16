@@ -3541,6 +3541,11 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   // Email connections
   const [gmailConnection, setGmailConnection] = useState(null);
   const [gmailConnecting, setGmailConnecting] = useState(false);
+  const [smtpConnection, setSmtpConnection] = useState(null);
+  const [smtpConnecting, setSmtpConnecting] = useState(false);
+  const [smtpForm, setSmtpForm] = useState({ email: "", password: "", smtp_host: "smtp.ionos.com", smtp_port: "587" });
+  const [smtpFormOpen, setSmtpFormOpen] = useState(false);
+  const [smtpError, setSmtpError] = useState("");
 
   useEffect(() => {
     if (!user?.id || !supabase) return;
@@ -3557,6 +3562,8 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         if (data) {
           const gmail = data.find(c => c.provider === "gmail");
           if (gmail) setGmailConnection(gmail);
+          const smtp = data.find(c => c.provider === "smtp");
+          if (smtp) setSmtpConnection(smtp);
         }
       });
   }, [user?.id]);
@@ -3605,6 +3612,44 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
       headers: { Authorization: `Bearer ${token}` },
     });
     setGmailConnection(null);
+  };
+
+  const connectSmtp = async () => {
+    setSmtpError("");
+    setSmtpConnecting(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/smtp-verify`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: smtpForm.email,
+          password: smtpForm.password,
+          smtp_host: smtpForm.smtp_host,
+          smtp_port: parseInt(smtpForm.smtp_port, 10),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setSmtpError(data.error || "Connection failed"); }
+      else {
+        setSmtpConnection({ email: smtpForm.email });
+        setSmtpFormOpen(false);
+        setSmtpForm(f => ({ ...f, password: "" }));
+      }
+    } catch (e) { setSmtpError("Network error"); }
+    setSmtpConnecting(false);
+  };
+
+  const disconnectSmtp = async () => {
+    const session = await supabase.auth.getSession();
+    const token = session.data.session?.access_token;
+    await fetch(
+      `${supabase.supabaseUrl}/rest/v1/email_connections?user_id=eq.${user.id}&provider=eq.smtp`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${token}`, apikey: supabase.supabaseKey } }
+    );
+    setSmtpConnection(null);
+    setSmtpFormOpen(false);
   };
 
   const set = key => val => setLocal(s => ({ ...s, [key]: val }));
@@ -3864,18 +3909,65 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
             )}
           </div>
 
-          {/* Outlook — coming soon */}
-          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginTop: 10, opacity: 0.5 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#0078D4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/></svg>
+          {/* SMTP / Custom inbox */}
+          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Custom SMTP</div>
+                  {smtpConnection
+                    ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {smtpConnection.email}</div>
+                    : <div style={{ fontSize: 12, color: COLORS.textMuted }}>IONOS, Zoho, any SMTP inbox</div>
+                  }
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Outlook / Microsoft 365</div>
-                <div style={{ fontSize: 12, color: COLORS.textMuted }}>Coming soon</div>
-              </div>
+              {smtpConnection ? (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                    Update
+                  </button>
+                  <button onClick={disconnectSmtp} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                    Disconnect
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Connect
+                </button>
+              )}
             </div>
-            <div style={{ fontSize: 11, color: COLORS.textMuted, background: COLORS.border, borderRadius: 6, padding: "4px 10px", fontWeight: 600 }}>SOON</div>
+            {smtpFormOpen && (
+              <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Email address</div>
+                    <input value={smtpForm.email} onChange={e => setSmtpForm(f => ({ ...f, email: e.target.value }))} placeholder="info@yourdomain.com" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Password</div>
+                    <input type="password" value={smtpForm.password} onChange={e => setSmtpForm(f => ({ ...f, password: e.target.value }))} placeholder="Email password" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>SMTP Host</div>
+                    <input value={smtpForm.smtp_host} onChange={e => setSmtpForm(f => ({ ...f, smtp_host: e.target.value }))} placeholder="smtp.ionos.com" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Port</div>
+                    <input value={smtpForm.smtp_port} onChange={e => setSmtpForm(f => ({ ...f, smtp_port: e.target.value }))} placeholder="587" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                </div>
+                {smtpError && <div style={{ fontSize: 12, color: "#ef4444" }}>{smtpError}</div>}
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button onClick={() => { setSmtpFormOpen(false); setSmtpError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
+                  <button onClick={connectSmtp} disabled={smtpConnecting || !smtpForm.email || !smtpForm.password} style={{ ...BTN.primary, ...BTN.sm, opacity: smtpConnecting ? 0.6 : 1 }}>
+                    {smtpConnecting ? "Testing…" : "Test & Connect"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
