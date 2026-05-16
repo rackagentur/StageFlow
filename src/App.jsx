@@ -6799,6 +6799,8 @@ function NoxReachApp({ user, session, supabase }) {
   const [loadingAdminData, setLoadingAdminData] = useState(false);
   const [adminEmailSends, setAdminEmailSends]   = useState([]);
   const emailTotal = adminEmailSends.reduce((s, x) => s + (x.count || 0), 0);
+  const [adminRefCodes, setAdminRefCodes]       = useState({ permanent: "", trial: "" });
+  const [adminRefCopied, setAdminRefCopied]     = useState(null); // "permanent" | "trial" | null
 
   const [showWelcomeNew, setShowWelcomeNew] = useState(() => {
     try { return !localStorage.getItem("nr_welcomed_" + user.id); } catch { return true; }
@@ -6924,7 +6926,17 @@ const loadAdminUsers = async () => {
 
 
   useEffect(() => {
-    if (activeTab === "admin" && isAdmin) loadAdminUsers();
+    if (activeTab === "admin" && isAdmin) {
+      loadAdminUsers();
+      // Fetch admin's referral codes once
+      supabase.from("profiles")
+        .select("referral_code, referral_code_trial")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setAdminRefCodes({ permanent: data.referral_code || "", trial: data.referral_code_trial || "" });
+        });
+    }
   }, [activeTab]);
 
   const loadUserLeads = async (userId) => {
@@ -7555,6 +7567,57 @@ const activeLeads = leads.filter(l => !l.archived);
 
               {!loadingAdminData && !selectedUser && (
                 <>
+                  {/* ── Referral links ── */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+                    {[
+                      {
+                        key: "permanent",
+                        label: "Permanent PRO link",
+                        badge: "PRO forever",
+                        badgeColor: COLORS.green,
+                        badgeBg: "rgba(34,197,94,0.12)",
+                        desc: "User gets PRO permanently after 3-day free period.",
+                        code: adminRefCodes.permanent,
+                        borderColor: "rgba(34,197,94,0.25)",
+                      },
+                      {
+                        key: "trial",
+                        label: "30-day PRO trial link",
+                        badge: "PRO 30 days",
+                        badgeColor: COLORS.purpleLight,
+                        badgeBg: COLORS.purpleBg,
+                        desc: "User gets 30-day PRO access after 3-day free period.",
+                        code: adminRefCodes.trial,
+                        borderColor: COLORS.purpleDim,
+                      },
+                    ].map(({ key, label, badge, badgeColor, badgeBg, desc, code, borderColor }) => (
+                      <div key={key} style={{ background: COLORS.surface, border: `1px solid ${borderColor}`, borderRadius: 12, padding: 16 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: badgeColor, background: badgeBg, border: `1px solid ${badgeColor}33`, borderRadius: 20, padding: "2px 8px" }}>{badge}</div>
+                        </div>
+                        <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 10 }}>{desc}</div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <div style={{ flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 11, color: COLORS.text2, fontFamily: "'DM Mono', monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {code ? `app.noxreach.com/?ref=${code}` : "—"}
+                          </div>
+                          <button
+                            disabled={!code}
+                            onClick={() => {
+                              if (!code) return;
+                              navigator.clipboard.writeText(`https://app.noxreach.com/?ref=${code}`);
+                              setAdminRefCopied(key);
+                              setTimeout(() => setAdminRefCopied(null), 2000);
+                            }}
+                            style={{ background: adminRefCopied === key ? "rgba(34,197,94,0.15)" : badgeBg, border: `1px solid ${adminRefCopied === key ? COLORS.green : borderColor}`, borderRadius: 8, padding: "8px 14px", color: adminRefCopied === key ? COLORS.green : badgeColor, fontSize: 11, fontWeight: 600, cursor: code ? "pointer" : "default", whiteSpace: "nowrap", transition: "all 0.2s" }}
+                          >
+                            {adminRefCopied === key ? "✓ Copied!" : "Copy"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
                     {[
                       { label: "Total Users",     value: adminUsers.length },
