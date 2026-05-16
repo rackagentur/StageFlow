@@ -393,8 +393,8 @@ const RELEASE_NOTES = [
     date: "May 2026",
     title: "AI suggestions, PWA install & feedback",
     items: [
-      { Icon: IconStar,       label: "AI outreach drafts",     desc: "One click generates a personalised cold email or DM for any lead — powered by Claude. Available on PRO once you have 50 leads in your pipeline.", badge: "PRO" },
-      { Icon: IconPipeline,   label: "AI venue suggestions",   desc: "NoxReach suggests 5 new venues similar to any lead you're targeting. Powered by Claude, available on PRO with 50+ leads.", badge: "PRO" },
+      { Icon: IconStar,       label: "AI outreach drafts",     desc: "One click generates a personalised cold email or DM for any lead — powered by Claude. PRO feature, available once you have 50+ leads.", badge: "PRO+" },
+      { Icon: IconPipeline,   label: "AI venue suggestions",   desc: "NoxReach suggests 5 new venues similar to any lead you're targeting. Powered by Claude. PRO feature, available with 50+ leads.", badge: "PRO+" },
       { Icon: IconFollowUps,  label: "Follow-up nudges",       desc: "Going Cold section shows leads that have gone quiet for 3+ days with no date set. Tap any card to open that lead directly." },
       { Icon: IconBookingKit, label: "Booking form revamp",    desc: "\"Book this artist\" on your kit page now opens the structured booking form. You get a notification email for every enquiry." },
       { Icon: IconLink,       label: "Referral rewards",       desc: "Share your referral link — you get 30 days PRO, the DJ you invite gets a 15-day PRO trial." },
@@ -474,9 +474,9 @@ function WhatsNewModal({ onClose }) {
                       <span style={{
                         fontSize: 9, fontWeight: 800, letterSpacing: "0.07em", textTransform: "uppercase",
                         padding: "2px 6px", borderRadius: 4,
-                        background: item.badge === "PRO" ? "rgba(14,116,144,0.18)" : "rgba(245,158,11,0.15)",
-                        border: `1px solid ${item.badge === "PRO" ? "rgba(14,116,144,0.4)" : "rgba(245,158,11,0.4)"}`,
-                        color: item.badge === "PRO" ? COLORS.purpleLight : COLORS.amber,
+                        background: item.badge === "PRO" || item.badge === "PRO+" ? "rgba(14,116,144,0.18)" : "rgba(245,158,11,0.15)",
+                        border: `1px solid ${item.badge === "PRO" || item.badge === "PRO+" ? "rgba(14,116,144,0.4)" : "rgba(245,158,11,0.4)"}`,
+                        color: item.badge === "PRO" || item.badge === "PRO+" ? COLORS.purpleLight : COLORS.amber,
                       }}>
                         {item.badge}
                       </span>
@@ -1536,7 +1536,9 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontSize: 14 }}>✨</span>
               AI Outreach Draft
-              {!isAdmin && totalLeads < 50 && <span style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 400 }}>· unlocks at 50 leads ({50 - totalLeads} to go)</span>}
+              {!isAdmin && totalLeads < 50 && (
+                <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 6px", borderRadius: 4, background: "rgba(14,116,144,0.15)", border: `1px solid rgba(14,116,144,0.35)`, color: COLORS.purpleLight }}>PRO+</span>
+              )}
             </span>
             {(isAdmin || totalLeads >= 50) && <span style={{ fontSize: 10, opacity: 0.6 }}>{aiOpen ? "▲" : "▼"}</span>}
           </button>
@@ -5785,7 +5787,7 @@ function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded, artistGenre
       >
         <span>✦</span>
         <span>AI Venue Suggestions</span>
-        {locked && <span style={{ marginLeft: "auto", fontSize: 10, color: COLORS.textMuted, fontWeight: 400 }}>unlocks at 50 leads ({50 - totalLeads} to go)</span>}
+        {locked && <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 6px", borderRadius: 4, background: "rgba(14,116,144,0.15)", border: `1px solid rgba(14,116,144,0.35)`, color: COLORS.purpleLight }}>PRO+</span>}
       </button>
 
       {showModal && (
