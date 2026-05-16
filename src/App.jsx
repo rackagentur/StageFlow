@@ -3316,10 +3316,10 @@ function CookieBanner() {
     <div style={{
       position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
       zIndex: 9999, width: "calc(100% - 48px)", maxWidth: 560,
-      background: "rgba(18,18,28,0.97)", border: `1px solid ${COLORS.border}`,
+      background: COLORS.surface, border: `1px solid ${COLORS.border}`,
       borderRadius: 14, padding: "16px 20px", display: "flex", alignItems: "center",
       justifyContent: "space-between", gap: 16, backdropFilter: "blur(12px)",
-      boxShadow: "0 8px 40px rgba(0,0,0,0.5)"
+      boxShadow: "0 8px 40px rgba(0,0,0,0.3)"
     }}>
       <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.6, flex: 1 }}>
         We use essential cookies to keep you logged in and save your settings.
@@ -7122,6 +7122,23 @@ function NoxReachApp({ user, session, supabase }) {
     await supabase.auth.signOut();
   };
 
+  // ── Theme toggle ────────────────────────────────────────────────────────────
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.getAttribute('data-theme') !== 'light'
+  );
+  const toggleTheme = () => {
+    const nowLight = isDark; // about to switch to light
+    if (nowLight) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('nox-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('nox-theme', 'dark');
+    }
+    setIsDark(!isDark);
+  };
+  // ────────────────────────────────────────────────────────────────────────────
+
   const [activeTab, setActiveTab]       = useState("pipeline");
 
   // Listen for "Add to Calendar" from booked cards
@@ -7787,6 +7804,15 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userName}</div>
             <div style={{ fontSize: 9, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</div>
           </div>
+          <button onClick={toggleTheme} title={isDark ? "Switch to light mode" : "Switch to dark mode"} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, padding: 4, borderRadius: 6, transition: "color 0.15s", display: "flex" }}
+            onMouseEnter={e => e.currentTarget.style.color = COLORS.purpleLight}
+            onMouseLeave={e => e.currentTarget.style.color = COLORS.textMuted}
+          >
+            {isDark
+              ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            }
+          </button>
           <button onClick={handleSignOut} title="Sign out" style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, padding: 4, borderRadius: 6, transition: "color 0.15s", display: "flex" }}
             onMouseEnter={e => e.currentTarget.style.color = COLORS.red}
             onMouseLeave={e => e.currentTarget.style.color = COLORS.textMuted}

@@ -1,0 +1,45 @@
+/* NoxReach global CSS custom properties — theme tokens */
+
+:root {
+  /* Dark theme (default) */
+  --c-bg:           #0a0a0a;
+  --c-bg-deep:      #060608;
+  --c-surface:      #111111;
+  --c-surface2:     #18181b;
+  --c-border:       rgba(255,255,255,0.07);
+  --c-border-hover: rgba(255,255,255,0.14);
+  --c-text:         #ffffff;
+  --c-text2:        #a1a1aa;
+  --c-text3:        #52525b;
+  /* cyan-400 — used as highlight text/icon on dark surfaces */
+  --c-purple-light: #22D3EE;
+}
+
+[data-theme="light"] {
+  --c-bg:           #f3f3fb;
+  --c-bg-deep:      #eaeaf5;
+  --c-surface:      #ffffff;
+  --c-surface2:     #f0f0f9;
+  --c-border:       rgba(0,0,0,0.08);
+  --c-border-hover: rgba(0,0,0,0.16);
+  --c-text:         #0d0d1a;
+  --c-text2:        #5a5a7a;
+  --c-text3:        #9090b0;
+  /* cyan-700 — readable on white */
+  --c-purple-light: #0E7490;
+}
+
+/* Smooth theme transition */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Base body bg */
+body {
+  background: var(--c-bg-deep);
+}
+
+/* Apply theme to scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--c-bg); }
+::-webkit-scrollbar-thumb { background: var(--c-border-hover); border-radius: 3px; }
