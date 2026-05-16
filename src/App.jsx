@@ -3,7 +3,7 @@ import { COLORS, STAGES } from './lib/constants.js';
 import { formatShortDate } from './lib/formatters.js';
 import { showToast as showDomToast } from './lib/toast.js';
 import { supabase } from './lib/supabaseClient.js';
-import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload, IconDashboard, IconPipeline, IconFollowUps, IconReplyHub, IconInbound, IconSettings, IconCalendar, IconBookingKit, IconAnalytics, IconCheck, IconLink, IconStar } from './icons/index.jsx';
+import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload, IconDashboard, IconPipeline, IconFollowUps, IconReplyHub, IconInbound, IconSettings, IconCalendar, IconBookingKit, IconAnalytics, IconCheck, IconLink, IconStar, IconContacts } from './icons/index.jsx';
 
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
@@ -1462,7 +1462,7 @@ function AssetCopyRow({ label, value }) {
   );
 }
 
-function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0, isAdmin = false }) {
+function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0, isAdmin = false, customTags = [] }) {
   const [editing, setEditing] = useState(false);
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
@@ -1506,6 +1506,8 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     instagram: lead.instagram || "",
     notes: lead.notes || "",
     follow_up_date: lead.follow_up_date || "",
+    tag: lead.tag || "",
+    tier: lead.tier || "A2",
   });
   const [saving, setSaving] = useState(false);
 
@@ -1517,6 +1519,8 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       instagram: lead.instagram || "",
       notes: lead.notes || "",
       follow_up_date: lead.follow_up_date || "",
+      tag: lead.tag || "",
+      tier: lead.tier || "A2",
     });
     setEditing(false);
     loadActivity();
@@ -1548,6 +1552,8 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         instagram: form.instagram.trim(),
         notes: form.notes.trim(),
         follow_up_date: form.follow_up_date || null,
+        tag: form.tag || lead.tag,
+        tier: form.tier || lead.tier,
       };
       const { error } = await supabase
         .from("leads")
@@ -1613,8 +1619,23 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           ) : (
             <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, lineHeight: 1.3 }}>{lead.name}</div>
           )}
-          <Badge color={TIER_COLORS[lead.tier]} style={{ marginTop: 4 }}>{lead.tier}</Badge>
-          {lead.tag && <Badge color={TAG_COLORS?.[lead.tag] || COLORS.purple} style={{ marginTop: 4, marginLeft: 4 }}>{lead.tag}</Badge>}
+          {editing ? (
+            <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+              <select value={form.tier} onChange={e => setForm(f => ({ ...f, tier: e.target.value }))}
+                style={{ padding: "4px 8px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.text, fontSize: 11, outline: "none", cursor: "pointer" }}>
+                {["A1","A2","A3"].map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select value={form.tag} onChange={e => setForm(f => ({ ...f, tag: e.target.value }))}
+                style={{ padding: "4px 8px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.text, fontSize: 11, outline: "none", cursor: "pointer" }}>
+                {customTags.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
+              <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
+              {lead.tag && <Badge color={TAG_COLORS?.[lead.tag] || COLORS.purple}>{lead.tag}</Badge>}
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", gap: 6, flexShrink: 0, marginLeft: 8 }}>
           {editing ? (
@@ -2939,7 +2960,7 @@ function ProGate({ children, isPro, reason, onUpgradeClick, label = "Pro feature
 
 // ── ContactsView ──────────────────────────────────────────────────────────────
 // Flat searchable address-book of all leads, independent of pipeline stage.
-function ContactsView({ leads, onOpenLead, TAG_COLORS, isMobile }) {
+function ContactsView({ leads, onOpenLead, TAG_COLORS, isMobile, customTags = [], supabase, userId, onUpdateLead }) {
   const [search, setSearch]     = useState("");
   const [sortBy, setSortBy]     = useState("name");   // name | stage | updated | tier
   const [showArchived, setShowArchived] = useState(false);
@@ -2972,6 +2993,40 @@ function ContactsView({ leads, onOpenLead, TAG_COLORS, isMobile }) {
     });
 
   const total = leads.filter(l => !l.archived).length;
+
+  // ── Inline editing ──────────────────────────────────────────────────────────
+  const [editId, setEditId]     = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving]     = useState(false);
+
+  const openEdit = (lead) => {
+    setEditId(lead.id);
+    setEditForm({ name: lead.name || "", contact: lead.contact || "", instagram: lead.instagram || "", tag: lead.tag || "", tier: lead.tier || "A2", notes: lead.notes || "" });
+  };
+  const closeEdit = () => { setEditId(null); setEditForm({}); };
+
+  const saveEdit = async () => {
+    if (!editId) return;
+    setSaving(true);
+    const updates = { name: editForm.name.trim(), contact: editForm.contact.trim(), instagram: editForm.instagram.trim(), tag: editForm.tag, tier: editForm.tier, notes: editForm.notes.trim() };
+    const { error } = await supabase.from("leads").update(updates).eq("id", editId).eq("user_id", userId);
+    if (!error) {
+      const original = leads.find(l => l.id === editId);
+      if (original) onUpdateLead?.({ ...original, ...updates });
+      closeEdit();
+    }
+    setSaving(false);
+  };
+
+  const rowInput = (key, placeholder, type = "text") => (
+    <input
+      type={type} value={editForm[key] || ""} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
+      placeholder={placeholder}
+      style={{ width: "100%", padding: "7px 10px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit" }}
+      onFocus={e => e.target.style.borderColor = COLORS.purple}
+      onBlur={e => e.target.style.borderColor = COLORS.border}
+    />
+  );
 
   return (
     <div>
@@ -3035,66 +3090,130 @@ function ContactsView({ leads, onOpenLead, TAG_COLORS, isMobile }) {
           )}
 
           {filtered.map((lead, i) => {
-            const stage = STAGE_META[lead.stage] || { label: lead.stage, color: COLORS.text2 };
+            const stage    = STAGE_META[lead.stage] || { label: lead.stage, color: COLORS.text2 };
             const tierColor = { A1: COLORS.purpleLight, A2: COLORS.purple, A3: COLORS.textSecondary }[lead.tier] || COLORS.textSecondary;
-            const tagColor = TAG_COLORS[lead.tag] || COLORS.purple;
+            const tagColor  = TAG_COLORS[lead.tag] || COLORS.purple;
+            const isEditing = editId === lead.id;
 
             return (
-              <div
-                key={lead.id}
-                onClick={() => onOpenLead(lead)}
-                style={{
-                  display: isMobile ? "flex" : "grid",
-                  gridTemplateColumns: isMobile ? undefined : "1fr 100px 80px 90px 120px 32px",
-                  flexDirection: isMobile ? "column" : undefined,
-                  gap: isMobile ? 6 : 0,
-                  padding: isMobile ? "14px 16px" : "12px 16px",
-                  borderBottom: i < filtered.length - 1 ? `1px solid ${COLORS.border}` : "none",
-                  cursor: "pointer",
-                  transition: "background 0.12s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = COLORS.surface2}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-              >
-                {/* Name + contact person */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 2, justifyContent: "center", minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.name}</div>
-                  {lead.contact && <div style={{ fontSize: 11, color: COLORS.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.contact}</div>}
+              <div key={lead.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
+                {/* ── Summary row ── */}
+                <div
+                  style={{
+                    display: isMobile ? "flex" : "grid",
+                    gridTemplateColumns: isMobile ? undefined : "1fr 100px 80px 90px 120px 72px",
+                    flexDirection: isMobile ? "column" : undefined,
+                    gap: isMobile ? 6 : 0,
+                    padding: isMobile ? "14px 16px" : "12px 16px",
+                    cursor: "pointer",
+                    transition: "background 0.12s",
+                    background: isEditing ? COLORS.surface2 : "transparent",
+                  }}
+                  onMouseEnter={e => { if (!isEditing) e.currentTarget.style.background = COLORS.surface2; }}
+                  onMouseLeave={e => { if (!isEditing) e.currentTarget.style.background = "transparent"; }}
+                >
+                  {/* Name + contact person */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2, justifyContent: "center", minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.name}</div>
+                    {lead.contact && <div style={{ fontSize: 11, color: COLORS.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.contact}</div>}
+                  </div>
+
+                  {isMobile ? (
+                    <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: tagColor, background: tagColor + "22", border: `1px solid ${tagColor}44`, borderRadius: 20, padding: "2px 7px" }}>{lead.tag}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: tierColor, background: tierColor + "22", borderRadius: 20, padding: "2px 7px" }}>{lead.tier}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: stage.color, background: stage.color + "22", border: `1px solid ${stage.color}44`, borderRadius: 20, padding: "2px 7px" }}>{stage.label}</span>
+                      {lead.instagram && <span style={{ fontSize: 11, color: COLORS.text2 }}>{lead.instagram.startsWith("@") ? lead.instagram : `@${lead.instagram}`}</span>}
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: tagColor, background: tagColor + "22", border: `1px solid ${tagColor}44`, borderRadius: 20, padding: "3px 8px" }}>{lead.tag}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: tierColor }}>{lead.tier}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: stage.color, background: stage.color + "18", border: `1px solid ${stage.color}33`, borderRadius: 20, padding: "3px 8px" }}>{stage.label}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                        {lead.instagram
+                          ? <span style={{ fontSize: 11, color: COLORS.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.instagram.startsWith("@") ? lead.instagram : `@${lead.instagram}`}</span>
+                          : lead.contact && lead.contact.includes("@")
+                            ? <span style={{ fontSize: 11, color: COLORS.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.contact}</span>
+                            : <span style={{ fontSize: 11, color: COLORS.textMuted }}>—</span>}
+                      </div>
+                      {/* Edit / Pipeline buttons */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+                        <button onClick={e => { e.stopPropagation(); isEditing ? closeEdit() : openEdit(lead); }}
+                          style={{ padding: "3px 8px", background: isEditing ? "transparent" : COLORS.purpleBg, border: `1px solid ${isEditing ? COLORS.border : COLORS.purpleDim}`, borderRadius: 6, color: isEditing ? COLORS.textMuted : COLORS.purpleLight, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>
+                          {isEditing ? "Cancel" : "Edit"}
+                        </button>
+                        {!isEditing && (
+                          <button onClick={e => { e.stopPropagation(); onOpenLead(lead); }}
+                            style={{ padding: "3px 8px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textMuted, fontSize: 10, cursor: "pointer" }}>
+                            ›
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                {isMobile ? (
-                  /* Mobile: single row of badges + contact info */
-                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: tagColor, background: tagColor + "22", border: `1px solid ${tagColor}44`, borderRadius: 20, padding: "2px 7px" }}>{lead.tag}</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: tierColor, background: tierColor + "22", borderRadius: 20, padding: "2px 7px" }}>{lead.tier}</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: stage.color, background: stage.color + "22", border: `1px solid ${stage.color}44`, borderRadius: 20, padding: "2px 7px" }}>{stage.label}</span>
-                    {lead.instagram && <span style={{ fontSize: 11, color: COLORS.text2 }}>{lead.instagram.startsWith("@") ? lead.instagram : `@${lead.instagram}`}</span>}
+                {/* ── Inline edit panel ── */}
+                {isEditing && (
+                  <div style={{ padding: "14px 16px 18px", background: COLORS.bg, borderTop: `1px solid ${COLORS.border}` }}>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Venue / Name</div>
+                        {rowInput("name", "Venue or event name")}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Contact / Email</div>
+                        {rowInput("contact", "booking@venue.com")}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Instagram</div>
+                        {rowInput("instagram", "@handle")}
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Tag</div>
+                          <select value={editForm.tag} onChange={e => setEditForm(f => ({ ...f, tag: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, outline: "none", cursor: "pointer" }}>
+                            {customTags.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Tier</div>
+                          <select value={editForm.tier} onChange={e => setEditForm(f => ({ ...f, tier: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, outline: "none", cursor: "pointer" }}>
+                            {["A1","A2","A3"].map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div style={{ gridColumn: isMobile ? undefined : "1 / -1" }}>
+                        <div style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Notes</div>
+                        <textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} placeholder="Any notes…"
+                          style={{ width: "100%", padding: "7px 10px", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", resize: "vertical" }}
+                          onFocus={e => e.target.style.borderColor = COLORS.purple} onBlur={e => e.target.style.borderColor = COLORS.border} />
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={saveEdit} disabled={saving}
+                        style={{ padding: "8px 20px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer" }}>
+                        {saving ? "Saving…" : "Save"}
+                      </button>
+                      <button onClick={() => onOpenLead(lead)}
+                        style={{ padding: "8px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textSecondary, fontSize: 12, cursor: "pointer" }}>
+                        Open in Pipeline →
+                      </button>
+                      <button onClick={closeEdit}
+                        style={{ padding: "8px 14px", background: "transparent", border: "none", color: COLORS.textMuted, fontSize: 12, cursor: "pointer" }}>
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <>
-                    {/* Tag */}
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: tagColor, background: tagColor + "22", border: `1px solid ${tagColor}44`, borderRadius: 20, padding: "3px 8px" }}>{lead.tag}</span>
-                    </div>
-                    {/* Tier */}
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: tierColor }}>{lead.tier}</span>
-                    </div>
-                    {/* Stage */}
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: stage.color, background: stage.color + "18", border: `1px solid ${stage.color}33`, borderRadius: 20, padding: "3px 8px" }}>{stage.label}</span>
-                    </div>
-                    {/* Instagram / contact email */}
-                    <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
-                      {lead.instagram
-                        ? <span style={{ fontSize: 11, color: COLORS.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.instagram.startsWith("@") ? lead.instagram : `@${lead.instagram}`}</span>
-                        : lead.contact && lead.contact.includes("@")
-                          ? <span style={{ fontSize: 11, color: COLORS.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.contact}</span>
-                          : <span style={{ fontSize: 11, color: COLORS.textMuted }}>—</span>}
-                    </div>
-                    {/* Chevron */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", color: COLORS.textMuted, fontSize: 12 }}>›</div>
-                  </>
                 )}
               </div>
             );
@@ -7526,7 +7645,7 @@ const activeLeads = leads.filter(l => !l.archived);
     { id: "dashboard", label: "Dashboard",  icon: "▣",  group: "main" },
     { id: "analytics", label: "Analytics", icon: "📊", group: "main" },
     { id: "pipeline",  label: "Pipeline",   icon: "⬛", group: "main" },
-    { id: "contacts",  label: "Contacts",   icon: "◎", group: "main" },
+    { id: "contacts",  label: "Contacts",   group: "main" },
     { id: "followups", label: "Follow-ups", icon: "⏰", badge: dueCount, group: "main" },
     { id: "bookingdesk",  label: "Reply Hub",  icon: "✉",  badge: unreadCount, group: "main" },
     { id: "calendar",  label: "Calendar",   icon: "📅", group: "main" },
@@ -7777,13 +7896,13 @@ const activeLeads = leads.filter(l => !l.archived);
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
-                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} />
+                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
                 </div>
               )}
-              {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} />}
+              {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />}
             </>
           )}
-          {activeTab === "contacts"  && <ContactsView leads={leads} TAG_COLORS={TAG_COLORS} isMobile={isMobile} onOpenLead={(lead) => { setSelectedLead(lead); setActiveTab("pipeline"); }} />}
+          {activeTab === "contacts"  && <ContactsView leads={leads} TAG_COLORS={TAG_COLORS} isMobile={isMobile} customTags={customTags} supabase={supabase} userId={user.id} onUpdateLead={lead => setLeads(p => p.map(l => l.id === lead.id ? lead : l))} onOpenLead={(lead) => { setSelectedLead(lead); setActiveTab("pipeline"); }} />}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} onOpenLead={(lead) => { setSelectedLead(lead); setActiveTab("pipeline"); }} />}
           {activeTab === "outreach"  && <OutreachView isPro={isPro} onUpgradeClick={requestUpgrade} supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}

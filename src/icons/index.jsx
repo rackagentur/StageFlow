@@ -280,11 +280,23 @@ export function IconWhatsApp({ size = defaults.size, color = defaults.color, str
   );
 }
 
+export function IconContacts({ size = defaults.size, color = defaults.color, strokeWidth = defaults.strokeWidth }) {
+  return (
+    <Icon size={size} color={color} strokeWidth={strokeWidth}>
+      <circle cx="9" cy="7" r="3.5" />
+      <path d="M2 20c0-3.866 3.134-7 7-7s7 3.134 7 7" />
+      <line x1="19" y1="8" x2="19" y2="14" />
+      <line x1="22" y1="11" x2="16" y2="11" />
+    </Icon>
+  );
+}
+
 // Map from tab id → icon component (for use in nav)
 export const TAB_ICONS = {
   dashboard:   IconDashboard,
   analytics:   IconAnalytics,
   pipeline:    IconPipeline,
+  contacts:    IconContacts,
   followups:   IconFollowUps,
   bookingdesk: IconReplyHub,
   calendar:    IconCalendar,
