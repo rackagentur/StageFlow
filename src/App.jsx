@@ -6793,6 +6793,7 @@ function NoxReachApp({ user, session, supabase }) {
   const [dataLoading, setDataLoading]   = useState(true);
   const [settings, setSettings]         = useState(() => loadSettings());
   const [isPro, setIsPro]               = useState(() => loadIsPro(user.id));
+  const [isAdmin, setIsAdmin]           = useState(false);
   const [adminUsers, setAdminUsers]     = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedUserLeads, setSelectedUserLeads] = useState([]);
@@ -6840,10 +6841,11 @@ function NoxReachApp({ user, session, supabase }) {
     // Try to apply a referral-based PRO upgrade first (no-op if not eligible)
     supabase.rpc("apply_referral_pro_upgrade", { p_user_id: user.id }).then(() => {
       // Then read the (possibly just-updated) pro status
-      supabase.from("profiles").select("is_pro, pro_expires_at").eq("id", user.id).single()
+      supabase.from("profiles").select("is_pro, pro_expires_at, is_admin").eq("id", user.id).single()
         .then(function(r) {
           const data = r["data"];
           if (!data) return;
+          if (data.is_admin) setIsAdmin(true);
           const trialActive = data.pro_expires_at && new Date(data.pro_expires_at) > new Date();
           const isPaid = data.is_pro;
           const returningFromStripe = new URLSearchParams(window.location.search).get("upgraded") === "true";
@@ -6893,8 +6895,6 @@ function NoxReachApp({ user, session, supabase }) {
   useEffect(() => {
     loadData();
   }, [user?.id]);
-
-  const isAdmin = (session?.user?.email || user?.email) === "info@soundofgeez.com";
 
 const loadAdminUsers = async () => {
     if (!isAdmin) return;
