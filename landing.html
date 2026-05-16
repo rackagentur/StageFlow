@@ -209,6 +209,87 @@
     .hp-card.booked { border-color: rgba(34,197,94,0.3); }
 
     /* ═══════════════════════════════
+       CITIES MARQUEE STRIP
+    ═══════════════════════════════ */
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    .cities-strip {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+      height: 44px;
+    }
+    .cities-label {
+      flex-shrink: 0;
+      padding: 0 20px 0 28px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text3);
+      border-right: 1px solid var(--border);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+    .cities-track-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .cities-track-wrap::before,
+    .cities-track-wrap::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 40px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .cities-track-wrap::before {
+      left: 0;
+      background: linear-gradient(to right, var(--surface), transparent);
+    }
+    .cities-track-wrap::after {
+      right: 0;
+      background: linear-gradient(to left, var(--surface), transparent);
+    }
+    .cities-track {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: max-content;
+      animation: marquee 28s linear infinite;
+    }
+    .cities-track:hover { animation-play-state: paused; }
+    .city-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      padding: 0 14px;
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+    .city-pill:hover { color: var(--text); }
+    .city-flag { font-size: 14px; line-height: 1; }
+    .city-sep {
+      color: var(--text3);
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════
        SOCIAL PROOF STRIP — NEW
     ═══════════════════════════════ */
     .proof-strip {
@@ -711,6 +792,66 @@
     </div>
   </div>
 </section>
+
+<!-- ══════════════════════════════════
+     CITIES MARQUEE STRIP
+══════════════════════════════════ -->
+<div class="cities-strip">
+  <div class="cities-label">DJs active in</div>
+  <div class="cities-track-wrap">
+    <div class="cities-track">
+      <span class="city-pill"><span class="city-flag">🇩🇪</span> Berlin</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇳🇱</span> Amsterdam</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇬🇧</span> London</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇪🇸</span> Barcelona</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇦🇹</span> Vienna</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇵🇹</span> Lisbon</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇫🇷</span> Paris</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇧🇪</span> Brussels</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇨🇭</span> Zürich</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇩🇪</span> Cologne</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇮🇹</span> Milan</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇺🇸</span> New York</span>
+      <span class="city-sep">·</span>
+      <!-- duplicate for seamless loop -->
+      <span class="city-pill"><span class="city-flag">🇩🇪</span> Berlin</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇳🇱</span> Amsterdam</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇬🇧</span> London</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇪🇸</span> Barcelona</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇦🇹</span> Vienna</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇵🇹</span> Lisbon</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇫🇷</span> Paris</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇧🇪</span> Brussels</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇨🇭</span> Zürich</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇩🇪</span> Cologne</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇮🇹</span> Milan</span>
+      <span class="city-sep">·</span>
+      <span class="city-pill"><span class="city-flag">🇺🇸</span> New York</span>
+      <span class="city-sep">·</span>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════
      FOUNDER IDENTITY SECTION
