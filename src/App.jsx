@@ -3541,11 +3541,11 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   // Email connections
   const [gmailConnection, setGmailConnection] = useState(null);
   const [gmailConnecting, setGmailConnecting] = useState(false);
-  const [smtpConnection, setSmtpConnection] = useState(null);
-  const [smtpConnecting, setSmtpConnecting] = useState(false);
-  const [smtpForm, setSmtpForm] = useState({ email: "", password: "", smtp_host: "smtp.ionos.com", smtp_port: "587" });
-  const [smtpFormOpen, setSmtpFormOpen] = useState(false);
-  const [smtpError, setSmtpError] = useState("");
+  const [resendConnection, setResendConnection] = useState(null);
+  const [resendConnecting, setResendConnecting] = useState(false);
+  const [resendForm, setResendForm] = useState({ email: "", from_name: "" });
+  const [resendFormOpen, setResendFormOpen] = useState(false);
+  const [resendError, setResendError] = useState("");
 
   useEffect(() => {
     if (!user?.id || !supabase) return;
@@ -3562,8 +3562,8 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         if (data) {
           const gmail = data.find(c => c.provider === "gmail");
           if (gmail) setGmailConnection(gmail);
-          const smtp = data.find(c => c.provider === "smtp");
-          if (smtp) setSmtpConnection(smtp);
+          const resend = data.find(c => c.provider === "resend");
+          if (resend) setResendConnection(resend);
         }
       });
   }, [user?.id]);
@@ -3614,42 +3614,29 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     setGmailConnection(null);
   };
 
-  const connectSmtp = async () => {
-    setSmtpError("");
-    setSmtpConnecting(true);
+  const connectResend = async () => {
+    setResendError("");
+    if (!resendForm.email || !resendForm.email.includes("@")) { setResendError("Enter a valid email address"); return; }
+    setResendConnecting(true);
     try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/smtp-verify`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: smtpForm.email,
-          password: smtpForm.password,
-          smtp_host: smtpForm.smtp_host,
-          smtp_port: parseInt(smtpForm.smtp_port, 10),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setSmtpError(data.error || "Connection failed"); }
-      else {
-        setSmtpConnection({ email: smtpForm.email });
-        setSmtpFormOpen(false);
-        setSmtpForm(f => ({ ...f, password: "" }));
-      }
-    } catch (e) { setSmtpError("Network error"); }
-    setSmtpConnecting(false);
+      const { error } = await supabase.from("email_connections").upsert({
+        user_id:      user.id,
+        provider:     "resend",
+        email:        resendForm.email,
+        access_token: "resend",
+        metadata:     { from_name: resendForm.from_name || null },
+      }, { onConflict: "user_id,provider" });
+      if (error) throw error;
+      setResendConnection({ email: resendForm.email, metadata: { from_name: resendForm.from_name } });
+      setResendFormOpen(false);
+    } catch (e) { setResendError("Failed to save. Try again."); }
+    setResendConnecting(false);
   };
 
-  const disconnectSmtp = async () => {
-    const session = await supabase.auth.getSession();
-    const token = session.data.session?.access_token;
-    await fetch(
-      `${supabase.supabaseUrl}/rest/v1/email_connections?user_id=eq.${user.id}&provider=eq.smtp`,
-      { method: "DELETE", headers: { Authorization: `Bearer ${token}`, apikey: supabase.supabaseKey } }
-    );
-    setSmtpConnection(null);
-    setSmtpFormOpen(false);
+  const disconnectResend = async () => {
+    await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "resend");
+    setResendConnection(null);
+    setResendFormOpen(false);
   };
 
   const set = key => val => setLocal(s => ({ ...s, [key]: val }));
@@ -3909,61 +3896,54 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
             )}
           </div>
 
-          {/* SMTP / Custom inbox */}
+          {/* Resend / Custom domain */}
           <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Custom SMTP</div>
-                  {smtpConnection
-                    ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {smtpConnection.email}</div>
-                    : <div style={{ fontSize: 12, color: COLORS.textMuted }}>IONOS, Zoho, any SMTP inbox</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Custom Domain Email</div>
+                  {resendConnection
+                    ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {resendConnection.email}</div>
+                    : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send from your own domain (e.g. info@yourdomain.com)</div>
                   }
                 </div>
               </div>
-              {smtpConnection ? (
+              {resendConnection ? (
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                    Update
+                  <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); setResendForm({ email: resendConnection.email, from_name: resendConnection.metadata?.from_name || "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                    Edit
                   </button>
-                  <button onClick={disconnectSmtp} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  <button onClick={disconnectResend} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                     Disconnect
                   </button>
                 </div>
               ) : (
-                <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                   Connect
                 </button>
               )}
             </div>
-            {smtpFormOpen && (
+            {resendFormOpen && (
               <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Email address</div>
-                    <input value={smtpForm.email} onChange={e => setSmtpForm(f => ({ ...f, email: e.target.value }))} placeholder="info@yourdomain.com" style={{ ...INPUT.base, fontSize: 12 }} />
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
+                    <input value={resendForm.email} onChange={e => setResendForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} />
                   </div>
                   <div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Password</div>
-                    <input type="password" value={smtpForm.password} onChange={e => setSmtpForm(f => ({ ...f, password: e.target.value }))} placeholder="Email password" style={{ ...INPUT.base, fontSize: 12 }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>SMTP Host</div>
-                    <input value={smtpForm.smtp_host} onChange={e => setSmtpForm(f => ({ ...f, smtp_host: e.target.value }))} placeholder="smtp.ionos.com" style={{ ...INPUT.base, fontSize: 12 }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Port</div>
-                    <input value={smtpForm.smtp_port} onChange={e => setSmtpForm(f => ({ ...f, smtp_port: e.target.value }))} placeholder="587" style={{ ...INPUT.base, fontSize: 12 }} />
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
+                    <input value={resendForm.from_name} onChange={e => setResendForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
                   </div>
                 </div>
-                {smtpError && <div style={{ fontSize: 12, color: "#ef4444" }}>{smtpError}</div>}
+                <div style={{ fontSize: 11, color: COLORS.textMuted }}>Your domain must be verified in Resend for sending to work.</div>
+                {resendError && <div style={{ fontSize: 12, color: "#ef4444" }}>{resendError}</div>}
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button onClick={() => { setSmtpFormOpen(false); setSmtpError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
-                  <button onClick={connectSmtp} disabled={smtpConnecting || !smtpForm.email || !smtpForm.password} style={{ ...BTN.primary, ...BTN.sm, opacity: smtpConnecting ? 0.6 : 1 }}>
-                    {smtpConnecting ? "Testing…" : "Test & Connect"}
+                  <button onClick={() => { setResendFormOpen(false); setResendError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
+                  <button onClick={connectResend} disabled={resendConnecting || !resendForm.email} style={{ ...BTN.primary, ...BTN.sm, opacity: resendConnecting ? 0.6 : 1 }}>
+                    {resendConnecting ? "Saving…" : "Save"}
                   </button>
                 </div>
               </div>
