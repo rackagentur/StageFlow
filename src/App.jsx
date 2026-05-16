@@ -714,7 +714,7 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
             {[
               { id: "target",    label: "Target",    color: COLORS.text3,   stages: ["target"] },
               { id: "contacted", label: "Contacted", color: COLORS.purple,  stages: ["contacted"] },
-              { id: "followup",  label: "Follow-up", color: COLORS.purple,  stages: ["followup1","followup2"] },
+              { id: "followup",  label: "Follow-up", color: COLORS.purpleLight, stages: ["followup1","followup2"] },
               { id: "replied",   label: "Replied",   color: COLORS.violetLight, stages: ["replied"] },
               { id: "booked",    label: "Booked",    color: COLORS.green,   stages: ["booked"] },
             ].map(s => (
@@ -841,8 +841,8 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
   const STAGE_COLORS = {
     target:    "#444444",
     contacted: COLORS.purple,
-    followup1: COLORS.purple,
-    followup2: COLORS.purple,
+    followup1: COLORS.purpleLight,
+    followup2: COLORS.purpleLight,
     replied:   COLORS.violetLight,
     booked:    COLORS.green,
   };
@@ -880,14 +880,14 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
         lead.archived                     ? COLORS.purpleDim :
         isOverdue                         ? COLORS.amber :
         lead.stage === "replied"          ? COLORS.violetLight :
-        lead.stage === "followup1" || lead.stage === "followup2" ? COLORS.purple :
+        lead.stage === "followup1" || lead.stage === "followup2" ? COLORS.purpleLight :
         lead.stage === "contacted"        ? "rgba(255,255,255,0.22)" :
         "rgba(124,58,237,0.22)"
       }`,
       borderLeft: (isBulkSelected || isSelected) ? undefined :
         lead.stage === "booked"    && !lead.archived ? "3px solid rgba(34,197,94,0.6)" :
         lead.stage === "replied"   && !lead.archived ? `3px solid ${COLORS.violetLight}` :
-        (lead.stage === "followup1" || lead.stage === "followup2") && !lead.archived ? `3px solid ${COLORS.purple}` :
+        (lead.stage === "followup1" || lead.stage === "followup2") && !lead.archived ? `3px solid ${COLORS.purpleLight}` :
         lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" :
         lead.stage === "target"    && !lead.archived ? `3px solid ${COLORS.text3}` :
         undefined,
@@ -973,7 +973,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           </button>
           <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, minWidth: 0 }}>{highlight(lead.name)}</div>
         </div>
-        {lead.stage === "followup1" && <Badge color={COLORS.purple}>F1</Badge>}
+        {lead.stage === "followup1" && <Badge color={COLORS.purpleLight}>F1</Badge>}
         {lead.stage === "followup2" && <Badge color={COLORS.amber}>F2</Badge>}
         <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
       </div>
@@ -1121,7 +1121,7 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
           {[
             { id: "target",    label: "Target",    color: COLORS.text3,  stages: ["target"] },
             { id: "contacted", label: "Contacted", color: COLORS.purple, stages: ["contacted"] },
-            { id: "followup",  label: "Follow-up", color: COLORS.purple, stages: ["followup1","followup2"] },
+            { id: "followup",  label: "Follow-up", color: COLORS.purpleLight, stages: ["followup1","followup2"] },
             { id: "replied",   label: "Replied",   color: COLORS.violetLight, stages: ["replied"] },
             { id: "booked",    label: "Booked",    color: COLORS.green,  stages: ["booked"] },
           ].map(col => {
