@@ -3522,7 +3522,7 @@ function GenreRow({ tag, color, onRemove, onSetColor }) {
   );
 }
 
-function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, defaultTags, onAddTag, onRemoveTag, TAG_COLORS, onSetTagColor, supabase, user }) {
+function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, defaultTags, onAddTag, onRemoveTag, TAG_COLORS, onSetTagColor, supabase, user, onDisplayNameChange }) {
   const [local, setLocal] = useState({ ...settings });
   const [saved,  setSaved]  = useState(false);
   const [username, setUsername] = useState("");
@@ -3565,6 +3565,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     await supabase.from("profiles").upsert({ id: user.id, display_name: displayName.trim(), username });
     setDisplayNameSaved(true);
     setTimeout(() => setDisplayNameSaved(false), 2000);
+    if (onDisplayNameChange) onDisplayNameChange(displayName.trim());
   };
 
   const set = key => val => setLocal(s => ({ ...s, [key]: val }));
@@ -7115,8 +7116,10 @@ function OutreachMethodModal({ lead, onClose, onSelect, templates }) {
 
 function NoxReachApp({ user, session, supabase }) {
   const userEmail = user?.email || "";
-  const userName  = user?.user_metadata?.full_name || userEmail.split("@")[0] || "DJ";
   const isMobile  = useIsMobile();
+  // display_name from profiles takes priority over auth full_name
+  const [profileDisplayName, setProfileDisplayName] = useState("");
+  const userName = profileDisplayName || user?.user_metadata?.full_name || userEmail.split("@")[0] || "DJ";
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -7207,11 +7210,12 @@ function NoxReachApp({ user, session, supabase }) {
     // Try to apply a referral-based PRO upgrade first (no-op if not eligible)
     supabase.rpc("apply_referral_pro_upgrade", { p_user_id: user.id }).then(() => {
       // Then read the (possibly just-updated) pro status
-      supabase.from("profiles").select("is_pro, pro_expires_at, is_admin").eq("id", user.id).single()
+      supabase.from("profiles").select("is_pro, pro_expires_at, is_admin, display_name").eq("id", user.id).single()
         .then(function(r) {
           const data = r["data"];
           if (!data) return;
           if (data.is_admin) setIsAdmin(true);
+          if (data.display_name) setProfileDisplayName(data.display_name);
           const trialActive = data.pro_expires_at && new Date(data.pro_expires_at) > new Date();
           const isPaid = data.is_pro;
           const returningFromStripe = new URLSearchParams(window.location.search).get("upgraded") === "true";
@@ -7935,7 +7939,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} isMobile={isMobile} />}
-          {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} />}
+          {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} onDisplayNameChange={name => setProfileDisplayName(name)} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
             <div>
