@@ -580,10 +580,72 @@
        FAQ — improved with real questions
     ═══════════════════════════════ */
     .faq { background: var(--bg); }
-    .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-top: 48px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--border); }
-    .faq-item { background: var(--surface); padding: 28px 32px; }
-    .faq-q { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
-    .faq-a { font-size: 13px; color: var(--text2); line-height: 1.75; }
+    .faq-list { max-width: 720px; margin: 48px auto 0; display: flex; flex-direction: column; gap: 0; }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-item:first-child { border-top: 1px solid var(--border); }
+
+    .faq-btn {
+      width: 100%;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 4px;
+      text-align: left;
+      color: var(--text);
+    }
+    .faq-btn:hover .faq-q { color: var(--cyan); }
+
+    .faq-q {
+      font-size: 15px;
+      font-weight: 600;
+      transition: color 0.2s;
+      flex: 1;
+    }
+
+    .faq-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 16px;
+      line-height: 1;
+      color: var(--text2);
+      transition: border-color 0.2s, color 0.2s, transform 0.3s;
+    }
+    .faq-item.open .faq-icon {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      transform: rotate(45deg);
+    }
+
+    .faq-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s ease;
+    }
+    .faq-item.open .faq-body {
+      grid-template-rows: 1fr;
+    }
+    .faq-body-inner {
+      overflow: hidden;
+    }
+    .faq-a {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.8;
+      padding: 0 4px 22px;
+    }
 
     /* ═══════════════════════════════
        FINAL CTA — contextual copy
@@ -631,7 +693,7 @@
       .trust-inner { grid-template-columns: 1fr; gap: 28px; }
       .trust-item { border-right: none; padding: 0; }
       .testimonials { grid-template-columns: 1fr; }
-      .problem-grid, .steps, .faq-grid { grid-template-columns: 1fr; }
+      .problem-grid, .steps { grid-template-columns: 1fr; }
       .followup-inner { grid-template-columns: 1fr; }
       .fu-mock { display: none; }
       .feat-grid { grid-template-columns: 1fr 1fr; }
@@ -1621,31 +1683,80 @@
   <div class="wrap">
     <div class="sec-label">FAQ</div>
     <h2 class="sec-title">Questions DJs ask<br>before they start.</h2>
-    <div class="faq-grid fade-up">
-      <div class="faq-item">
-        <div class="faq-q">Is NoxReach actually live and being used?</div>
-        <div class="faq-a">Yes — NoxReach is a live product used by DJs across Tech-House, Circuit, and Disco scenes. It's actively developed with updates based on real user feedback. You can sign up and start using it today.</div>
+    <div class="faq-list fade-up">
+
+      <div class="faq-item open">
+        <button class="faq-btn" aria-expanded="true">
+          <span class="faq-q">Is NoxReach actually live and being used?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            <p class="faq-a">Yes — NoxReach is a live product used by DJs across Tech-House, Circuit, and Disco scenes. It's actively developed with updates based on real user feedback. You can sign up and start using it today.</p>
+          </div>
+        </div>
       </div>
+
       <div class="faq-item">
-        <div class="faq-q">How is this different from a spreadsheet or Notion?</div>
-        <div class="faq-a">Spreadsheets and Notion don't tell you what to do next. NoxReach surfaces due follow-ups automatically, tracks lead stages, and gives you a daily view of who needs contact. It's a system, not just a database.</div>
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">How is this different from a spreadsheet or Notion?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            <p class="faq-a">Spreadsheets and Notion don't tell you what to do next. NoxReach surfaces due follow-ups automatically, tracks lead stages, and gives you a daily view of who needs contact. It's a system, not just a database.</p>
+          </div>
+        </div>
       </div>
+
       <div class="faq-item">
-        <div class="faq-q">What happens to my data if I cancel?</div>
-        <div class="faq-a">Your data stays intact. On the free plan everything remains accessible. On paid plans, premium tools become unavailable after your term ends, but your leads and history are not deleted.</div>
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">What happens to my data if I cancel?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            <p class="faq-a">Your data stays intact. On the free plan everything remains accessible. On paid plans, premium tools become unavailable after your term ends, but your leads and history are not deleted.</p>
+          </div>
+        </div>
       </div>
+
       <div class="faq-item">
-        <div class="faq-q">Do I need a credit card to start?</div>
-        <div class="faq-a">No credit card required for the free plan. If you choose a paid plan, billing starts when you upgrade — not before. Cancel anytime from your account settings.</div>
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">Do I need a credit card to start?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            <p class="faq-a">No credit card required for the free plan. If you choose a paid plan, billing starts when you upgrade — not before. Cancel anytime from your account settings.</p>
+          </div>
+        </div>
       </div>
+
       <div class="faq-item">
-        <div class="faq-q">Is the free plan actually enough to try it?</div>
-        <div class="faq-a">Yes. The free plan gives you enough leads to run your first 2–3 outreach campaigns and experience exactly how the pipeline and follow-up system work. Most DJs who try it upgrade within their first month.</div>
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">Is the free plan actually enough to try it?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            <p class="faq-a">Yes. The free plan gives you enough leads to run your first 2–3 outreach campaigns and experience exactly how the pipeline and follow-up system work. Most DJs who try it upgrade within their first month.</p>
+          </div>
+        </div>
       </div>
+
       <div class="faq-item">
-        <div class="faq-q">Which plan is right for me?</div>
-        <div class="faq-a">Choose <strong>Free</strong> to get organised and test the workflow. Choose <strong>Pro</strong> if you're actively booking and need automated follow-ups and unlimited leads. Choose <strong>Team</strong> if you manage outreach with a booking partner.</div>
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">Which plan is right for me?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <div class="faq-body-inner">
+            <p class="faq-a">Choose <strong>Free</strong> to get organised and test the workflow. Choose <strong>Pro</strong> if you're actively booking and need automated follow-ups and unlimited leads. Choose <strong>Team</strong> if you manage outreach with a booking partner.</p>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
 </section>
@@ -1711,6 +1822,24 @@
       else { btn.style.border='1px solid #1c1c2e'; btn.style.background='transparent'; btn.style.color='#9090a8'; }
     });
   }
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const item = btn.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      // close all
+      document.querySelectorAll('.faq-item.open').forEach(function(el) {
+        el.classList.remove('open');
+        el.querySelector('.faq-btn').setAttribute('aria-expanded', 'false');
+      });
+      // open clicked if it was closed
+      if (!isOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
 
   let yearly = false;
   function toggleBilling() {
