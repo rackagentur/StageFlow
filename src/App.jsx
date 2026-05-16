@@ -3538,6 +3538,10 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   const [referralCopied, setReferralCopied] = useState(false);
   const [bookingLinkCopied, setBookingLinkCopied] = useState(false);
 
+  // Email connections
+  const [gmailConnection, setGmailConnection] = useState(null);
+  const [gmailConnecting, setGmailConnecting] = useState(false);
+
   useEffect(() => {
     if (!user?.id || !supabase) return;
     supabase.from("profiles").select("username, display_name, referral_code, referral_count").eq("id", user.id).single()
@@ -3546,6 +3550,14 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         if (data?.display_name) setDisplayName(data.display_name);
         if (data?.referral_code) setReferralCode(data.referral_code);
         if (data?.referral_count) setReferralCount(data.referral_count);
+      });
+    // Load email connections
+    supabase.from("email_connections").select("provider, email, updated_at").eq("user_id", user.id)
+      .then(({ data }) => {
+        if (data) {
+          const gmail = data.find(c => c.provider === "gmail");
+          if (gmail) setGmailConnection(gmail);
+        }
       });
   }, [user?.id]);
 
@@ -3566,6 +3578,33 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     setDisplayNameSaved(true);
     setTimeout(() => setDisplayNameSaved(false), 2000);
     if (onDisplayNameChange) onDisplayNameChange(displayName.trim());
+  };
+
+  const connectGmail = async () => {
+    setGmailConnecting(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/gmail-oauth?action=url&user_id=${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { url } = await res.json();
+      if (url) window.open(url, "_blank", "width=500,height=650");
+    } catch (e) {
+      console.error("Gmail connect error:", e);
+    }
+    setGmailConnecting(false);
+  };
+
+  const disconnectGmail = async () => {
+    const session = await supabase.auth.getSession();
+    const token = session.data.session?.access_token;
+    await fetch(`${supabase.supabaseUrl}/functions/v1/gmail-oauth`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setGmailConnection(null);
   };
 
   const set = key => val => setLocal(s => ({ ...s, [key]: val }));
@@ -3793,6 +3832,51 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
           )}
           {!isDirty && !saved && <span style={{ fontSize: 11, color: COLORS.textMuted }}>No unsaved changes</span>}
           {saved && <span style={{ fontSize: 11, color: COLORS.green }}>Changes applied to all future reminders</span>}
+        </div>
+
+        {/* Email Connections */}
+        <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${COLORS.border}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Email Integration</div>
+          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Connect your inbox to send emails directly from NoxReach and auto-detect replies.</div>
+
+          {/* Gmail */}
+          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#EA4335" d="M6 18V8.4L2 5.6V18c0 1.1.9 2 2 2h2z"/><path fill="#34A853" d="M18 18V8.4l4-2.8V18c0 1.1-.9 2-2 2h-2z"/><path fill="#4285F4" d="M18 4H6L2 6.8 12 14l10-7.2L18 4z"/><path fill="#FBBC04" d="M2 6.8V5.6C2 4.72 2.72 4 3.6 4h.4L2 6.8z"/><path fill="#EA4335" d="M22 5.6v1.2L18 4h.4c.88 0 1.6.72 1.6 1.6v0z"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Gmail</div>
+                {gmailConnection
+                  ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {gmailConnection.email}</div>
+                  : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Not connected</div>
+                }
+              </div>
+            </div>
+            {gmailConnection ? (
+              <button onClick={disconnectGmail} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                Disconnect
+              </button>
+            ) : (
+              <button onClick={connectGmail} disabled={gmailConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: gmailConnecting ? 0.6 : 1 }}>
+                {gmailConnecting ? "Opening…" : "Connect Gmail"}
+              </button>
+            )}
+          </div>
+
+          {/* Outlook — coming soon */}
+          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginTop: 10, opacity: 0.5 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#0078D4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Outlook / Microsoft 365</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted }}>Coming soon</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: COLORS.textMuted, background: COLORS.border, borderRadius: 6, padding: "4px 10px", fontWeight: 600 }}>SOON</div>
+          </div>
         </div>
 
         {/* Danger Zone */}
@@ -7184,8 +7268,22 @@ function NoxReachApp({ user, session, supabase }) {
 
   useEffect(function() {
     if (!user) return;
-    // Check if returning from Stripe checkout
     const params = new URLSearchParams(window.location.search);
+
+    // Returning from Gmail OAuth
+    if (params.get("gmail_connected") === "1") {
+      window.history.replaceState({}, "", window.location.pathname);
+      setActiveTab("settings");
+      showToast("Gmail connected successfully!", "success");
+      // SettingsView reloads email_connections on mount — no action needed here
+    }
+    if (params.get("gmail_error")) {
+      window.history.replaceState({}, "", window.location.pathname);
+      setActiveTab("settings");
+      showToast(`Gmail connection failed: ${params.get("gmail_error")}`, "error");
+    }
+
+    // Check if returning from Stripe checkout
     const fromStripe = params.get("upgraded") === "true";
     if (fromStripe) {
       window.history.replaceState({}, "", window.location.pathname);
