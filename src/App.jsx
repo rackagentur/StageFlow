@@ -331,6 +331,15 @@ function AuthGate({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Track login count for PWA install prompt — once per browser session
+  useEffect(() => {
+    if (!user) return;
+    if (sessionStorage.getItem('noxreach_session_counted')) return;
+    const prev = parseInt(localStorage.getItem('noxreach_login_count') || '0', 10);
+    localStorage.setItem('noxreach_login_count', String(prev + 1));
+    sessionStorage.setItem('noxreach_session_counted', 'true');
+  }, [user]);
+
   // Loading state
   if (session === undefined) {
     return (
@@ -7982,6 +7991,128 @@ function PublicGigList({ supabase }) {
   );
 }
 
+// ── PWA Install Prompt ────────────────────────────────────────────────────────
+function InstallPrompt() {
+  const [visible,        setVisible]        = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showIOSGuide,   setShowIOSGuide]   = useState(false);
+  const [fadeOut,        setFadeOut]        = useState(false);
+
+  const isIOS       = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window).MSStream;
+  const isInstalled = window.matchMedia('(display-mode: standalone)').matches || (navigator).standalone === true;
+  const isMobile    = window.innerWidth < 640;
+
+  useEffect(() => {
+    if (isInstalled) return;
+    if (localStorage.getItem('noxreach_prompt_dismissed')) return;
+    const count = parseInt(localStorage.getItem('noxreach_login_count') || '0', 10);
+    if (count < 3) return;
+
+    // Capture Android install event
+    const onBeforeInstall = (e) => { e.preventDefault(); setDeferredPrompt(e); };
+    window.addEventListener('beforeinstallprompt', onBeforeInstall);
+
+    // Show after a short delay so it doesn't clash with app load
+    const t = setTimeout(() => setVisible(true), 2500);
+    return () => { window.removeEventListener('beforeinstallprompt', onBeforeInstall); clearTimeout(t); };
+  }, []);
+
+  const dismiss = () => {
+    setFadeOut(true);
+    localStorage.setItem('noxreach_prompt_dismissed', 'true');
+    setTimeout(() => setVisible(false), 300);
+  };
+
+  const handleInstall = async () => {
+    if (isIOS) { setShowIOSGuide(true); return; }
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+    }
+    localStorage.setItem('noxreach_prompt_dismissed', 'true');
+    setFadeOut(true);
+    setTimeout(() => setVisible(false), 300);
+  };
+
+  if (!visible) return null;
+
+  const overlay = {
+    position: 'fixed', inset: 0, zIndex: 9999,
+    display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
+    background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+    animation: fadeOut ? 'ipFadeOut 0.3s ease forwards' : 'ipFadeIn 0.3s ease forwards',
+  };
+  const sheet = {
+    width: '100%', maxWidth: isMobile ? '100%' : 420,
+    background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`,
+    borderRadius: isMobile ? '20px 20px 0 0' : 16,
+    padding: isMobile ? '28px 24px 36px' : '28px 28px 24px',
+    boxShadow: '0 -4px 40px rgba(0,0,0,0.6)',
+    animation: fadeOut
+      ? (isMobile ? 'ipSlideDown 0.3s ease forwards' : 'ipFadeOut 0.3s ease forwards')
+      : (isMobile ? 'ipSlideUp 0.35s ease forwards'  : 'ipFadeIn 0.3s ease forwards'),
+  };
+
+  return (
+    <>
+      <style>{`
+        @keyframes ipFadeIn    { from { opacity:0 } to { opacity:1 } }
+        @keyframes ipFadeOut   { from { opacity:1 } to { opacity:0 } }
+        @keyframes ipSlideUp   { from { transform:translateY(100%) } to { transform:translateY(0) } }
+        @keyframes ipSlideDown { from { transform:translateY(0) } to { transform:translateY(100%) } }
+      `}</style>
+      <div style={overlay} onClick={dismiss}>
+        <div style={sheet} onClick={e => e.stopPropagation()}>
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+            <img src="https://noxreach.com/public/nr-icon.png" width={40} height={40}
+              style={{ borderRadius: 10, flexShrink: 0 }} alt="NoxReach" />
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, lineHeight: 1.2 }}>Add NoxReach to your home screen</div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3 }}>One tap to open. Works offline.</div>
+            </div>
+          </div>
+
+          {/* iOS guide */}
+          {showIOSGuide ? (
+            <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ fontSize: 26, lineHeight: 1 }}>⎙</div>
+              <div style={{ fontSize: 13, color: COLORS.text2, lineHeight: 1.6 }}>
+                Tap the <strong style={{ color: COLORS.text }}>Share</strong> button at the bottom of Safari, then choose <strong style={{ color: COLORS.text }}>Add to Home Screen</strong>
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 13, color: COLORS.text2, lineHeight: 1.6, marginBottom: 18 }}>
+              Install NoxReach for faster access — no app store needed.
+            </div>
+          )}
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={dismiss}
+              style={{ flex: 1, padding: '11px', background: 'transparent', border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              Maybe later
+            </button>
+            {showIOSGuide ? (
+              <button onClick={dismiss}
+                style={{ flex: 1, padding: '11px', background: COLORS.green, border: 'none', borderRadius: 9, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                Got it ✓
+              </button>
+            ) : (isIOS || deferredPrompt) ? (
+              <button onClick={handleInstall}
+                style={{ flex: 1, padding: '11px', background: COLORS.purple, border: 'none', borderRadius: 9, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                {isIOS ? 'How to install' : 'Install'}
+              </button>
+            ) : null}
+          </div>
+
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function NoxReach() {
   if (window.location.pathname.startsWith('/kit/'))  return <PublicAssetKit  supabase={supabase} />;
   if (window.location.pathname.startsWith('/gigs/')) return <PublicGigList   supabase={supabase} />;
@@ -8018,6 +8149,7 @@ export default function NoxReach() {
         )}
       </AuthGate>
       <CookieBanner />
+      <InstallPrompt />
     </>
   );
 }
