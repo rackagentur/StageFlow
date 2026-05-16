@@ -2993,6 +2993,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   const [referralCode, setReferralCode] = useState("");
   const [referralCount, setReferralCount] = useState(0);
   const [referralCopied, setReferralCopied] = useState(false);
+  const [bookingLinkCopied, setBookingLinkCopied] = useState(false);
 
   useEffect(() => {
     if (!user?.id || !supabase) return;
@@ -3072,7 +3073,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Your booking link</div>
         <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
           <div style={{ display: "flex", flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, overflow: "hidden" }}>
-            <span style={{ padding: "10px 12px", fontSize: 12, color: COLORS.textMuted, borderRight: `1px solid ${COLORS.border}`, whiteSpace: "nowrap" }}>noxreach.app/book/</span>
+            <span style={{ padding: "10px 12px", fontSize: 12, color: COLORS.textMuted, borderRight: `1px solid ${COLORS.border}`, whiteSpace: "nowrap" }}>app.noxreach.com/book/</span>
             <input
               value={username}
               onChange={e => { setUsername(e.target.value); setUsernameError(""); }}
@@ -3086,7 +3087,17 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
           </button>
         </div>
         {usernameError && <div style={{ fontSize: 12, color: COLORS.red, marginBottom: 6 }}>{usernameError}</div>}
-        {bookingLink && <div style={{ fontSize: 11, color: COLORS.textMuted }}>Share in your Instagram bio — promoters fill it out and land in your pipeline automatically.</div>}
+        {bookingLink && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
+            <div style={{ fontSize: 11, color: COLORS.textMuted, flex: 1 }}>Share in your Instagram bio — promoters fill it out and land in your pipeline automatically.</div>
+            <button
+              onClick={() => { navigator.clipboard.writeText(bookingLink); setBookingLinkCopied(true); setTimeout(() => setBookingLinkCopied(false), 2000); }}
+              style={{ flexShrink: 0, padding: "6px 12px", background: bookingLinkCopied ? "rgba(74,222,128,0.12)" : COLORS.purpleBg, border: `1px solid ${bookingLinkCopied ? "rgba(74,222,128,0.3)" : COLORS.purpleDim}`, borderRadius: 7, color: bookingLinkCopied ? "#4ade80" : COLORS.purpleLight, fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+            >
+              {bookingLinkCopied ? "✓ Copied" : "🔗 Copy link"}
+            </button>
+          </div>
+        )}
         <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>Artist / display name</div>
           <div style={{ display: "flex", gap: 10 }}>
@@ -7649,9 +7660,7 @@ function PublicAssetKit({ supabase }) {
             <button onClick={share} style={{ padding: '10px 20px', background: copied ? 'rgba(34,197,94,0.15)' : 'rgba(14,116,144,0.15)', border: `1px solid ${copied ? 'rgba(34,197,94,0.4)' : 'rgba(14,116,144,0.4)'}`, borderRadius: 8, color: copied ? '#4ade80' : '#22D3EE', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
               {copied ? '✓ Link copied' : '🔗 Share Kit'}
             </button>
-            {kit.booking_email && (
-              <a href={`mailto:${kit.booking_email}`} style={{ padding: '10px 20px', background: '#D4AF37', border: 'none', borderRadius: 8, color: '#0a0a0a', fontSize: 13, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>📩 Book this artist</a>
-            )}
+            <a href={`/book/${username}`} style={{ padding: '10px 20px', background: '#D4AF37', border: 'none', borderRadius: 8, color: '#0a0a0a', fontSize: 13, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>📩 Book this artist</a>
           </div>
         </div>
 
