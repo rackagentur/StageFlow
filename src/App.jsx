@@ -2287,7 +2287,7 @@ function FollowUpsView({ leads, onNavigate }) {
 
 function OutreachView({ isPro, onUpgradeClick, supabase, userId }) {
   const [selected, setSelected] = useState("berlin");
-  const [artistName, setArtistName] = useState("GEEZ");
+  const [artistName, setArtistName] = useState("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -3265,7 +3265,8 @@ function gigToDb(gig, userId) {
    
 }
 
-function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClick, customTags, TAG_COLORS, supabase, onDateClick, userId }) {
+function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClick, customTags, TAG_COLORS, supabase, onDateClick, userId, isMobile: isMobileProp }) {
+  const isMobileCalendar = isMobileProp ?? (typeof window !== "undefined" && window.innerWidth < 768);
   const today    = new Date();
   const [viewYear,  setViewYear]  = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -3403,7 +3404,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
           Preview →
         </a>
       </div>
-    )}    <div style={{ display: "grid", gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "1fr 300px", gap: 20 }}>
+    )}    <div style={{ display: "grid", gridTemplateColumns: isMobileCalendar ? "1fr" : "1fr 300px", gap: 20 }}>
       {/* Left: Calendar + upcoming list */}
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -5322,7 +5323,7 @@ function TemplatePickerModal({ supabase, user, lead, onClose, onSelectTemplate }
     });
 
     // Replace placeholders
-    const artistName = user.user_metadata?.full_name || 'GEEZ';
+    const artistName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Artist";
     const venueName = lead.name || '{venue_name}';
     const contactName = lead.contact?.split('@')[0] || '{contact_name}';
     const genre = lead.tag || '{genre}';
@@ -7245,7 +7246,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "outreach"  && <OutreachView isPro={isPro} onUpgradeClick={requestUpgrade} supabase={supabase} userId={user.id} />}
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} />}
-          {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} />}
+          {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} />}
           {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
