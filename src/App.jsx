@@ -1467,6 +1467,44 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
 
+  // Email compose
+  const [emailConn, setEmailConn]         = useState(null); // { provider, email }
+  const [composeOpen, setComposeOpen]     = useState(false);
+  const [composeSubject, setComposeSubject] = useState("");
+  const [composeBody, setComposeBody]     = useState("");
+  const [composeSending, setComposeSending] = useState(false);
+  const [composeSent, setComposeSent]     = useState(false);
+  const [composeError, setComposeError]   = useState("");
+
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    supabase.from("email_connections").select("provider, email").eq("user_id", userId)
+      .then(({ data }) => {
+        if (!data?.length) return;
+        const conn = data.find(c => c.provider === "resend") || data.find(c => c.provider === "gmail") || data[0];
+        setEmailConn(conn);
+      });
+  }, [userId]);
+
+  const sendEmail = async () => {
+    if (!composeSubject.trim() || !composeBody.trim()) return;
+    setComposeSending(true); setComposeError("");
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const fn = emailConn?.provider === "gmail" ? "gmail-send" : "resend-send";
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ to: lead.contact, subject: composeSubject, message: composeBody, lead_id: lead.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setComposeError(data.error || "Send failed"); }
+      else { setComposeSent(true); setTimeout(() => { setComposeOpen(false); setComposeSent(false); setComposeSubject(""); setComposeBody(""); }, 2000); }
+    } catch (e) { setComposeError("Network error. Try again."); }
+    setComposeSending(false);
+  };
+
   // AI outreach draft
   const [aiOpen, setAiOpen]         = useState(false);
   const [aiFormat, setAiFormat]     = useState("email");
@@ -1840,7 +1878,52 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {editing ? (
         <input value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} style={inputStyle} placeholder="booking@venue.com" />
       ) : (
-        <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3 }}>{lead.contact || <span style={{ color: COLORS.textMuted }}>—</span>}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
+          <div style={{ fontSize: 12, color: COLORS.text, flex: 1 }}>{lead.contact || <span style={{ color: COLORS.textMuted }}>—</span>}</div>
+          {lead.contact && emailConn && (
+            <button
+              onClick={() => { setComposeOpen(o => !o); setComposeError(""); setComposeSent(false); }}
+              style={{ fontSize: 10, padding: "3px 8px", background: composeOpen ? COLORS.purple : "transparent", border: `1px solid ${composeOpen ? COLORS.purple : COLORS.border}`, borderRadius: 5, color: composeOpen ? "#fff" : COLORS.textMuted, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}
+            >
+              ✉ Send
+            </button>
+          )}
+          {lead.contact && !emailConn && (
+            <span style={{ fontSize: 10, color: COLORS.textMuted }}>Connect email in Settings</span>
+          )}
+        </div>
+      )}
+
+      {/* Inline compose panel */}
+      {composeOpen && !editing && (
+        <div style={{ marginTop: 10, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "14px 14px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ fontSize: 10, color: COLORS.textMuted, marginBottom: 2 }}>To: <span style={{ color: COLORS.text }}>{lead.contact}</span> · via <span style={{ color: COLORS.purpleLight }}>{emailConn?.email}</span></div>
+          <input
+            value={composeSubject}
+            onChange={e => setComposeSubject(e.target.value)}
+            placeholder="Subject"
+            style={{ ...INPUT.base, fontSize: 12, padding: "7px 10px" }}
+          />
+          <textarea
+            value={composeBody}
+            onChange={e => setComposeBody(e.target.value)}
+            placeholder="Write your message…"
+            rows={5}
+            style={{ ...INPUT.base, fontSize: 12, padding: "8px 10px", resize: "vertical", lineHeight: 1.6, fontFamily: "inherit" }}
+          />
+          {composeError && <div style={{ fontSize: 11, color: "#ef4444" }}>{composeError}</div>}
+          {composeSent && <div style={{ fontSize: 11, color: COLORS.green, fontWeight: 600 }}>✓ Email sent!</div>}
+          <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+            <button onClick={() => setComposeOpen(false)} style={{ fontSize: 11, padding: "5px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textMuted, cursor: "pointer" }}>Cancel</button>
+            <button
+              onClick={sendEmail}
+              disabled={composeSending || !composeSubject.trim() || !composeBody.trim()}
+              style={{ fontSize: 11, padding: "5px 12px", background: COLORS.purple, border: "none", borderRadius: 6, color: "#fff", cursor: "pointer", fontWeight: 700, opacity: composeSending ? 0.6 : 1 }}
+            >
+              {composeSending ? "Sending…" : "Send"}
+            </button>
+          </div>
+        </div>
       )}
 
       <div style={labelStyle}>Instagram</div>
