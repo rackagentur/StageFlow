@@ -367,6 +367,94 @@ const TIER_COLORS = { A1: COLORS.purpleLight, A2: COLORS.purple, A3: COLORS.text
 // Leads + Gigs now live in Supabase (per user), not localStorage
 // localStorage kept only for settings, pro status, tags
 
+// ── Release notes ─────────────────────────────────────────────────────────────
+const APP_VERSION = "1.5.0";
+const STORAGE_KEY_WHATS_NEW = "noxreach_whats_new_seen_v";
+
+const RELEASE_NOTES = [
+  {
+    version: "1.5.0",
+    date: "May 2026",
+    title: "Design overhaul, mobile & public pages",
+    items: [
+      { icon: "🎨", label: "New design system", desc: "Unified cyan accent across every button, border, and badge. Consistent FREE/PRO chips, stronger card borders throughout." },
+      { icon: "🎸", label: "Pipeline stage colors", desc: "Each lead stage now has its own border heat — Target (dim) → Contacted (grey) → Follow-up (teal) → Replied (cyan) → Booked (green)." },
+      { icon: "🎨", label: "Genre color picker", desc: "Each genre tag gets its own color. Tap the dot to pick. All genres are now deletable, including defaults." },
+      { icon: "📱", label: "Mobile improvements", desc: "Cleaner header on small screens, icon-only Add Lead button, full-screen lead detail overlay, safe-area fixes for iPhone." },
+      { icon: "🌐", label: "Public press kit page", desc: "Share your artist kit at app.noxreach.com/kit/[username] — bio, EPK, mix links, booking CTA." },
+      { icon: "📅", label: "Public gig schedule", desc: "app.noxreach.com/gigs/[username] is now live. Preview button in Calendar finally works." },
+      { icon: "📊", label: "Analytics alignment", desc: "Conversion funnel matches the stat card grid. Tier and genre rows show correct colors." },
+      { icon: "⬇️", label: "CSV export", desc: "Download all your active leads as a dated CSV straight from the pipeline header." },
+    ],
+  },
+  {
+    version: "1.4.0",
+    date: "May 2026",
+    title: "Booking form, gig logbook & smart emails",
+    items: [
+      { icon: "📩", label: "Public booking form", desc: "Venues can submit booking requests directly via app.noxreach.com/book/[username]. Leads land in your Inbound tab instantly." },
+      { icon: "📓", label: "Gig logbook", desc: "Log recaps, setlist links, recording URLs, and crowd & promoter ratings on each past gig." },
+      { icon: "📧", label: "Behavioral email triggers", desc: "5 lifecycle nudges now fire automatically — day 2, day 5, day 7, day 10, and first booking celebration." },
+      { icon: "📋", label: "Asset kit", desc: "Store your EPK, SoundCloud, Spotify, mix links, bio and press photos in one place. Share via link." },
+    ],
+  },
+];
+
+function WhatsNewModal({ onClose }) {
+  const [tab, setTab] = useState(0);
+  const release = RELEASE_NOTES[tab];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 4000, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 18, width: "100%", maxWidth: 520, maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.7)" }}>
+
+        {/* Header */}
+        <div style={{ padding: "22px 24px 0", borderBottom: `1px solid ${COLORS.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>What's New</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.02em" }}>{release.title}</div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 3 }}>v{release.version} · {release.date}</div>
+            </div>
+            <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", padding: 4, fontSize: 18, lineHeight: 1, borderRadius: 6 }}>✕</button>
+          </div>
+          {/* Version tabs */}
+          <div style={{ display: "flex", gap: 4, marginBottom: -1 }}>
+            {RELEASE_NOTES.map((r, i) => (
+              <button key={r.version} onClick={() => setTab(i)} style={{ padding: "7px 14px", background: "none", border: "none", borderBottom: `2px solid ${tab === i ? COLORS.purpleLight : "transparent"}`, color: tab === i ? COLORS.purpleLight : COLORS.textMuted, fontSize: 12, fontWeight: tab === i ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+                v{r.version}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Items */}
+        <div style={{ overflowY: "auto", padding: "16px 24px", flex: 1 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {release.items.map((item, i) => (
+              <div key={i} style={{ display: "flex", gap: 14, padding: "12px 14px", background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 11, alignItems: "flex-start" }}>
+                <div style={{ fontSize: 20, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{item.icon}</div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 2 }}>{item.label}</div>
+                  <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "14px 24px", borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ padding: "10px 28px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+            Got it →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const STORAGE_KEY_SETTINGS = "noxreach_settings_v1";
 const DEFAULT_SETTINGS = { followup1Days: 5, followup2Days: 14 };
 function loadSettings() { try { const r = localStorage.getItem(STORAGE_KEY_SETTINGS); if (r) return { ...DEFAULT_SETTINGS, ...JSON.parse(r) }; } catch {} return DEFAULT_SETTINGS; }
@@ -6793,6 +6881,13 @@ const loadAdminUsers = async () => {
   const showToast = (msg, type = "info") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3200); };
 
   const [showWelcomePro, setShowWelcomePro] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(() => {
+    try { return localStorage.getItem(STORAGE_KEY_WHATS_NEW + APP_VERSION) !== "1"; } catch { return false; }
+  });
+  const dismissWhatsNew = () => {
+    try { localStorage.setItem(STORAGE_KEY_WHATS_NEW + APP_VERSION, "1"); } catch {}
+    setShowWhatsNew(false);
+  };
   const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
     try { return localStorage.getItem("noxreach_onboarding_done_" + user.id) === "true"; } catch { return false; }
   });
@@ -7038,6 +7133,7 @@ const activeLeads = leads.filter(l => !l.archived);
             {showWelcomeNew && !isPro && <WelcomeNewUserModal onClose={dismissWelcomeNew} />}
       {showWelcomePro && <ProWelcomeModal onClose={() => setShowWelcomePro(false)} />}
       {showCSVImport && <CSVImportModal onClose={() => setShowCSVImport(false)} onImport={() => { loadData(); setShowCSVImport(false); }} userId={user.id} supabase={supabase} COLORS={COLORS} />}
+      {showWhatsNew && <WhatsNewModal onClose={dismissWhatsNew} />}
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
       {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail="info@soundofgeez.com" />
 }
@@ -7129,6 +7225,14 @@ const activeLeads = leads.filter(l => !l.archived);
             <div style={{ fontSize: 11, color: COLORS.textSecondary }}>{activeLeads.filter(l => l.stage !== "target").length} / {activeLeads.length} contacted</div>
             <button onClick={() => setShowResetConfirm(true)} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 10, cursor: "pointer", padding: 0 }}>reset</button>
           </div>
+        </div>
+        {/* What's New link */}
+        <div style={{ padding: "8px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button onClick={() => setShowWhatsNew(true)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
+            <span style={{ fontSize: 10 }}>✦</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: "0.04em" }}>What's New</span>
+          </button>
+          <span style={{ fontSize: 9, color: COLORS.text3, fontFamily: "'DM Mono', monospace" }}>v{APP_VERSION}</span>
         </div>
         {/* User info + sign out — own flex child so it's always visible */}
         <div style={{ padding: "12px 20px", borderTop: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
