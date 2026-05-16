@@ -408,7 +408,7 @@ const RELEASE_NOTES = [
     title: "Design overhaul, mobile & public pages",
     items: [
       { Icon: IconDashboard,  label: "New design system",     desc: "Unified cyan accent across every button, border, and badge. Consistent FREE/PRO chips, stronger card borders throughout." },
-      { Icon: IconPipeline,   label: "Pipeline stage colors", desc: "Each lead stage has its own border heat — Target (dim) → Contacted (grey) → Follow-up (teal) → Replied (cyan) → Booked (green)." },
+      { Icon: IconPipeline,   label: "Pipeline stage colors", desc: "Each lead stage has its own border heat — Target (dim) → Contacted (grey) → Follow-up (teal) → Replied (violet) → Booked (green)." },
       { Icon: IconSettings,   label: "Genre color picker",    desc: "Each genre tag gets its own persistent color. Tap the dot to pick. All genres are now deletable, including defaults." },
       { Icon: IconFollowUps,  label: "Mobile improvements",   desc: "Cleaner header on small screens, icon-only Add Lead button, full-screen lead detail overlay, safe-area fixes for iPhone." },
       { Icon: IconBookingKit, label: "Public press kit",      desc: "Share your artist kit at app.noxreach.com/kit/[username] — bio, EPK, mix links, booking CTA." },
@@ -715,7 +715,7 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
               { id: "target",    label: "Target",    color: COLORS.text3,   stages: ["target"] },
               { id: "contacted", label: "Contacted", color: COLORS.purple,  stages: ["contacted"] },
               { id: "followup",  label: "Follow-up", color: COLORS.purple,  stages: ["followup1","followup2"] },
-              { id: "replied",   label: "Replied",   color: COLORS.purple,  stages: ["replied"] },
+              { id: "replied",   label: "Replied",   color: COLORS.violetLight, stages: ["replied"] },
               { id: "booked",    label: "Booked",    color: COLORS.green,   stages: ["booked"] },
             ].map(s => (
               <FilterPill key={s.id} label={s.label} active={filters.stage === s.id} color={s.color}
@@ -1515,7 +1515,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {/* EPK prompt on Replied */}
       {!lead.archived && lead.stage === "replied" && assets && (assets?.epk_url || assets?.soundcloud || assets?.booking_email) && (
         <div style={{ background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 10, padding: "12px 14px", marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, marginBottom: 8 }}>✓ They replied — send your kit</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.violetLight, marginBottom: 8 }}>✓ They replied — send your kit</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {[
               assets?.epk_url      && { label: "EPK PDF",       value: assets.epk_url },
@@ -2066,7 +2066,7 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
   const funnel = [
     { label: "Total Leads",  count: total,      color: COLORS.textSecondary, pct: 100 },
     { label: "Contacted",    count: fContacted, color: COLORS.purple,        pct: total > 0 ? Math.round(fContacted / total * 100) : 0 },
-    { label: "Replied",      count: fReplied,   color: COLORS.purpleLight,   pct: total > 0 ? Math.round(fReplied / total * 100) : 0 },
+    { label: "Replied",      count: fReplied,   color: COLORS.violetLight,   pct: total > 0 ? Math.round(fReplied / total * 100) : 0 },
     { label: "Booked",       count: fBooked,    color: COLORS.green,         pct: total > 0 ? Math.round(fBooked / total * 100) : 0 },
   ];
   // Drop-off rates between stages
@@ -2081,7 +2081,7 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
         <StatCard label="Total Leads"   value={total}           sub="in pipeline"                                         accent={COLORS.textSecondary} />
         <StatCard label="Outreach Sent" value={contacted}       sub={`${active.filter(l => l.stage === "target").length} still in target`} accent={COLORS.purple} />
-        <StatCard label="Reply Rate"    value={`${replyRate}%`} sub={`${replied} replies`}                                accent={COLORS.purpleLight} />
+        <StatCard label="Reply Rate"    value={`${replyRate}%`} sub={`${replied} replies`}                                accent={COLORS.violetLight} />
         <StatCard label="Booked"        value={booked}          sub="confirmed gigs"                                      accent={COLORS.green} />
         {totalRevenue > 0 && <StatCard label="Total Fees" value={`€${totalRevenue.toLocaleString()}`} sub="booked gigs" accent={COLORS.green} />}
         {unpaidCount > 0 && <StatCard label="Deposit Due" value={unpaidCount} sub="awaiting deposit" accent={COLORS.amber} />}
@@ -3870,7 +3870,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
                   <div style={{ fontSize: 11, color: COLORS.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{msg.preview}</div>
                   <div style={{ marginTop: 6, display: "flex", gap: 4 }}>
                     <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
-                    <Badge color={lead.stage === "booked" ? COLORS.green : COLORS.purpleLight}>{lead.stage === "booked" ? "Booked" : "Replied"}</Badge>
+                    <Badge color={lead.stage === "booked" ? COLORS.green : COLORS.violetLight}>{lead.stage === "booked" ? "Booked" : "Replied"}</Badge>
                   </div>
                 </div>
               );
@@ -6249,7 +6249,7 @@ function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {}, isMobile }) 
           {[
             { label: "Target",    count: stats.target_count,    color: COLORS.text3,       width: 100 },
             { label: "Contacted", count: stats.contacted_count, color: COLORS.purple,      width: stats.total_leads > 0     ? (stats.contacted_count / stats.total_leads) * 100  : 0 },
-            { label: "Replied",   count: stats.replied_count,   color: COLORS.purpleLight, width: stats.contacted_count > 0 ? (stats.replied_count / stats.contacted_count) * 100 : 0 },
+            { label: "Replied",   count: stats.replied_count,   color: COLORS.violetLight, width: stats.contacted_count > 0 ? (stats.replied_count / stats.contacted_count) * 100 : 0 },
             { label: "Booked",    count: stats.booked_count,    color: COLORS.green,       width: stats.replied_count > 0   ? (stats.booked_count / stats.replied_count) * 100   : 0 },
           ].map((stage, i) => {
             const isBooked = i === 3;
@@ -7593,7 +7593,7 @@ const activeLeads = leads.filter(l => !l.archived);
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                               {stageBreakdown.map(s => {
-                                const stageColor = { target: COLORS.textSecondary, contacted: COLORS.purple, followup1: COLORS.purpleLight, followup2: COLORS.purpleLight, replied: COLORS.purpleLight, booked: COLORS.green }[s.id] || COLORS.textSecondary;
+                                const stageColor = { target: COLORS.textSecondary, contacted: COLORS.purple, followup1: COLORS.purpleLight, followup2: COLORS.purpleLight, replied: COLORS.violetLight, booked: COLORS.green }[s.id] || COLORS.textSecondary;
                                 return (
                                   <div key={s.id}>
                                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
