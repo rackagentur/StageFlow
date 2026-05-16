@@ -384,10 +384,24 @@ const TIER_COLORS = { A1: COLORS.purpleLight, A2: COLORS.purple, A3: COLORS.text
 // localStorage kept only for settings, pro status, tags
 
 // ── Release notes ─────────────────────────────────────────────────────────────
-const APP_VERSION = "1.5.0";
+const APP_VERSION = "1.6.0";
 const STORAGE_KEY_WHATS_NEW = "noxreach_whats_new_seen_v";
 
 const RELEASE_NOTES = [
+  {
+    version: "1.6.0",
+    date: "May 2026",
+    title: "AI suggestions, PWA install & feedback",
+    items: [
+      { Icon: IconStar,       label: "AI outreach drafts",     desc: "One click generates a personalised cold email or DM for any lead — powered by Claude. Unlocks after 50 leads in your pipeline." },
+      { Icon: IconPipeline,   label: "AI venue suggestions",   desc: "NoxReach suggests 5 new venues similar to any lead you're targeting. Powered by Claude, gated at 50 leads." },
+      { Icon: IconFollowUps,  label: "Follow-up nudges",       desc: "Going Cold section shows leads that have gone quiet for 3+ days with no date set. Tap any card to open that lead directly." },
+      { Icon: IconBookingKit, label: "Booking form revamp",    desc: "\"Book this artist\" on your kit page now opens the structured booking form. You get a notification email for every enquiry." },
+      { Icon: IconLink,       label: "Referral rewards",       desc: "Share your referral link — you get 30 days PRO, the DJ you invite gets a 15-day PRO trial." },
+      { Icon: IconSettings,   label: "PWA install prompt",     desc: "Add NoxReach to your home screen. Appears after your 3rd login — native install on Android, step-by-step guide on iOS." },
+      { Icon: IconMail,       label: "Feedback button",        desc: "The ✦ button in the bottom-right corner lets you send ideas, bug reports, or anything else straight to the founder." },
+    ],
+  },
   {
     version: "1.5.0",
     date: "May 2026",
