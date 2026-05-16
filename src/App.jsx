@@ -3052,7 +3052,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
       {referralCode && (
         <div style={{ background: COLORS.surface, border: `1px solid rgba(139,92,246,0.25)`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Refer a DJ — get 1 month free PRO</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Refer a DJ — you both get free PRO</div>
             {referralCount > 0 && (
               <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.violetLight, background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", borderRadius: 20, padding: "2px 10px" }}>
                 {referralCount} {referralCount === 1 ? "referral" : "referrals"}
@@ -3060,7 +3060,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
             )}
           </div>
           <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>
-            Share your link. Every DJ who signs up gives you 30 days of free PRO.
+            Share your link. They get 15 days free PRO — you get 30 days free PRO.
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <div style={{ flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.text2, fontFamily: "'DM Mono', monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
