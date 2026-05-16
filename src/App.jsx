@@ -309,11 +309,148 @@ function LoginScreen({ onAuth }) {
   );
 }
 
+// ── SetNewPasswordScreen ──────────────────────────────────────────────────────
+// Shown when user returns from a Supabase password-reset email link
+function SetNewPasswordScreen({ onDone }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm]   = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+  const [success, setSuccess]   = useState(false);
+
+  const inputStyle = {
+    width: "100%", padding: "13px 16px",
+    background: COLORS.surface, border: `1px solid ${COLORS.border}`,
+    borderRadius: 8, color: COLORS.text, fontSize: 14, outline: "none",
+    fontFamily: "'DM Sans', sans-serif", transition: "border-color 0.2s",
+    WebkitBoxShadow: `0 0 0 1000px ${COLORS.surface} inset`,
+    WebkitTextFillColor: COLORS.text,
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (password.length < 6) return setError("Password must be at least 6 characters.");
+    if (password !== confirm)  return setError("Passwords don't match.");
+    setLoading(true);
+    try {
+      const { error: err } = await supabase.auth.updateUser({ password });
+      if (err) throw err;
+      setSuccess(true);
+      setTimeout(onDone, 1600);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+      background: COLORS.bgDeep, position: "relative", overflow: "hidden",
+    }}>
+      <style>{AUTH_CSS}</style>
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
+        backgroundSize: "80px 80px", animation: "gridScroll 8s linear infinite",
+        maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%)",
+      }} />
+      <div style={{
+        position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -60%)",
+        width: 700, height: 500,
+        background: "radial-gradient(ellipse, rgba(14,116,144,0.12) 0%, rgba(14,116,144,0.03) 50%, transparent 70%)",
+        pointerEvents: "none", animation: "authGlow 4s ease infinite",
+      }} />
+
+      <div style={{
+        position: "relative", zIndex: 1, width: "100%", maxWidth: 420, padding: "0 24px",
+        animation: "authFadeIn 0.5s ease",
+      }}>
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <img src="https://noxreach.com/public/nr-icon.png" width="52" height="52"
+            style={{ borderRadius: 12, display: "block", margin: "0 auto 14px" }} alt="NR" />
+          <img src="https://noxreach.com/public/nr-wordmark.png" height="18"
+            style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
+          <div style={{ fontSize: 11, color: COLORS.purple, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
+        </div>
+
+        <div style={{
+          background: COLORS.surface, border: `1px solid ${COLORS.border}`,
+          borderRadius: 16, padding: "32px 28px", boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
+        }}>
+          {success ? (
+            <div style={{ textAlign: "center", padding: "24px 0" }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: "50%",
+                background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 16px", fontSize: 22, color: COLORS.green,
+              }}>✓</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.green, marginBottom: 6 }}>Password updated!</div>
+              <div style={{ fontSize: 13, color: COLORS.text2 }}>Taking you to the app…</div>
+            </div>
+          ) : (
+            <>
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Set new password</div>
+                <div style={{ fontSize: 13, color: COLORS.text2 }}>Choose a new password for your account.</div>
+              </div>
+              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text2, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>New password</div>
+                  <input
+                    type="password" value={password} onChange={e => setPassword(e.target.value)}
+                    placeholder="Min. 6 characters" style={inputStyle} required autoFocus
+                    onFocus={e => e.target.style.borderColor = COLORS.purple}
+                    onBlur={e => e.target.style.borderColor = COLORS.border}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.text2, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 7 }}>Confirm password</div>
+                  <input
+                    type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
+                    placeholder="Repeat new password" style={inputStyle} required
+                    onFocus={e => e.target.style.borderColor = COLORS.purple}
+                    onBlur={e => e.target.style.borderColor = COLORS.border}
+                  />
+                </div>
+                {error && (
+                  <div style={{
+                    padding: "10px 14px", borderRadius: 8,
+                    background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)",
+                    color: COLORS.red, fontSize: 13, lineHeight: 1.5,
+                  }}>{error}</div>
+                )}
+                <button type="submit" disabled={loading} style={{
+                  padding: "13px 0", borderRadius: 10, border: "none",
+                  background: loading ? COLORS.purpleLight + "88" : `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`,
+                  color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  boxShadow: loading ? "none" : "0 4px 20px rgba(14,116,144,0.30)",
+                  transition: "all 0.15s",
+                }}>
+                  {loading
+                    ? <><span style={{ display: "inline-block", width: 14, height: 14, border: "2px solid #fff6", borderTopColor: "#fff", borderRadius: "50%", animation: "authSpin 0.7s linear infinite" }} /> Updating…</>
+                    : "Update password →"}
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── AuthGate ─────────────────────────────────────────────────────────────────
 // Wraps the whole app — shows login screen until authenticated
 function AuthGate({ children }) {
-  const [session, setSession] = useState(undefined); // undefined = loading
-  const [user, setUser]       = useState(null);
+  const [session, setSession]       = useState(undefined); // undefined = loading
+  const [user, setUser]             = useState(null);
+  const [recoveryMode, setRecovery] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -323,9 +460,20 @@ function AuthGate({ children }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === "PASSWORD_RECOVERY") {
+        // User clicked the reset link — show set-new-password screen
+        setSession(s);
+        setUser(s?.user ?? null);
+        setRecovery(true);
+        return;
+      }
       setSession(s);
       setUser(s?.user ?? null);
+      // After updateUser succeeds Supabase fires USER_UPDATED — clear recovery mode
+      if (event === "USER_UPDATED") {
+        setRecovery(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -334,11 +482,12 @@ function AuthGate({ children }) {
   // Track login count for PWA install prompt — once per browser session
   useEffect(() => {
     if (!user) return;
+    if (recoveryMode) return; // don't count recovery sessions as logins
     if (sessionStorage.getItem('noxreach_session_counted')) return;
     const prev = parseInt(localStorage.getItem('noxreach_login_count') || '0', 10);
     localStorage.setItem('noxreach_login_count', String(prev + 1));
     sessionStorage.setItem('noxreach_session_counted', 'true');
-  }, [user]);
+  }, [user, recoveryMode]);
 
   // Loading state
   if (session === undefined) {
@@ -356,6 +505,11 @@ function AuthGate({ children }) {
         <div style={{ fontSize: 12, color: COLORS.text3, letterSpacing: "0.1em" }}>LOADING NOXREACH</div>
       </div>
     );
+  }
+
+  // Password recovery return — show set-new-password screen
+  if (recoveryMode && session) {
+    return <SetNewPasswordScreen onDone={() => setRecovery(false)} />;
   }
 
   // Not logged in
