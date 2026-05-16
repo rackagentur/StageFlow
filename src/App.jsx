@@ -393,8 +393,8 @@ const RELEASE_NOTES = [
     date: "May 2026",
     title: "AI suggestions, PWA install & feedback",
     items: [
-      { Icon: IconStar,       label: "AI outreach drafts",     desc: "One click generates a personalised cold email or DM for any lead — powered by Claude. Unlocks after 50 leads in your pipeline." },
-      { Icon: IconPipeline,   label: "AI venue suggestions",   desc: "NoxReach suggests 5 new venues similar to any lead you're targeting. Powered by Claude, gated at 50 leads." },
+      { Icon: IconStar,       label: "AI outreach drafts",     desc: "One click generates a personalised cold email or DM for any lead — powered by Claude. Unlocks after 50 leads in your pipeline.", badge: "50 leads" },
+      { Icon: IconPipeline,   label: "AI venue suggestions",   desc: "NoxReach suggests 5 new venues similar to any lead you're targeting. Powered by Claude, gated at 50 leads.", badge: "50 leads" },
       { Icon: IconFollowUps,  label: "Follow-up nudges",       desc: "Going Cold section shows leads that have gone quiet for 3+ days with no date set. Tap any card to open that lead directly." },
       { Icon: IconBookingKit, label: "Booking form revamp",    desc: "\"Book this artist\" on your kit page now opens the structured booking form. You get a notification email for every enquiry." },
       { Icon: IconLink,       label: "Referral rewards",       desc: "Share your referral link — you get 30 days PRO, the DJ you invite gets a 15-day PRO trial." },
@@ -413,7 +413,7 @@ const RELEASE_NOTES = [
       { Icon: IconFollowUps,  label: "Mobile improvements",   desc: "Cleaner header on small screens, icon-only Add Lead button, full-screen lead detail overlay, safe-area fixes for iPhone." },
       { Icon: IconBookingKit, label: "Public press kit",      desc: "Share your artist kit at app.noxreach.com/kit/[username] — bio, EPK, mix links, booking CTA." },
       { Icon: IconCalendar,   label: "Public gig schedule",   desc: "app.noxreach.com/gigs/[username] is live. The Preview button in Calendar now works." },
-      { Icon: IconAnalytics,  label: "Analytics alignment",   desc: "Conversion funnel matches the stat card grid. Tier and genre rows show correct colors." },
+      { Icon: IconAnalytics,  label: "Analytics alignment",   desc: "Conversion funnel matches the stat card grid. Tier and genre rows show correct colors.", badge: "PRO" },
       { Icon: IconUpload,     label: "CSV export",            desc: "Download all your active leads as a dated CSV straight from the pipeline header." },
     ],
   },
@@ -467,8 +467,21 @@ function WhatsNewModal({ onClose }) {
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: COLORS.violetBg, border: `1px solid rgba(124,58,237,0.25)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <item.Icon size={15} color={COLORS.violetLight} />
                 </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 2 }}>{item.label}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{item.label}</span>
+                    {item.badge && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, letterSpacing: "0.07em", textTransform: "uppercase",
+                        padding: "2px 6px", borderRadius: 4,
+                        background: item.badge === "PRO" ? "rgba(14,116,144,0.18)" : "rgba(245,158,11,0.15)",
+                        border: `1px solid ${item.badge === "PRO" ? "rgba(14,116,144,0.4)" : "rgba(245,158,11,0.4)"}`,
+                        color: item.badge === "PRO" ? COLORS.purpleLight : COLORS.amber,
+                      }}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>{item.desc}</div>
                 </div>
               </div>
