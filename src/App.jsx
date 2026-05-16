@@ -874,10 +874,11 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
         lead.stage === "booked"  && !lead.archived ? "rgba(34,197,94,0.04)" :
         lead.stage === "replied" && !lead.archived ? COLORS.violetBg :
         COLORS.surface,
-      border: (isBulkSelected || isSelected) ? `2px solid ${COLORS.violet}` : `1px solid ${
+      border: (isBulkSelected || isSelected) ? `2px solid ${COLORS.violet}` :
+        lead.stage === "booked"  && !lead.archived ? `2px solid rgba(34,197,94,0.5)` :
+        `1px solid ${
         lead.archived                     ? COLORS.purpleDim :
         isOverdue                         ? COLORS.amber :
-        lead.stage === "booked"           ? "rgba(34,197,94,0.5)" :
         lead.stage === "replied"          ? COLORS.violetLight :
         lead.stage === "followup1" || lead.stage === "followup2" ? COLORS.purple :
         lead.stage === "contacted"        ? "rgba(255,255,255,0.22)" :
