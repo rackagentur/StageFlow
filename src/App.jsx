@@ -1215,7 +1215,7 @@ function AssetCopyRow({ label, value }) {
   );
 }
 
-function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick }) {
+function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0 }) {
   const [editing, setEditing] = useState(false);
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
@@ -1494,14 +1494,15 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {!lead.archived && lead.stage !== "booked" && (
         <div style={{ marginBottom: 12 }}>
           <button
-            onClick={() => setAiOpen(o => !o)}
-            style={{ width: "100%", padding: "8px 12px", background: aiOpen ? `rgba(139,92,246,0.15)` : COLORS.surface2, border: `1px solid ${aiOpen ? COLORS.violetLight : COLORS.border}`, borderRadius: 8, color: aiOpen ? COLORS.violetLight : COLORS.text2, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.15s" }}
+            onClick={() => totalLeads >= 50 && setAiOpen(o => !o)}
+            style={{ width: "100%", padding: "8px 12px", background: aiOpen ? `rgba(139,92,246,0.15)` : COLORS.surface2, border: `1px solid ${aiOpen ? COLORS.violetLight : COLORS.border}`, borderRadius: 8, color: totalLeads >= 50 ? (aiOpen ? COLORS.violetLight : COLORS.text2) : COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: totalLeads >= 50 ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.15s" }}
           >
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontSize: 14 }}>✨</span>
               AI Outreach Draft
+              {totalLeads < 50 && <span style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 400 }}>· unlocks at 50 leads ({50 - totalLeads} to go)</span>}
             </span>
-            <span style={{ fontSize: 10, opacity: 0.6 }}>{aiOpen ? "▲" : "▼"}</span>
+            {totalLeads >= 50 && <span style={{ fontSize: 10, opacity: 0.6 }}>{aiOpen ? "▲" : "▼"}</span>}
           </button>
 
           {aiOpen && (
@@ -1681,8 +1682,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           user={{ id: userId }}
           lead={lead}
           artistGenre={assets?.genres}
-          isPro={isPro}
-          onUpgradeClick={onUpgradeClick}
+          totalLeads={totalLeads}
           onLeadAdded={(newLead) => { if (onUpdate) onUpdate(newLead); }}
         />
       )}
@@ -5644,20 +5644,21 @@ function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClo
 
 // Smart Suggestions Button Component
 // Used in LeadDetail panel to trigger suggestions
-function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded, artistGenre, isPro, onUpgradeClick }) {
+function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded, artistGenre, totalLeads = 0 }) {
   const [showModal, setShowModal] = useState(false);
+  const locked = totalLeads < 50;
 
   if (lead.archived || lead.stage === "booked") return null;
 
   return (
     <>
       <button
-        onClick={() => { if (!isPro) { onUpgradeClick?.("suggestions"); return; } setShowModal(true); }}
-        style={{ background: COLORS.purpleBg, color: COLORS.purpleLight, border: `1px solid ${COLORS.purpleDim}`, padding: "8px 16px", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, width: "100%" }}
+        onClick={() => !locked && setShowModal(true)}
+        style={{ background: COLORS.purpleBg, color: locked ? COLORS.textMuted : COLORS.purpleLight, border: `1px solid ${COLORS.purpleDim}`, padding: "8px 16px", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: locked ? "default" : "pointer", display: "flex", alignItems: "center", gap: 6, width: "100%" }}
       >
         <span>✦</span>
         <span>AI Venue Suggestions</span>
-        {!isPro && <span style={{ marginLeft: "auto", fontSize: 10, background: COLORS.amber + "22", color: COLORS.amber, borderRadius: 4, padding: "1px 6px", fontWeight: 700 }}>PRO</span>}
+        {locked && <span style={{ marginLeft: "auto", fontSize: 10, color: COLORS.textMuted, fontWeight: 400 }}>unlocks at 50 leads ({50 - totalLeads} to go)</span>}
       </button>
 
       {showModal && (
@@ -7268,10 +7269,10 @@ const activeLeads = leads.filter(l => !l.archived);
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
-                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} />
+                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} />
                 </div>
               )}
-              {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} />}
+              {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} />}
             </>
           )}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
