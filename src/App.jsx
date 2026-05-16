@@ -3619,17 +3619,21 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     if (!resendForm.email || !resendForm.email.includes("@")) { setResendError("Enter a valid email address"); return; }
     setResendConnecting(true);
     try {
-      const { error } = await supabase.from("email_connections").upsert({
+      // Delete existing first, then insert fresh
+      await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "resend");
+      const { error } = await supabase.from("email_connections").insert({
         user_id:      user.id,
         provider:     "resend",
         email:        resendForm.email,
         access_token: "resend",
         metadata:     { from_name: resendForm.from_name || null },
-      }, { onConflict: "user_id,provider" });
-      if (error) throw error;
-      setResendConnection({ email: resendForm.email, metadata: { from_name: resendForm.from_name } });
-      setResendFormOpen(false);
-    } catch (e) { setResendError("Failed to save. Try again."); }
+      });
+      if (error) { console.error("Resend save error:", error); setResendError(error.message || "Failed to save."); }
+      else {
+        setResendConnection({ email: resendForm.email, metadata: { from_name: resendForm.from_name } });
+        setResendFormOpen(false);
+      }
+    } catch (e) { console.error("Resend save exception:", e); setResendError("Failed to save. Try again."); }
     setResendConnecting(false);
   };
 
