@@ -4119,8 +4119,28 @@ function useIsMobile() {
   return isMobile;
 }
 
-// CSV Import Modal Component - Add this to App.jsx
+// RFC 4180-compliant CSV row parser — handles quoted fields with commas/newlines inside
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; } // escaped quote
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
 
+// CSV Import Modal Component
 function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
   const [file, setFile] = useState(null);
   const [parsing, setParsing] = useState(false);
@@ -4160,11 +4180,11 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
 
       // Parse header
       const headerLine = lines[0];
-      const headers = headerLine.split(',').map(h => h.trim().replace(/['"]/g, ''));
+      const headers = parseCSVLine(headerLine);
 
       // Parse first 5 rows for preview
       const rows = lines.slice(1, 6).map(line => {
-        const values = line.split(',').map(v => v.trim().replace(/['"]/g, ''));
+        const values = parseCSVLine(line);
         const row = {};
         headers.forEach((h, i) => {
           row[h] = values[i] || '';
@@ -4179,7 +4199,7 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
         if (lower.includes('name') || lower.includes('venue')) autoMapping.name = h;
         if (lower.includes('contact') || lower.includes('email') || lower.includes('phone')) autoMapping.contact = h;
         if (lower.includes('tier') || lower.includes('level')) autoMapping.tier = h;
-        if (lower.includes('tag') || lower.includes('category') || lower.includes('type')) autoMapping.tag = h;
+        if (lower.includes('tag') || lower.includes('genre') || lower.includes('category') || lower.includes('type')) autoMapping.tag = h;
         if (lower.includes('instagram') || lower.includes('ig') || lower.includes('social')) autoMapping.instagram = h;
         if (lower.includes('note')) autoMapping.notes = h;
       });
@@ -4214,7 +4234,7 @@ function CSVImportModal({ onClose, onImport, userId, supabase, COLORS }) {
 
       for (let i = 0; i < lines.length; i++) {
         try {
-          const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
+          const values = parseCSVLine(lines[i]);
           const row = {};
           preview.headers.forEach((h, idx) => {
             row[h] = values[idx] || '';
@@ -6960,7 +6980,7 @@ const activeLeads = leads.filter(l => !l.archived);
   const hasFilter   = search || filters.tier || filters.tag || filters.stage;
 
   const exportCSV = () => {
-    const cols = ["Venue", "Contact Email", "Instagram", "Stage", "Tier", "Genre", "Fee", "Follow-up Date", "Notes", "Contact Log"];
+    const cols = ["Venue", "Contact Email", "Instagram", "Stage", "Tier", "Tag", "Fee", "Follow-up Date", "Notes", "Contact Log"];
     const rows = activeLeads.map(l => [
       l.name, l.contact, l.instagram, l.stage, l.tier, l.tag,
       l.fee || "", l.followUpDate || "", l.notes, l.contactLog,
