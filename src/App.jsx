@@ -888,6 +888,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
         lead.stage === "replied"   && !lead.archived ? `3px solid rgba(34,211,238,0.80)` :
         (lead.stage === "followup1" || lead.stage === "followup2") && !lead.archived ? `3px solid ${COLORS.purple}` :
         lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" :
+        lead.stage === "target"    && !lead.archived ? `3px solid ${COLORS.text3}` :
         undefined,
       boxShadow: (isBulkSelected || isSelected)
         ? `inset 4px 0 0 ${COLORS.purpleLight}, 0 0 16px rgba(124,58,237,0.20), 0 4px 16px rgba(0,0,0,0.5)`
