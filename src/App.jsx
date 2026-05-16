@@ -2447,7 +2447,7 @@ function AssetsView({ supabase, userId, isMobile }) {
             </button>
           ))}
           <button onClick={save} disabled={saving} style={{ marginTop: 12, padding: "10px", background: saved ? COLORS.green : COLORS.purple, border: "none", borderRadius: 10, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-            {saving ? "Saving..." : saved ? "✓ Saved" : "Save Assets"}
+            {saving ? "Saving..." : saved ? "✓ Saved" : "Save"}
           </button>
           {kitUsername && (
             <button onClick={() => {
@@ -3174,7 +3174,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         {/* Save */}
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button onClick={handleSave} style={{ padding: "11px 28px", background: isDirty ? COLORS.purple : COLORS.border, border: "none", borderRadius: 10, color: isDirty ? "#fff" : COLORS.textMuted, fontSize: 13, fontWeight: 700, cursor: isDirty ? "pointer" : "default", transition: "all 0.2s", boxShadow: isDirty ? "0 4px 20px rgba(14,116,144,0.28)" : "none" }}>
-            {saved ? "✓ Saved" : "Save Settings"}
+            {saved ? "✓ Saved" : "Save"}
           </button>
           {isDirty && (
             <button onClick={() => setLocal({ ...settings })} style={{ padding: "11px 18px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 10, color: COLORS.textSecondary, fontSize: 13, cursor: "pointer" }}>
@@ -3704,11 +3704,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
 
   // Simulate some message previews based on lead data
   const getMessage = (lead) => {
-    const msgs = {
-      "The BPM Festival": { subject: "Re: GEEZ Booking Inquiry", preview: "Hey, thanks for reaching out! We listened to your mix and we'd love to discuss a slot on the Terrace stage. Can you send your rider and confirm your dates?", time: "2h ago", location: "Playa del Carmen, MX" },
-      "Alegria NYC":      { subject: "Booking Confirmed — March 15th", preview: "Hi! Confirming your slot for March 15th. 1am to 3am opening set. Please send tech rider to production@alegria.com by the 1st.", time: "1d ago", location: "New York, US" },
-    };
-    return msgs[lead.name] || { subject: `Re: Booking Inquiry`, preview: `Thanks for getting in touch. We'd like to discuss possible dates for a booking. Can you share your availability for Q2?`, time: "3d ago", location: lead.instagram || "—" };
+    return { subject: `Re: Booking Inquiry`, preview: `Thanks for getting in touch. We'd like to discuss possible dates for a booking. Can you share your availability for the coming months?`, time: "3d ago", location: lead.instagram || "—" };
   };
 
   const filtered = repliedLeads.filter(l => {
@@ -7011,7 +7007,6 @@ const activeLeads = leads.filter(l => !l.archived);
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
         input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active, textarea:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px #0A0A0A inset !important; -webkit-text-fill-color: #F0F0F0 !important; caret-color: #F0F0F0 !important; transition: background-color 9999s ease-in-out 0s; }
-        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active, textarea:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px #0A0A0A inset !important; -webkit-text-fill-color: #F0F0F0 !important; caret-color: #F0F0F0 !important; transition: background-color 9999s ease-in-out 0s; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -7026,14 +7021,14 @@ const activeLeads = leads.filter(l => !l.archived);
       {showCSVImport && <CSVImportModal onClose={() => setShowCSVImport(false)} onImport={() => { loadData(); setShowCSVImport(false); }} userId={user.id} supabase={supabase} COLORS={COLORS} />}
       {showWhatsNew && <WhatsNewModal onClose={dismissWhatsNew} />}
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
-      {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail="info@soundofgeez.com" />
+      {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail={user?.email || "hello@noxreach.io"} />
 }
         {showResetConfirm && (
         <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={e => e.target === e.currentTarget && setShowResetConfirm(false)}>
           <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 16, padding: 28, width: 360, maxWidth: "90vw", boxShadow: "0 24px 80px rgba(0,0,0,0.6)" }}>
             <div style={{ fontSize: 18, marginBottom: 8 }}>⚠️</div>
             <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, marginBottom: 8 }}>Reset pipeline?</div>
-            <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 24 }}>This will clear all your leads and replace them with sample data. This cannot be undone.</div>
+            <div style={{ fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6, marginBottom: 24 }}>This will permanently delete all your leads. This cannot be undone.</div>
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setShowResetConfirm(false)} style={{ flex: 1, padding: "10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 9, color: COLORS.textSecondary, fontSize: 13, cursor: "pointer" }}>Cancel</button>
               <button onClick={resetData} style={{ flex: 1, padding: "10px", background: COLORS.red + "22", border: `1px solid ${COLORS.red}55`, borderRadius: 9, color: COLORS.red, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Reset</button>
