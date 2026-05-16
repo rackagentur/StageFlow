@@ -2177,15 +2177,45 @@ function DashboardView({ leads, gigs = [], onNavigate, isPro, onUpgradeClick }) 
   );
 }
 
-function FollowUpsView({ leads, onNavigate }) {
-  const today    = new Date();
-  const active   = leads.filter(l => !l.archived);
-  const due      = active.filter(l => l.followUpDate && new Date(l.followUpDate) <= today);
-  const upcoming = active.filter(l => l.followUpDate && new Date(l.followUpDate) > today);
-  const stale    = active.filter(l => ["contacted","followup1","followup2","replied"].includes(l.stage) && !l.followUpDate);
+function FollowUpsView({ leads, onNavigate, onOpenLead }) {
+  const today  = new Date();
+  const active = leads.filter(l => !l.archived);
+
+  // Leads with an explicit follow-up date that's past
+  const due = active
+    .filter(l => l.followUpDate && new Date(l.followUpDate) <= today)
+    .sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate));
+
+  // Leads in active stages with no follow-up date set, stale for 3+ days
+  const stale = active
+    .filter(l => {
+      if (!["contacted","followup1","followup2","replied"].includes(l.stage)) return false;
+      if (l.followUpDate) return false;
+      if (!l.updatedAt) return true; // no timestamp — show anyway
+      const days = (today - new Date(l.updatedAt)) / (1000 * 60 * 60 * 24);
+      return days >= 3;
+    })
+    .sort((a, b) => {
+      // Oldest stale first
+      if (!a.updatedAt) return 1;
+      if (!b.updatedAt) return -1;
+      return new Date(a.updatedAt) - new Date(b.updatedAt);
+    });
+
+  // Leads with a future follow-up date
+  const upcoming = active
+    .filter(l => l.followUpDate && new Date(l.followUpDate) > today)
+    .sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate));
+
+  const openLead = (lead) => {
+    if (onOpenLead) onOpenLead(lead);
+    else onNavigate("pipeline");
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+
+      {/* ── Due Now ── */}
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.red, boxShadow: `0 0 8px ${COLORS.red}` }} />
@@ -2196,91 +2226,116 @@ function FollowUpsView({ leads, onNavigate }) {
           <div style={{ padding: "20px", background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${COLORS.green}`, borderRadius: 10, color: COLORS.green, fontSize: 12, textAlign: "center", fontWeight: 600 }}>All caught up ✓</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {due.map(lead => (
-              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${COLORS.red}`, borderRadius: 10, padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
-                    <Badge color={COLORS.textSecondary}>{STAGES.find(s => s.id === lead.stage)?.label}</Badge>
+            {due.map(lead => {
+              const daysOverdue = Math.floor((today - new Date(lead.followUpDate)) / (1000 * 60 * 60 * 24));
+              return (
+                <div key={lead.id} onClick={() => openLead(lead)} style={{ background: COLORS.surface, border: `1px solid ${COLORS.red}44`, borderLeft: `3px solid ${COLORS.red}`, borderRadius: 10, padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
+                      <Badge color={COLORS.textSecondary}>{STAGES.find(s => s.id === lead.stage)?.label || lead.stage}</Badge>
+                      <span style={{ fontSize: 11, color: COLORS.red, fontWeight: 600 }}>
+                        {daysOverdue === 0 ? "Due today" : `${daysOverdue}d overdue`}
+                      </span>
+                    </div>
                   </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openLead(lead); }}
+                    style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                  >
+                    Open Lead →
+                  </button>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 11, color: COLORS.red, fontWeight: 700, marginBottom: 6 }}>Follow up today</div>
-                  <button onClick={() => onNavigate("outreach")} style={{ padding: "7px 14px", background: COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Get Template →</button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
-{/* ── Needs Attention ── */}
+
+      {/* ── Going Cold ── */}
       {stale.length > 0 && (
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.red, boxShadow: `0 0 8px ${COLORS.red}` }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.red, letterSpacing: "0.08em", textTransform: "uppercase" }}>Needs Attention</span>
-            <Badge color={COLORS.red}>{stale.length}</Badge>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.amber, boxShadow: `0 0 8px ${COLORS.amber}` }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.amber, letterSpacing: "0.08em", textTransform: "uppercase" }}>Going Cold</span>
+            <Badge color={COLORS.amber}>{stale.length}</Badge>
             <span style={{ fontSize: 11, color: COLORS.textMuted }}>No follow-up scheduled</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {stale.map(lead => {
               const stageLabel = { contacted: "Contacted", followup1: "Follow-up 1", followup2: "Follow-up 2", replied: "Replied" }[lead.stage] || lead.stage;
-              const isReplied = lead.stage === "replied";
+              const isReplied  = lead.stage === "replied";
+              const daysStale  = lead.updatedAt ? Math.floor((today - new Date(lead.updatedAt)) / (1000 * 60 * 60 * 24)) : null;
+              const accentColor = isReplied ? COLORS.amber : COLORS.red;
               return (
-                <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${isReplied ? COLORS.amber + "55" : COLORS.red + "44"}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div key={lead.id} onClick={() => openLead(lead)} style={{ background: COLORS.surface, border: `1px solid ${accentColor}33`, borderLeft: `3px solid ${accentColor}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                       <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
-                      <Badge color={isReplied ? COLORS.amber : COLORS.red}>{stageLabel}</Badge>
-                      <span style={{ fontSize: 11, color: COLORS.textMuted }}>
-                        {isReplied ? "⚠ They replied — schedule your next move" : "No date set — don't let this go cold"}
-                      </span>
+                      <Badge color={accentColor}>{stageLabel}</Badge>
+                      {daysStale !== null && (
+                        <span style={{ fontSize: 11, color: COLORS.textMuted }}>{daysStale}d no activity</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 5 }}>
+                      {isReplied ? "⚠ They replied — schedule your next move" : "Set a date before this goes cold"}
                     </div>
                   </div>
-                  <button onClick={() => onNavigate("pipeline")} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${isReplied ? COLORS.amber : COLORS.red}`, borderRadius: 8, color: isReplied ? COLORS.amber : COLORS.red, fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
-                    Set Follow-Up →
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openLead(lead); }}
+                    style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${accentColor}`, borderRadius: 8, color: accentColor, fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                  >
+                    Set Date →
                   </button>
                 </div>
               );
             })}
           </div>
         </div>
-      )}      <div>
+      )}
+
+      {/* ── Upcoming ── */}
+      <div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.purple, boxShadow: `0 0 8px ${COLORS.purple}` }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.purpleLight, letterSpacing: "0.08em", textTransform: "uppercase" }}>Upcoming</span>
           <Badge color={COLORS.purple}>{upcoming.length}</Badge>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {upcoming.map(lead => {
-            const daysLeft = Math.ceil((new Date(lead.followUpDate) - today) / (1000 * 60 * 60 * 24));
-            const nudge = daysLeft <= 2
-              ? { text: "Get your message ready", color: COLORS.purpleLight }
-              : daysLeft <= 5
-              ? { text: "Coming up soon", color: COLORS.textSecondary }
-              : { text: "On track", color: COLORS.textMuted };
-            return (
-              <div key={lead.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${nudge.color}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <Badge color={COLORS.textSecondary}>{STAGES.find(s => s.id === lead.stage)?.label}</Badge>
-                    <span style={{ fontSize: 11, color: nudge.color }}>{nudge.text}</span>
+        {upcoming.length === 0 ? (
+          <div style={{ padding: "20px", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, color: COLORS.textMuted, fontSize: 12, textAlign: "center" }}>No upcoming follow-ups scheduled</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {upcoming.map(lead => {
+              const daysLeft = Math.ceil((new Date(lead.followUpDate) - today) / (1000 * 60 * 60 * 24));
+              const nudge = daysLeft <= 2
+                ? { text: "Get your message ready", color: COLORS.purpleLight }
+                : daysLeft <= 5
+                ? { text: "Coming up soon", color: COLORS.textSecondary }
+                : { text: "On track", color: COLORS.textMuted };
+              return (
+                <div key={lead.id} onClick={() => openLead(lead)} style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderLeft: `3px solid ${nudge.color}`, borderRadius: 10, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>{lead.name}</div>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <Badge color={COLORS.textSecondary}>{STAGES.find(s => s.id === lead.stage)?.label || lead.stage}</Badge>
+                      <span style={{ fontSize: 11, color: nudge.color }}>{nudge.text}</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: daysLeft <= 2 ? COLORS.purpleLight : COLORS.textSecondary, fontFamily: "'DM Mono', monospace" }}>
+                      {daysLeft === 1 ? "Tomorrow" : `${daysLeft}d`}
+                    </div>
+                    <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 2 }}>{formatShortDate(lead.followUpDate)}</div>
                   </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: daysLeft <= 2 ? COLORS.purpleLight : COLORS.textSecondary, fontFamily: "'DM Mono', monospace" }}>
-                    {daysLeft === 1 ? "Tomorrow" : `${daysLeft}d`}
-                  </div>
-                  <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 2 }}>{formatShortDate(lead.followUpDate)}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
     </div>
   );
 }
@@ -3218,6 +3273,7 @@ function dbToLead(r) {
     fee:            r.fee || null,
     depositPaid:    r.deposit_paid || false,
     isInbound:      r.is_inbound || false,
+    updatedAt:      r.updated_at || null,
   };
 }
 function leadToDb(lead, userId) {
@@ -6967,7 +7023,18 @@ const loadAdminUsers = async () => {
       ]);
     } catch (err) { console.error("resetData sync failed:", err); }
   };
-const dueCount     = leads.filter(l => !l.archived && l.followUpDate && new Date(l.followUpDate) <= new Date()).length;
+const _today = new Date();
+const dueCount = leads.filter(l => {
+    if (l.archived) return false;
+    // Explicit follow-up date that's past
+    if (l.followUpDate && new Date(l.followUpDate) <= _today) return true;
+    // Stale: in contacted/followup stage with no date set and untouched for 3+ days
+    if (!l.followUpDate && ["contacted","followup1","followup2"].includes(l.stage) && l.updatedAt) {
+      const daysStale = (_today - new Date(l.updatedAt)) / (1000 * 60 * 60 * 24);
+      if (daysStale >= 3) return true;
+    }
+    return false;
+  }).length;
   const repliedCount = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked")).length;
   const inboundCount = leads.filter(l => !l.archived && l.is_inbound && l.stage === "replied").length;
   const unreadCount  = useMemo(() => {
@@ -7263,7 +7330,7 @@ const activeLeads = leads.filter(l => !l.archived);
               {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} />}
             </>
           )}
-          {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
+          {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} onOpenLead={(lead) => { setSelectedLead(lead); setActiveTab("pipeline"); }} />}
           {activeTab === "outreach"  && <OutreachView isPro={isPro} onUpgradeClick={requestUpgrade} supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} isMobile={isMobile} />}
