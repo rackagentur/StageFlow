@@ -8902,6 +8902,10 @@ export default function NoxReach() {
     window.location.href = 'https://noxreach.com/terms.html';
     return null;
   }
+  if (window.location.pathname === '/agb' || window.location.pathname === '/agb.html') {
+    window.location.href = 'https://noxreach.com/agb.html';
+    return null;
+  }
   if (window.location.pathname === '/privacy' || window.location.pathname === '/privacy.html') {
     window.location.href = 'https://noxreach.com/privacy.html';
     return null;
