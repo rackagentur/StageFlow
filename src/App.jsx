@@ -393,8 +393,8 @@ const RELEASE_NOTES = [
     date: "May 2026",
     title: "AI suggestions, PWA install & feedback",
     items: [
-      { Icon: IconStar,       label: "AI outreach drafts",     desc: "One click generates a personalised cold email or DM for any lead — powered by Claude. Unlocks after 50 leads in your pipeline.", badge: "50 leads" },
-      { Icon: IconPipeline,   label: "AI venue suggestions",   desc: "NoxReach suggests 5 new venues similar to any lead you're targeting. Powered by Claude, gated at 50 leads.", badge: "50 leads" },
+      { Icon: IconStar,       label: "AI outreach drafts",     desc: "One click generates a personalised cold email or DM for any lead — powered by Claude. Available on PRO once you have 50 leads in your pipeline.", badge: "PRO" },
+      { Icon: IconPipeline,   label: "AI venue suggestions",   desc: "NoxReach suggests 5 new venues similar to any lead you're targeting. Powered by Claude, available on PRO with 50+ leads.", badge: "PRO" },
       { Icon: IconFollowUps,  label: "Follow-up nudges",       desc: "Going Cold section shows leads that have gone quiet for 3+ days with no date set. Tap any card to open that lead directly." },
       { Icon: IconBookingKit, label: "Booking form revamp",    desc: "\"Book this artist\" on your kit page now opens the structured booking form. You get a notification email for every enquiry." },
       { Icon: IconLink,       label: "Referral rewards",       desc: "Share your referral link — you get 30 days PRO, the DJ you invite gets a 15-day PRO trial." },
