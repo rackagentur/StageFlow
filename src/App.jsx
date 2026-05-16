@@ -7991,6 +7991,149 @@ function PublicGigList({ supabase }) {
   );
 }
 
+// ── Feedback Button ───────────────────────────────────────────────────────────
+function FeedbackButton({ supabase, userId }) {
+  const [open,      setOpen]      = useState(false);
+  const [type,      setType]      = useState('idea');
+  const [message,   setMessage]   = useState('');
+  const [status,    setStatus]    = useState('idle'); // idle | saving | done
+  const isMobile = window.innerWidth < 640;
+
+  const close = () => { setOpen(false); setTimeout(() => { setType('idea'); setMessage(''); setStatus('idle'); }, 300); };
+
+  const submit = async () => {
+    if (!message.trim()) return;
+    setStatus('saving');
+    await supabase.from('feedback').insert({
+      user_id: userId,
+      type,
+      message: message.trim(),
+      context: window.location.pathname,
+    });
+    setStatus('done');
+    setTimeout(close, 1800);
+  };
+
+  const TYPES = [
+    { id: 'idea',  label: '💡 Idea'  },
+    { id: 'bug',   label: '🐛 Bug'   },
+    { id: 'other', label: '💬 Other' },
+  ];
+
+  // Bottom-right, above mobile nav
+  const btnBottom = isMobile ? 70 : 24;
+
+  return (
+    <>
+      {/* Floating trigger */}
+      <button
+        onClick={() => setOpen(true)}
+        title="Send feedback"
+        style={{
+          position: 'fixed', bottom: btnBottom, right: 20, zIndex: 1000,
+          width: 40, height: 40, borderRadius: '50%',
+          background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`,
+          color: COLORS.textMuted, fontSize: 16, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
+          transition: 'border-color 0.15s, color 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.purple; e.currentTarget.style.color = COLORS.purpleLight; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.borderHover; e.currentTarget.style.color = COLORS.textMuted; }}
+      >
+        ✦
+      </button>
+
+      {/* Modal */}
+      {open && (
+        <div
+          onClick={close}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9000,
+            display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)',
+            animation: 'fbFadeIn 0.2s ease',
+          }}
+        >
+          <style>{`@keyframes fbFadeIn { from { opacity:0 } to { opacity:1 } }`}</style>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: 400,
+              background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`,
+              borderRadius: isMobile ? '20px 20px 0 0' : 14,
+              padding: isMobile ? '24px 20px 32px' : '22px 22px 20px',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+            }}
+          >
+            {status === 'done' ? (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ fontSize: 28, marginBottom: 10 }}>🙏</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>Thanks for the feedback</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>It goes straight to the founder.</div>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Send feedback</div>
+                  <button onClick={close} style={{ background: 'none', border: 'none', color: COLORS.textMuted, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>×</button>
+                </div>
+
+                {/* Type selector */}
+                <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                  {TYPES.map(t => (
+                    <button key={t.id} onClick={() => setType(t.id)} style={{
+                      flex: 1, padding: '7px 4px', borderRadius: 8, cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                      background: type === t.id ? COLORS.purpleBg : COLORS.bg,
+                      border: `1px solid ${type === t.id ? COLORS.purple : COLORS.border}`,
+                      color: type === t.id ? COLORS.purpleLight : COLORS.textMuted,
+                      transition: 'all 0.1s',
+                    }}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Message */}
+                <textarea
+                  autoFocus
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  placeholder={type === 'bug' ? 'What broke? What did you expect to happen?' : type === 'idea' ? 'What would make NoxReach better?' : 'What\'s on your mind?'}
+                  rows={4}
+                  style={{
+                    width: '100%', boxSizing: 'border-box', resize: 'vertical',
+                    background: COLORS.bg, border: `1px solid ${COLORS.border}`,
+                    borderRadius: 8, padding: '10px 12px', color: COLORS.text,
+                    fontSize: 13, outline: 'none', colorScheme: 'dark',
+                    fontFamily: 'inherit', lineHeight: 1.6,
+                  }}
+                  onFocus={e => { e.target.style.borderColor = COLORS.purple; }}
+                  onBlur={e => { e.target.style.borderColor = COLORS.border; }}
+                />
+
+                <button
+                  onClick={submit}
+                  disabled={!message.trim() || status === 'saving'}
+                  style={{
+                    marginTop: 10, width: '100%', padding: '11px',
+                    background: message.trim() ? COLORS.purple : COLORS.border,
+                    border: 'none', borderRadius: 8, color: '#fff',
+                    fontSize: 13, fontWeight: 700, cursor: message.trim() ? 'pointer' : 'default',
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  {status === 'saving' ? 'Sending…' : 'Send'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ── PWA Install Prompt ────────────────────────────────────────────────────────
 function InstallPrompt() {
   const [visible,        setVisible]        = useState(false);
@@ -8145,7 +8288,10 @@ export default function NoxReach() {
     <>
       <AuthGate>
         {({ user, session, supabase }) => (
-          <NoxReachApp user={user} session={session} supabase={supabase} />
+          <>
+            <NoxReachApp user={user} session={session} supabase={supabase} />
+            <FeedbackButton supabase={supabase} userId={user?.id} />
+          </>
         )}
       </AuthGate>
       <CookieBanner />
