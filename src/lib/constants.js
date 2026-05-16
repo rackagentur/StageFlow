@@ -36,6 +36,11 @@ export const COLORS = {
 
   // Gold: public booking CTA only
   gold: "#D4AF37",
+
+  // Violet — selected lead state only
+  violet:    "#7C3AED",   // violet-600 — selected border
+  violetLight:"#8B5CF6",  // violet-500 — selected left accent glow
+  violetBg:  "rgba(124,58,237,0.08)", // selected card tint
 };
 
 export const STAGES = [

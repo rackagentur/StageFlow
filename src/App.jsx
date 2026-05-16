@@ -3,7 +3,7 @@ import { COLORS, STAGES } from './lib/constants.js';
 import { formatShortDate } from './lib/formatters.js';
 import { showToast as showDomToast } from './lib/toast.js';
 import { supabase } from './lib/supabaseClient.js';
-import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload, IconDashboard, IconPipeline, IconFollowUps, IconReplyHub, IconInbound } from './icons/index.jsx';
+import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload, IconDashboard, IconPipeline, IconFollowUps, IconReplyHub, IconInbound, IconSettings, IconCalendar, IconBookingKit, IconAnalytics, IconCheck, IconLink, IconStar } from './icons/index.jsx';
 
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
@@ -377,14 +377,14 @@ const RELEASE_NOTES = [
     date: "May 2026",
     title: "Design overhaul, mobile & public pages",
     items: [
-      { icon: "🎨", label: "New design system", desc: "Unified cyan accent across every button, border, and badge. Consistent FREE/PRO chips, stronger card borders throughout." },
-      { icon: "🎸", label: "Pipeline stage colors", desc: "Each lead stage now has its own border heat — Target (dim) → Contacted (grey) → Follow-up (teal) → Replied (cyan) → Booked (green)." },
-      { icon: "🎨", label: "Genre color picker", desc: "Each genre tag gets its own color. Tap the dot to pick. All genres are now deletable, including defaults." },
-      { icon: "📱", label: "Mobile improvements", desc: "Cleaner header on small screens, icon-only Add Lead button, full-screen lead detail overlay, safe-area fixes for iPhone." },
-      { icon: "🌐", label: "Public press kit page", desc: "Share your artist kit at app.noxreach.com/kit/[username] — bio, EPK, mix links, booking CTA." },
-      { icon: "📅", label: "Public gig schedule", desc: "app.noxreach.com/gigs/[username] is now live. Preview button in Calendar finally works." },
-      { icon: "📊", label: "Analytics alignment", desc: "Conversion funnel matches the stat card grid. Tier and genre rows show correct colors." },
-      { icon: "⬇️", label: "CSV export", desc: "Download all your active leads as a dated CSV straight from the pipeline header." },
+      { Icon: IconDashboard,  label: "New design system",     desc: "Unified cyan accent across every button, border, and badge. Consistent FREE/PRO chips, stronger card borders throughout." },
+      { Icon: IconPipeline,   label: "Pipeline stage colors", desc: "Each lead stage has its own border heat — Target (dim) → Contacted (grey) → Follow-up (teal) → Replied (cyan) → Booked (green)." },
+      { Icon: IconSettings,   label: "Genre color picker",    desc: "Each genre tag gets its own persistent color. Tap the dot to pick. All genres are now deletable, including defaults." },
+      { Icon: IconFollowUps,  label: "Mobile improvements",   desc: "Cleaner header on small screens, icon-only Add Lead button, full-screen lead detail overlay, safe-area fixes for iPhone." },
+      { Icon: IconBookingKit, label: "Public press kit",      desc: "Share your artist kit at app.noxreach.com/kit/[username] — bio, EPK, mix links, booking CTA." },
+      { Icon: IconCalendar,   label: "Public gig schedule",   desc: "app.noxreach.com/gigs/[username] is live. The Preview button in Calendar now works." },
+      { Icon: IconAnalytics,  label: "Analytics alignment",   desc: "Conversion funnel matches the stat card grid. Tier and genre rows show correct colors." },
+      { Icon: IconUpload,     label: "CSV export",            desc: "Download all your active leads as a dated CSV straight from the pipeline header." },
     ],
   },
   {
@@ -392,10 +392,10 @@ const RELEASE_NOTES = [
     date: "May 2026",
     title: "Booking form, gig logbook & smart emails",
     items: [
-      { icon: "📩", label: "Public booking form", desc: "Venues can submit booking requests directly via app.noxreach.com/book/[username]. Leads land in your Inbound tab instantly." },
-      { icon: "📓", label: "Gig logbook", desc: "Log recaps, setlist links, recording URLs, and crowd & promoter ratings on each past gig." },
-      { icon: "📧", label: "Behavioral email triggers", desc: "5 lifecycle nudges now fire automatically — day 2, day 5, day 7, day 10, and first booking celebration." },
-      { icon: "📋", label: "Asset kit", desc: "Store your EPK, SoundCloud, Spotify, mix links, bio and press photos in one place. Share via link." },
+      { Icon: IconInbound,    label: "Public booking form",       desc: "Venues submit booking requests via app.noxreach.com/book/[username]. Leads land in your Inbound tab instantly." },
+      { Icon: IconCalendar,   label: "Gig logbook",               desc: "Log recaps, setlist links, recording URLs, and crowd & promoter ratings on each past gig." },
+      { Icon: IconMail,       label: "Behavioral email triggers", desc: "5 lifecycle nudges fire automatically — day 2, day 5, day 7, day 10, and first booking celebration." },
+      { Icon: IconBookingKit, label: "Asset kit",                 desc: "Store your EPK, SoundCloud, Spotify, mix links, bio and press photos in one place. Share via link." },
     ],
   },
 ];
@@ -413,7 +413,7 @@ function WhatsNewModal({ onClose }) {
         <div style={{ padding: "22px 24px 0", borderBottom: `1px solid ${COLORS.border}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.purpleLight, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>What's New</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.violetLight, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>What's New</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.02em" }}>{release.title}</div>
               <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 3 }}>v{release.version} · {release.date}</div>
             </div>
@@ -422,7 +422,7 @@ function WhatsNewModal({ onClose }) {
           {/* Version tabs */}
           <div style={{ display: "flex", gap: 4, marginBottom: -1 }}>
             {RELEASE_NOTES.map((r, i) => (
-              <button key={r.version} onClick={() => setTab(i)} style={{ padding: "7px 14px", background: "none", border: "none", borderBottom: `2px solid ${tab === i ? COLORS.purpleLight : "transparent"}`, color: tab === i ? COLORS.purpleLight : COLORS.textMuted, fontSize: 12, fontWeight: tab === i ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
+              <button key={r.version} onClick={() => setTab(i)} style={{ padding: "7px 14px", background: "none", border: "none", borderBottom: `2px solid ${tab === i ? COLORS.violetLight : "transparent"}`, color: tab === i ? COLORS.violetLight : COLORS.textMuted, fontSize: 12, fontWeight: tab === i ? 700 : 500, cursor: "pointer", transition: "all 0.15s" }}>
                 v{r.version}
               </button>
             ))}
@@ -434,7 +434,9 @@ function WhatsNewModal({ onClose }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {release.items.map((item, i) => (
               <div key={i} style={{ display: "flex", gap: 14, padding: "12px 14px", background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 11, alignItems: "flex-start" }}>
-                <div style={{ fontSize: 20, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{item.icon}</div>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: COLORS.violetBg, border: `1px solid rgba(124,58,237,0.25)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <item.Icon size={15} color={COLORS.violetLight} />
+                </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, marginBottom: 2 }}>{item.label}</div>
                   <div style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>{item.desc}</div>
@@ -446,7 +448,7 @@ function WhatsNewModal({ onClose }) {
 
         {/* Footer */}
         <div style={{ padding: "14px 24px", borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ padding: "10px 28px", background: COLORS.purple, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={onClose} style={{ padding: "10px 28px", background: COLORS.violet, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
             Got it →
           </button>
         </div>
@@ -825,11 +827,11 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
           onSelect(isSelected ? null : lead);
         }} style={{
 
-      background: (isBulkSelected || isSelected) ? `${COLORS.purpleLight}0D` :
+      background: (isBulkSelected || isSelected) ? COLORS.violetBg :
         lead.stage === "booked"  && !lead.archived ? "rgba(34,197,94,0.04)" :
         lead.stage === "replied" && !lead.archived ? `${COLORS.purpleLight}08` :
         COLORS.surface,
-      border: (isBulkSelected || isSelected) ? `2px solid rgba(255,255,255,0.70)` : `1px solid ${
+      border: (isBulkSelected || isSelected) ? `2px solid ${COLORS.violet}` : `1px solid ${
         lead.archived                     ? COLORS.purpleDim :
         isOverdue                         ? COLORS.amber :
         lead.stage === "booked"           ? "rgba(34,197,94,0.5)" :
@@ -845,7 +847,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
         lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" :
         undefined,
       boxShadow: (isBulkSelected || isSelected)
-        ? `inset 4px 0 0 ${COLORS.purpleLight}, 0 0 16px rgba(34,211,238,0.18), 0 4px 16px rgba(0,0,0,0.5)`
+        ? `inset 4px 0 0 ${COLORS.violetLight}, 0 0 16px rgba(124,58,237,0.20), 0 4px 16px rgba(0,0,0,0.5)`
         : lead.stage === "booked" && !lead.archived
         ? `0 0 8px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.35)`
         : lead.stage === "replied" && !lead.archived
@@ -1301,7 +1303,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   return (
     <div style={{
       width: 280,
-      borderLeft: `3px solid ${COLORS.purpleLight}`,
+      borderLeft: `3px solid ${COLORS.violetLight}`,
       background: COLORS.surface,
       display: "flex",
       flexDirection: "column",
@@ -7229,8 +7231,8 @@ const activeLeads = leads.filter(l => !l.archived);
         {/* What's New link */}
         <div style={{ padding: "8px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={() => setShowWhatsNew(true)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: 0 }}>
-            <span style={{ fontSize: 10 }}>✦</span>
-            <span style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: "0.04em" }}>What's New</span>
+            <IconStar size={11} color={COLORS.violetLight} />
+            <span style={{ fontSize: 10, fontWeight: 600, color: COLORS.violetLight, letterSpacing: "0.04em" }}>What's New</span>
           </button>
           <span style={{ fontSize: 9, color: COLORS.text3, fontFamily: "'DM Mono', monospace" }}>v{APP_VERSION}</span>
         </div>
