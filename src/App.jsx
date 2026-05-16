@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { COLORS, STAGES } from './lib/constants.js';
 import { formatShortDate } from './lib/formatters.js';
 import { showToast as showDomToast } from './lib/toast.js';
@@ -1802,7 +1802,7 @@ function AddGenreRow({ onAdd }) {
     </button>
   );
 
-  const previewColor = input.trim() ? tagColor(input.trim()) : null;
+  const previewColor = null; // color preview requires TAG_COLORS prop — skipped for now
   return (
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -1842,7 +1842,7 @@ function GenreSelector({ tags, value, onChange, TAG_COLORS, onAddTag }) {
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
       {tags.map(tag => {
-        const color  = TAG_COLORS[tag] || tagColor(tag);
+        const color  = TAG_COLORS[tag] || COLORS.textMuted;
         const active = value === tag;
         return (
           <button key={tag} onClick={() => onChange(tag)} style={{
@@ -3685,7 +3685,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 
 // ─── Reply Hub ─────────────────────────────────────────────────────────────────
 
-function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
+function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate }) {
   const [filter, setFilter]   = useState("all"); // all | unread | replied
   const [selected, setSelected] = useState(null);
   const [replyText, setReplyText] = useState("");
@@ -3833,7 +3833,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS }) {
                   </div>
                   <button
                     onClick={() => {
-                      setActiveTab("calendar");
+                      onNavigate?.("calendar");
                       // Small delay to let tab switch complete, then trigger add form
                       setTimeout(() => {
                         const calendarSection = document.querySelector('[data-calendar-view]');
@@ -6582,24 +6582,25 @@ function NoxReachApp({ user, session, supabase }) {
       .then(({ data, error }) => setOnboardingAssets(error ? {} : (data || {})));
   }, [user?.id]);
 
-  // ── Load user's leads + gigs from Supabase on mount ─────────────────────
-  useEffect(() => {
+  // ── Load user's leads + gigs from Supabase ───────────────────────────────
+  const loadData = useCallback(async () => {
     if (!user?.id) return;
-    const loadData = async () => {
-      setDataLoading(true);
-      try {
-        const [leadsRes, gigsRes] = await Promise.all([
-          supabase.from("leads").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-          supabase.from("gigs").select("*").eq("user_id", user.id).order("date", { ascending: true }),
-        ]);
-        if (leadsRes.data) setLeads(leadsRes.data.map(dbToLead));
-        if (gigsRes.data)  setGigs(gigsRes.data.map(dbToGig));
-      } catch (err) {
-        console.error("Failed to load data:", err);
-      } finally {
-        setDataLoading(false);
-      }
-    };
+    setDataLoading(true);
+    try {
+      const [leadsRes, gigsRes] = await Promise.all([
+        supabase.from("leads").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("gigs").select("*").eq("user_id", user.id).order("date", { ascending: true }),
+      ]);
+      if (leadsRes.data) setLeads(leadsRes.data.map(dbToLead));
+      if (gigsRes.data)  setGigs(gigsRes.data.map(dbToGig));
+    } catch (err) {
+      console.error("Failed to load data:", err);
+    } finally {
+      setDataLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
     loadData();
   }, [user?.id]);
 
@@ -7013,43 +7014,7 @@ const activeLeads = leads.filter(l => !l.archived);
       `}</style>
 
       {showAddModal     && <AddLeadModal onClose={() => setShowAddModal(false)} onAdd={addLead} customTags={customTags} TAG_COLORS={TAG_COLORS} onAddTag={addCustomTag} />}
-      {showWelcomePro && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 3000, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
-          onClick={() => setShowWelcomePro(false)}>
-          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, width: 420, maxWidth: "95vw", overflow: "hidden", boxShadow: `0 0 80px rgba(14,116,144,0.15)` }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.purple}, ${COLORS.purpleLight})` }} />
-            <div style={{ padding: "32px 28px" }}>
-              <div style={{ textAlign: "center", marginBottom: 24 }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.text, marginBottom: 6 }}>Welcome to Pro</div>
-                <div style={{ fontSize: 13, color: COLORS.textSecondary }}>Everything is unlocked. Here's what you now have access to:</div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-                {[
-                  { icon: "∞", label: "Unlimited leads & gigs", desc: "No more caps. Track every opportunity." },
-                  { icon: "⏰", label: "Auto follow-up scheduling", desc: "Reminders set themselves at 5 and 14 days." },
-                  { icon: "✦", label: "All outreach templates", desc: "Berlin, Circuit, Disco, Leverage — all unlocked." },
-                  { icon: "▣", label: "Conversion Funnel + Next Actions", desc: "See exactly where bookings drop off." },
-                  { icon: "⚙", label: "Custom follow-up intervals", desc: "Set your own cadence in Settings." },
-                ].map((f, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 14px", background: COLORS.bg, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: COLORS.purple, flexShrink: 0 }}>{f.icon}</div>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text }}>{f.label}</div>
-                      <div style={{ fontSize: 11, color: COLORS.textSecondary, marginTop: 2 }}>{f.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => setShowWelcomePro(false)} style={{ width: "100%", padding: "13px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`, border: "none", borderRadius: 12, color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(14,116,144,0.35)" }}>
-                Let's go →
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-            {showWelcomeNew && !isPro && <WelcomeNewUserModal onClose={dismissWelcomeNew} />}
+      {showWelcomeNew && !isPro && <WelcomeNewUserModal onClose={dismissWelcomeNew} />}
       {showWelcomePro && <ProWelcomeModal onClose={() => setShowWelcomePro(false)} />}
       {showCSVImport && <CSVImportModal onClose={() => setShowCSVImport(false)} onImport={() => { loadData(); setShowCSVImport(false); }} userId={user.id} supabase={supabase} COLORS={COLORS} />}
       {showWhatsNew && <WhatsNewModal onClose={dismissWhatsNew} />}
@@ -7266,7 +7231,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   <button onClick={() => requestUpgrade("leads")} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Upgrade to Pro →</button>
                 </div>
               )}
-              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowNewLeadModal(true)} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
+              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
@@ -7281,7 +7246,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} />}
-          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} />}
+          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} />}
           {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
