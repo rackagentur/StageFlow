@@ -48,6 +48,9 @@ function LoginScreen({ onAuth }) {
   const [error, setError]     = useState("");
   const [success, setSuccess] = useState("");
 
+  // Capture referral code from URL
+  const refCode = useState(() => new URLSearchParams(window.location.search).get("ref") || "")[0];
+
   const inputStyle = {
     width: "100%", padding: "13px 16px",
     background: COLORS.surface, border: `1px solid ${COLORS.border}`,
@@ -74,6 +77,10 @@ function LoginScreen({ onAuth }) {
           options: { data: { full_name: name.trim() } }
         });
         if (err) throw err;
+        // Store referral code on the new profile
+        if (refCode && data.user) {
+          await supabase.from("profiles").upsert({ id: data.user.id, referred_by: refCode });
+        }
         if (data.session) {
           onAuth(data.session, data.user);
         } else {
@@ -2926,13 +2933,18 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
 
   const [displayName, setDisplayName] = useState("");
   const [displayNameSaved, setDisplayNameSaved] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
+  const [referralCount, setReferralCount] = useState(0);
+  const [referralCopied, setReferralCopied] = useState(false);
 
   useEffect(() => {
     if (!user?.id || !supabase) return;
-    supabase.from("profiles").select("username, display_name").eq("id", user.id).single()
+    supabase.from("profiles").select("username, display_name, referral_code, referral_count").eq("id", user.id).single()
       .then(({ data }) => {
         if (data?.username) setUsername(data.username);
         if (data?.display_name) setDisplayName(data.display_name);
+        if (data?.referral_code) setReferralCode(data.referral_code);
+        if (data?.referral_count) setReferralCount(data.referral_count);
       });
   }, [user?.id]);
 
@@ -3035,6 +3047,38 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
           <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 6 }}>This is what promoters see on your booking form — "Book [name]"</div>
         </div>
       </div>
+
+      {/* Referral */}
+      {referralCode && (
+        <div style={{ background: COLORS.surface, border: `1px solid rgba(139,92,246,0.25)`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Refer a DJ — get 1 month free PRO</div>
+            {referralCount > 0 && (
+              <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.violetLight, background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", borderRadius: 20, padding: "2px 10px" }}>
+                {referralCount} {referralCount === 1 ? "referral" : "referrals"}
+              </div>
+            )}
+          </div>
+          <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>
+            Share your link. Every DJ who signs up gives you 30 days of free PRO.
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ flex: 1, background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.text2, fontFamily: "'DM Mono', monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              app.noxreach.com/?ref={referralCode}
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`https://app.noxreach.com/?ref=${referralCode}`);
+                setReferralCopied(true);
+                setTimeout(() => setReferralCopied(false), 2000);
+              }}
+              style={{ background: referralCopied ? "rgba(34,197,94,0.15)" : "rgba(139,92,246,0.15)", border: `1px solid ${referralCopied ? COLORS.green : "rgba(139,92,246,0.35)"}`, borderRadius: 8, padding: "10px 16px", color: referralCopied ? COLORS.green : COLORS.violetLight, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}
+            >
+              {referralCopied ? "✓ Copied!" : "Copy link"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
