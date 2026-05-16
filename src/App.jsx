@@ -722,11 +722,11 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
 
 
 // === Bulk Actions Bar - Bundle 5.5 ===
-function BulkActionsBar({ count, onMoveTo, onArchive, onClear }) {
+function BulkActionsBar({ count, onMoveTo, onArchive, onClear, isMobile }) {
   const [showMenu, setShowMenu] = useState(false);
   return (
     <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0,
+      position: 'fixed', bottom: isMobile ? 56 : 0, left: 0, right: 0,
       background: COLORS.surface, borderTop: `2px solid ${COLORS.purple}`,
       padding: '16px 24px', display: 'flex', gap: 12, alignItems: 'center',
       zIndex: 10000, boxShadow: '0 -4px 12px rgba(0,0,0,0.3)'
@@ -2285,7 +2285,7 @@ function FollowUpsView({ leads, onNavigate }) {
   );
 }
 
-function OutreachView({ isPro, onUpgradeClick, supabase, userId }) {
+function OutreachView({ isPro, onUpgradeClick, supabase, userId, isMobile }) {
   const [selected, setSelected] = useState("berlin");
   const [artistName, setArtistName] = useState("");
   const [copied, setCopied] = useState(false);
@@ -2303,7 +2303,7 @@ function OutreachView({ isPro, onUpgradeClick, supabase, userId }) {
   const freeTemplateIds = ["berlin", "circuit"];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 20 }}>
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "220px 1fr", gap: 20 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, padding: "0 4px" }}>Message Templates</div>
         {TEMPLATES.map(t => {
@@ -2374,7 +2374,7 @@ function CopyBlock({ label, value }) {
   );
 }
 
-function AssetsView({ supabase, userId }) {
+function AssetsView({ supabase, userId, isMobile }) {
   const [assets, setAssets] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -2438,7 +2438,7 @@ function AssetsView({ supabase, userId }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "200px 1fr", gap: 20 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{ fontSize: 10, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8, padding: "0 4px" }}>Your Assets</div>
           {SECTIONS.map(s => (
@@ -3686,10 +3686,11 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 
 // ─── Reply Hub ─────────────────────────────────────────────────────────────────
 
-function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate }) {
+function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobile }) {
   const [filter, setFilter]   = useState("all"); // all | unread | replied
   const [selected, setSelected] = useState(null);
   const [replyText, setReplyText] = useState("");
+  const [mobileShowDetail, setMobileShowDetail] = useState(false);
   const [readIds, setReadIds] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]")); } catch { return new Set(); }
   });
@@ -3725,10 +3726,10 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate }) {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 0, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden", minHeight: 500 }}>
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "320px 1fr", gap: 0, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, overflow: "hidden", minHeight: 500 }}>
 
       {/* Left: message list */}
-      <div style={{ borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column" }}>
+      <div style={{ borderRight: isMobile ? "none" : `1px solid ${COLORS.border}`, display: isMobile && mobileShowDetail ? "none" : "flex", flexDirection: "column" }}>
         {/* Filter tabs */}
         <div style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", gap: 6 }}>
           {[["all", "All"], ["unread", `Unread`], ["replied", "Booked"]].map(([id, label]) => (
@@ -3753,7 +3754,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate }) {
               const isUnread = !readIds.has(lead.id);
               const isActive = selected?.id === lead.id;
               return (
-                <div key={lead.id} onClick={() => { setSelected(lead); markRead(lead.id); setReplyText(""); }}
+                <div key={lead.id} onClick={() => { setSelected(lead); markRead(lead.id); setReplyText(""); if (isMobile) setMobileShowDetail(true); }}
                   style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer", background: isActive ? COLORS.purpleBg : "transparent", borderLeft: `3px solid ${isActive ? COLORS.purple : isUnread ? COLORS.purple : "transparent"}`, transition: "background 0.15s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -3784,13 +3785,18 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate }) {
       </div>
 
       {/* Right: message detail + reply composer */}
-      {selected ? (() => {
+      {(!isMobile || mobileShowDetail) && selected ? (() => {
         const msg  = getMessage(selected);
         const hint = selected.stage === "replied"
           ? { action: "Confirm booking", next: "booked", color: COLORS.green }
           : null;
         return (
           <div style={{ display: "flex", flexDirection: "column" }}>
+            {isMobile && (
+              <button onClick={() => setMobileShowDetail(false)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", background: "transparent", border: "none", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.textMuted, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                ‹ Back to inbox
+              </button>
+            )}
             {/* Message header */}
             <div style={{ padding: "18px 24px", borderBottom: `1px solid ${COLORS.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -4037,7 +4043,7 @@ function OnboardingBanner({ leads, assets, onNavigate, onDismiss }) {
 
   return (
     <div style={{
-      background: allDone ? COLORS.greenDim : "rgba(107,47,212,0.08)",
+      background: allDone ? "rgba(34,197,94,0.10)" : "rgba(107,47,212,0.08)",
       border: `1px solid ${allDone ? COLORS.green + "44" : COLORS.purple + "55"}`,
       borderRadius: 16, padding: "24px 28px", marginBottom: 28, position: "relative",
       boxShadow: allDone ? "none" : "0 0 40px rgba(107,47,212,0.08)",
@@ -5891,7 +5897,7 @@ function ShortcutsHelpModal({ onClose }) {
 
 // Quick Actions Floating Button (Mobile/Desktop)
 // Shows ? button in bottom-right corner
-function QuickActionsButton({ onShowHelp }) {
+function QuickActionsButton({ onShowHelp, isMobile }) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -5901,7 +5907,7 @@ function QuickActionsButton({ onShowHelp }) {
       onMouseLeave={() => setIsHovered(false)}
       style={{
         position: 'fixed',
-        bottom: 24,
+        bottom: isMobile ? 72 : 24,
         right: 24,
         width: 48,
         height: 48,
@@ -5978,7 +5984,7 @@ function QuickActionTooltip({ children, text, shortcut }) {
 
 // AnalyticsView Component - Insert this into App.jsx
 
-function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {} }) {
+function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {}, isMobile }) {
   const [stats, setStats] = useState(null);
   const [tierStats, setTierStats] = useState([]);
   const [tagStats, setTagStats] = useState([]);
@@ -6089,7 +6095,7 @@ function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {} }) {
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto" }}>
       {/* Key Metrics Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
         {[
           { label: "Total Leads",     value: stats.total_leads,           color: COLORS.purpleLight },
           { label: "Total Gigs",      value: stats.booked_count,          color: COLORS.green       },
@@ -6116,7 +6122,7 @@ function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {} }) {
       {/* Conversion Funnel — same 4-col grid as stat cards */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textMuted, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Pipeline Conversion Funnel</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, alignItems: "end" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 16, alignItems: "end" }}>
           {[
             { label: "Target",    count: stats.target_count,    color: COLORS.text3,       width: 100 },
             { label: "Contacted", count: stats.contacted_count, color: COLORS.purple,      width: stats.total_leads > 0     ? (stats.contacted_count / stats.total_leads) * 100  : 0 },
@@ -7218,7 +7224,7 @@ const activeLeads = leads.filter(l => !l.archived);
               <DashboardView leads={leads} gigs={gigs} onNavigate={setActiveTab} isPro={isPro} onUpgradeClick={requestUpgrade} TAG_COLORS={TAG_COLORS} />
             </>
           )}
-          {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} TAG_COLORS={TAG_COLORS} />}
+          {activeTab === "analytics" && <AnalyticsView userId={user.id} supabase={supabase} COLORS={COLORS} TAG_COLORS={TAG_COLORS} isMobile={isMobile} />}
           {activeTab === "templates" && <TemplatesView supabase={supabase} user={user} />}
           {activeTab === "pipeline"  && (
             <>
@@ -7243,11 +7249,11 @@ const activeLeads = leads.filter(l => !l.archived);
             </>
           )}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
-          {activeTab === "outreach"  && <OutreachView isPro={isPro} onUpgradeClick={requestUpgrade} supabase={supabase} userId={user.id} />}
+          {activeTab === "outreach"  && <OutreachView isPro={isPro} onUpgradeClick={requestUpgrade} supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
-          {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} />}
+          {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} isMobile={isMobile} />}
-          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} />}
+          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} isMobile={isMobile} />}
           {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
@@ -7483,6 +7489,7 @@ const activeLeads = leads.filter(l => !l.archived);
           count={selectedLeads.size}
           onMoveTo={bulkMoveTo}
           onArchive={bulkArchive}
+          isMobile={isMobile}
           onClear={() => {
             setSelectedLeads(new Set());
             setShowBulkBar(false);
