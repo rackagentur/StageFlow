@@ -1215,7 +1215,7 @@ function AssetCopyRow({ label, value }) {
   );
 }
 
-function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0 }) {
+function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0, isAdmin = false }) {
   const [editing, setEditing] = useState(false);
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
@@ -1494,15 +1494,15 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {!lead.archived && lead.stage !== "booked" && (
         <div style={{ marginBottom: 12 }}>
           <button
-            onClick={() => totalLeads >= 50 && setAiOpen(o => !o)}
-            style={{ width: "100%", padding: "8px 12px", background: aiOpen ? `rgba(139,92,246,0.15)` : COLORS.surface2, border: `1px solid ${aiOpen ? COLORS.violetLight : COLORS.border}`, borderRadius: 8, color: totalLeads >= 50 ? (aiOpen ? COLORS.violetLight : COLORS.text2) : COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: totalLeads >= 50 ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.15s" }}
+            onClick={() => (isAdmin || totalLeads >= 50) && setAiOpen(o => !o)}
+            style={{ width: "100%", padding: "8px 12px", background: aiOpen ? `rgba(139,92,246,0.15)` : COLORS.surface2, border: `1px solid ${aiOpen ? COLORS.violetLight : COLORS.border}`, borderRadius: 8, color: (isAdmin || totalLeads >= 50) ? (aiOpen ? COLORS.violetLight : COLORS.text2) : COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: (isAdmin || totalLeads >= 50) ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.15s" }}
           >
             <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontSize: 14 }}>✨</span>
               AI Outreach Draft
-              {totalLeads < 50 && <span style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 400 }}>· unlocks at 50 leads ({50 - totalLeads} to go)</span>}
+              {!isAdmin && totalLeads < 50 && <span style={{ fontSize: 10, color: COLORS.textMuted, fontWeight: 400 }}>· unlocks at 50 leads ({50 - totalLeads} to go)</span>}
             </span>
-            {totalLeads >= 50 && <span style={{ fontSize: 10, opacity: 0.6 }}>{aiOpen ? "▲" : "▼"}</span>}
+            {(isAdmin || totalLeads >= 50) && <span style={{ fontSize: 10, opacity: 0.6 }}>{aiOpen ? "▲" : "▼"}</span>}
           </button>
 
           {aiOpen && (
@@ -1683,6 +1683,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           lead={lead}
           artistGenre={assets?.genres}
           totalLeads={totalLeads}
+          isAdmin={isAdmin}
           onLeadAdded={(newLead) => { if (onUpdate) onUpdate(newLead); }}
         />
       )}
@@ -5644,9 +5645,9 @@ function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClo
 
 // Smart Suggestions Button Component
 // Used in LeadDetail panel to trigger suggestions
-function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded, artistGenre, totalLeads = 0 }) {
+function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded, artistGenre, totalLeads = 0, isAdmin = false }) {
   const [showModal, setShowModal] = useState(false);
-  const locked = totalLeads < 50;
+  const locked = !isAdmin && totalLeads < 50;
 
   if (lead.archived || lead.stage === "booked") return null;
 
@@ -7269,10 +7270,10 @@ const activeLeads = leads.filter(l => !l.archived);
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
-                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} />
+                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} />
                 </div>
               )}
-              {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} />}
+              {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} />}
             </>
           )}
           {activeTab === "followups" && <FollowUpsView leads={leads} onNavigate={setActiveTab} />}
