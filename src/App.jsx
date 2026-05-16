@@ -757,7 +757,10 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
   const isFiltered = hasAnyFilter && resultCount < totalCount;
   const TIERS = ["A1", "A2", "A3"];
 
-  const toggle = (key, val) => setFilters(f => ({ ...f, [key]: f[key] === val ? null : val }));
+  const toggle = (key, val) => {
+    setFilters(f => ({ ...f, [key]: f[key] === val ? null : val }));
+    if (isMobile) setShowFilters(false); // auto-close on mobile after selection
+  };
   const clearAll = () => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); };
 
   const activeFilterCount = [filters.tier, filters.tag, filters.stage].filter(Boolean).length;
@@ -1200,7 +1203,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
 
-function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, selectedLeads = new Set(), onSelectAll, onToggleLeadSelection }) {
+function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, onClearFilters, selectedLeads = new Set(), onSelectAll, onToggleLeadSelection }) {
   const [showArchived, setShowArchived] = useState(false);
 
   const isLeadBulkSelected = (leadId) => {
@@ -1243,6 +1246,58 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
           </div>
         )}
       </div>
+
+      {/* ── Full-pipeline empty state (zero active leads, no filter) ── */}
+      {!showArchived && leads.filter(l => !l.archived).length === 0 && !hasFilter && (
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          padding: "64px 24px", textAlign: "center",
+        }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: "50%",
+            background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 26, marginBottom: 20,
+          }}>◈</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>Your pipeline is empty</div>
+          <div style={{ fontSize: 13, color: COLORS.text2, lineHeight: 1.6, maxWidth: 280, marginBottom: 28 }}>
+            Add your first venue or promoter to start tracking outreach and bookings.
+          </div>
+          <button
+            onClick={onOpenNewLead}
+            style={{
+              padding: "13px 32px", background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`,
+              border: "none", borderRadius: 10, color: "#fff",
+              fontSize: 14, fontWeight: 700, cursor: "pointer",
+              boxShadow: `0 4px 20px ${COLORS.purpleDim}`,
+            }}
+          >
+            + Add your first lead
+          </button>
+        </div>
+      )}
+
+      {/* ── No-results state (filter returns nothing) ── */}
+      {!showArchived && leads.filter(l => !l.archived).length > 0 && activeLeads.length === 0 && hasFilter && (
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          padding: "56px 24px", textAlign: "center",
+        }}>
+          <div style={{ fontSize: 22, marginBottom: 12, opacity: 0.4 }}>⌕</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: COLORS.text, marginBottom: 6 }}>No leads match</div>
+          <div style={{ fontSize: 13, color: COLORS.text2, marginBottom: 20 }}>Try adjusting or clearing your filters.</div>
+          <button
+            onClick={onClearFilters}
+            style={{
+              padding: "9px 20px", background: "transparent",
+              border: `1px solid ${COLORS.border}`, borderRadius: 8,
+              color: COLORS.textSecondary, fontSize: 13, cursor: "pointer",
+            }}
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
 
       {showArchived ? (
         <div>
@@ -7541,7 +7596,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   <button onClick={() => requestUpgrade("leads")} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Upgrade to Pro →</button>
                 </div>
               )}
-              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
+              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
@@ -7784,7 +7839,7 @@ const activeLeads = leads.filter(l => !l.archived);
                           leads={selectedUserLeads}
                           onMove={() => {}} onSelect={() => {}} selectedLead={null} onArchive={() => {}}
                           search="" filters={{}} TAG_COLORS={TAG_COLORS} customTags={customTags}
-                          onUpdateLead={() => {}} isMobile={isMobile} onOpenNewLead={() => {}}
+                          onUpdateLead={() => {}} isMobile={isMobile} onOpenNewLead={() => {}} onClearFilters={() => {}}
                         />
                       </div>
                     )}
