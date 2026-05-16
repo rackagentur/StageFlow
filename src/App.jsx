@@ -842,7 +842,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
       }`,
       borderLeft: (isBulkSelected || isSelected) ? undefined :
         lead.stage === "booked"    && !lead.archived ? "3px solid rgba(34,197,94,0.6)" :
-        lead.stage === "replied"   && !lead.archived ? `2px solid rgba(34,211,238,0.45)` :
+        lead.stage === "replied"   && !lead.archived ? `3px solid rgba(34,211,238,0.80)` :
         (lead.stage === "followup1" || lead.stage === "followup2") && !lead.archived ? `3px solid ${COLORS.purple}` :
         lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" :
         undefined,
