@@ -1212,6 +1212,40 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   const [editing, setEditing] = useState(false);
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
+
+  // AI outreach draft
+  const [aiOpen, setAiOpen]         = useState(false);
+  const [aiFormat, setAiFormat]     = useState("email");
+  const [aiLoading, setAiLoading]   = useState(false);
+  const [aiDraft, setAiDraft]       = useState("");
+  const [aiCopied, setAiCopied]     = useState(false);
+  const [aiError, setAiError]       = useState("");
+
+  const generateDraft = async () => {
+    setAiLoading(true); setAiError(""); setAiDraft("");
+    try {
+      const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", userId).single();
+      const { data: assetData } = await supabase.from("user_assets").select("*").eq("user_id", userId).maybeSingle();
+      const res = await supabase.functions.invoke("ai-outreach", {
+        body: {
+          lead: { name: lead.name, city: lead.city, country: lead.country, tag: lead.tag, tier: lead.tier, notes: lead.notes, instagram: lead.instagram, stage: lead.stage },
+          artist: { display_name: profile?.display_name, tagline: assetData?.tagline, location: assetData?.location, genres: assetData?.genres, bio: assetData?.bio, booking_email: assetData?.booking_email, soundcloud: assetData?.soundcloud },
+          format: aiFormat,
+        },
+      });
+      if (res.error) throw new Error(res.error.message);
+      setAiDraft(res.data?.message || "");
+    } catch (e) {
+      setAiError("Generation failed — check your connection and try again.");
+    }
+    setAiLoading(false);
+  };
+
+  const copyDraft = () => {
+    navigator.clipboard.writeText(aiDraft);
+    setAiCopied(true); setTimeout(() => setAiCopied(false), 2000);
+  };
+
   const [form, setForm] = useState({
     name: lead.name || "",
     contact: lead.contact || "",
@@ -1446,6 +1480,78 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
               <AssetCopyRow key={item.label} label={item.label} value={item.value} />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* AI Draft Panel */}
+      {!lead.archived && lead.stage !== "booked" && (
+        <div style={{ marginBottom: 12 }}>
+          <button
+            onClick={() => setAiOpen(o => !o)}
+            style={{ width: "100%", padding: "8px 12px", background: aiOpen ? `rgba(139,92,246,0.15)` : COLORS.surface2, border: `1px solid ${aiOpen ? COLORS.violetLight : COLORS.border}`, borderRadius: 8, color: aiOpen ? COLORS.violetLight : COLORS.text2, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.15s" }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 14 }}>✨</span>
+              AI Outreach Draft
+            </span>
+            <span style={{ fontSize: 10, opacity: 0.6 }}>{aiOpen ? "▲" : "▼"}</span>
+          </button>
+
+          {aiOpen && (
+            <div style={{ background: `rgba(139,92,246,0.06)`, border: `1px solid rgba(139,92,246,0.20)`, borderTop: "none", borderRadius: "0 0 8px 8px", padding: "12px 12px 14px" }}>
+              {/* Format toggle */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                {["email", "dm"].map(fmt => (
+                  <button
+                    key={fmt}
+                    onClick={() => { setAiFormat(fmt); setAiDraft(""); setAiError(""); }}
+                    style={{ flex: 1, padding: "5px 0", borderRadius: 6, border: `1px solid ${aiFormat === fmt ? COLORS.violetLight : COLORS.border}`, background: aiFormat === fmt ? `rgba(139,92,246,0.18)` : "transparent", color: aiFormat === fmt ? COLORS.violetLight : COLORS.text2, fontSize: 11, fontWeight: 600, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.06em" }}
+                  >
+                    {fmt === "email" ? "📧 Email" : "💬 DM"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Generate button */}
+              <button
+                onClick={generateDraft}
+                disabled={aiLoading}
+                style={{ width: "100%", padding: "7px 0", background: aiLoading ? "rgba(124,58,237,0.3)" : COLORS.violet, border: "none", borderRadius: 7, color: "#fff", fontSize: 12, fontWeight: 700, cursor: aiLoading ? "not-allowed" : "pointer", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+              >
+                {aiLoading ? (
+                  <>
+                    <span style={{ display: "inline-block", width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                    Generating…
+                  </>
+                ) : (
+                  <>✦ Generate {aiFormat === "email" ? "Email" : "DM"}</>
+                )}
+              </button>
+
+              {/* Error */}
+              {aiError && (
+                <div style={{ fontSize: 11, color: COLORS.red, marginBottom: 8, padding: "6px 10px", background: "rgba(239,68,68,0.08)", borderRadius: 6 }}>{aiError}</div>
+              )}
+
+              {/* Draft textarea + copy */}
+              {aiDraft && (
+                <div>
+                  <textarea
+                    value={aiDraft}
+                    onChange={e => setAiDraft(e.target.value)}
+                    rows={aiFormat === "email" ? 8 : 4}
+                    style={{ width: "100%", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, lineHeight: 1.6, padding: "10px 12px", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box", outline: "none" }}
+                  />
+                  <button
+                    onClick={copyDraft}
+                    style={{ width: "100%", marginTop: 6, padding: "6px 0", background: aiCopied ? COLORS.green : "rgba(139,92,246,0.15)", border: `1px solid ${aiCopied ? COLORS.green : COLORS.violetLight}`, borderRadius: 7, color: aiCopied ? "#fff" : COLORS.violetLight, fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
+                  >
+                    {aiCopied ? "✓ Copied!" : "Copy to clipboard"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
