@@ -843,7 +843,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
     contacted: COLORS.purple,
     followup1: COLORS.purple,
     followup2: COLORS.purple,
-    replied:   COLORS.purple,
+    replied:   COLORS.violetLight,
     booked:    COLORS.green,
   };
   const stageBorder = STAGE_COLORS[lead.stage] || COLORS.border;
@@ -872,20 +872,20 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
 
       background: (isBulkSelected || isSelected) ? COLORS.violetBg :
         lead.stage === "booked"  && !lead.archived ? "rgba(34,197,94,0.04)" :
-        lead.stage === "replied" && !lead.archived ? `${COLORS.purpleLight}08` :
+        lead.stage === "replied" && !lead.archived ? COLORS.violetBg :
         COLORS.surface,
       border: (isBulkSelected || isSelected) ? `2px solid ${COLORS.violet}` : `1px solid ${
         lead.archived                     ? COLORS.purpleDim :
         isOverdue                         ? COLORS.amber :
         lead.stage === "booked"           ? "rgba(34,197,94,0.5)" :
-        lead.stage === "replied"          ? COLORS.purpleLight :
+        lead.stage === "replied"          ? COLORS.violetLight :
         lead.stage === "followup1" || lead.stage === "followup2" ? COLORS.purple :
         lead.stage === "contacted"        ? "rgba(255,255,255,0.22)" :
         "rgba(124,58,237,0.22)"
       }`,
       borderLeft: (isBulkSelected || isSelected) ? undefined :
         lead.stage === "booked"    && !lead.archived ? "3px solid rgba(34,197,94,0.6)" :
-        lead.stage === "replied"   && !lead.archived ? `3px solid rgba(34,211,238,0.80)` :
+        lead.stage === "replied"   && !lead.archived ? `3px solid ${COLORS.violetLight}` :
         (lead.stage === "followup1" || lead.stage === "followup2") && !lead.archived ? `3px solid ${COLORS.purple}` :
         lead.stage === "contacted" && !lead.archived ? "3px solid rgba(255,255,255,0.25)" :
         lead.stage === "target"    && !lead.archived ? `3px solid ${COLORS.text3}` :
@@ -895,7 +895,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
         : lead.stage === "booked" && !lead.archived
         ? `0 0 8px rgba(34,197,94,0.08), 0 2px 12px rgba(0,0,0,0.35)`
         : lead.stage === "replied" && !lead.archived
-        ? `0 0 10px rgba(34,211,238,0.10), 0 2px 12px rgba(0,0,0,0.35)`
+        ? `0 0 10px rgba(139,92,246,0.12), 0 2px 12px rgba(0,0,0,0.35)`
         : `0 2px 12px rgba(0,0,0,0.35)`,
       borderRadius: 10, padding: "14px 16px", cursor: "pointer",
       transition: "all 0.15s ease", position: "relative", overflow: "hidden",
@@ -1121,7 +1121,7 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
             { id: "target",    label: "Target",    color: COLORS.text3,  stages: ["target"] },
             { id: "contacted", label: "Contacted", color: COLORS.purple, stages: ["contacted"] },
             { id: "followup",  label: "Follow-up", color: COLORS.purple, stages: ["followup1","followup2"] },
-            { id: "replied",   label: "Replied",   color: COLORS.purple, stages: ["replied"] },
+            { id: "replied",   label: "Replied",   color: COLORS.violetLight, stages: ["replied"] },
             { id: "booked",    label: "Booked",    color: COLORS.green,  stages: ["booked"] },
           ].map(col => {
             const isFiltered = filters.stage && !col.stages.includes(filters.stage);
