@@ -263,16 +263,17 @@ Deno.serve(async (req: Request) => {
   let newRepliesCount = 0;
 
   // Poll each conversation for replies
-  for (const [conversationId, { lead_id, from_email }] of convMap) {
+  for (const [conversationId, { lead_id, from_email, sent_message_ids }] of convMap) {
     const messages = await fetchConversationMessages(conversationId, accessToken);
 
     for (const msg of messages) {
       // Skip drafts
       if (msg.isDraft) continue;
-      // Skip messages sent by the connected account (our outbound emails)
+      // Skip messages we sent: match by sender address OR by stored internetMessageId
       const senderAddress = msg.from?.emailAddress?.address?.toLowerCase() ?? "";
       const ownAddress    = (conn.email as string).toLowerCase();
       if (senderAddress === ownAddress) continue;
+      if (msg.internetMessageId && sent_message_ids.has(msg.internetMessageId)) continue;
       // Skip already-stored replies
       if (existingIds.has(msg.id)) continue;
 
