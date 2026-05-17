@@ -135,7 +135,7 @@ function LoginScreen({ onAuth }) {
       }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <img src="/nr-icon.svg" width="52" height="52" style={{ borderRadius: 12, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
+          <img src="/nr-icon.svg" width="104" height="104" style={{ borderRadius: 24, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
           <img src="/nr-wordmark.svg" height="18" style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
           <div style={{ fontSize: 11, color: COLORS.purple, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6, letterSpacing: "0.02em" }}>Track venues, replies, follow-ups, and booked gigs in one place.</div>
@@ -268,14 +268,13 @@ function LoginScreen({ onAuth }) {
                 if (err) setError("Demo unavailable right now.");
                 else onAuth(data.session, data.user);
               }} disabled={loading} style={{
-                width: "100%", padding: "12px 0", borderRadius: 8,
-                background: "transparent", border: `1px solid ${COLORS.border}`,
-                color: COLORS.text2, fontSize: 13, fontWeight: 600,
+                width: "100%", padding: "12px 0", borderRadius: 10, border: "none",
+                background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`,
+                color: "#fff", fontSize: 13, fontWeight: 700,
                 fontFamily: "'DM Sans', sans-serif", cursor: "pointer",
+                boxShadow: "0 4px 20px rgba(14,116,144,0.30)",
                 transition: "all 0.15s",
               }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.purple; e.currentTarget.style.color = COLORS.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.text2; }}
               >Try Demo →</button>
             </div>
           )}
@@ -725,26 +724,8 @@ function Toast({ toast }) {
 }
 
 function Logo({ size = 24 }) {
-  const s = size;
   return (
-    <svg width={s} height={s} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" rx="6" fill="#0F0820"/>
-      {/* N */}
-      <path d="M3 23V9h2.8l5.6 9.2V9H14v14h-2.8L5.6 13.8V23H3z" fill="url(#nl)"/>
-      {/* R */}
-      <path d="M16 9h5.2c2.1 0 3.8 1.7 3.8 3.8 0 1.5-.8 2.8-2.1 3.4L26 23h-3.2l-2.6-7.4H19V23h-3V9z M19 11.8v3.4h2.1c.7 0 1.3-.6 1.3-1.3v-.8c0-.7-.6-1.3-1.3-1.3H19z" fill="url(#rl)"/>
-      <line x1="10" y1="16" x2="22" y2="16" stroke={COLORS.purple} strokeWidth="1.2" strokeOpacity="0.7"/>
-      <defs>
-        <linearGradient id="nl" x1="3" y1="9" x2="14" y2="23" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={COLORS.purpleLight}/>
-          <stop offset="100%" stopColor={COLORS.purple}/>
-        </linearGradient>
-        <linearGradient id="rl" x1="16" y1="9" x2="26" y2="23" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={COLORS.purpleLight}/>
-          <stop offset="100%" stopColor={COLORS.purple}/>
-        </linearGradient>
-      </defs>
-    </svg>
+    <img src="/nr-icon.svg" width={size} height={size} alt="NoxReach" style={{ borderRadius: size * 0.117, display: "block" }} />
   );
 }
 
@@ -1481,7 +1462,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     supabase.from("email_connections").select("provider, email").eq("user_id", userId)
       .then(({ data }) => {
         if (!data?.length) return;
-        const conn = data.find(c => c.provider === "resend") || data.find(c => c.provider === "gmail") || data[0];
+        const conn = data.find(c => c.provider === "gmail") || data.find(c => c.provider === "outlook") || data.find(c => c.provider === "resend") || data[0];
         setEmailConn(conn);
       });
   }, [userId]);
@@ -1492,7 +1473,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const fn = emailConn?.provider === "gmail" ? "gmail-send" : "resend-send";
+      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : "resend-send";
       const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -1552,7 +1533,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const fn = emailConn?.provider === "gmail" ? "gmail-send" : "resend-send";
+      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : "resend-send";
       const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -3677,6 +3658,8 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   // Email connections
   const [gmailConnection, setGmailConnection] = useState(null);
   const [gmailConnecting, setGmailConnecting] = useState(false);
+  const [outlookConnection, setOutlookConnection] = useState(null);
+  const [outlookConnecting, setOutlookConnecting] = useState(false);
   const [resendConnection, setResendConnection] = useState(null);
   const [resendConnecting, setResendConnecting] = useState(false);
   const [resendForm, setResendForm] = useState({ email: "", from_name: "", api_key: "" });
@@ -3698,6 +3681,8 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         if (data) {
           const gmail = data.find(c => c.provider === "gmail");
           if (gmail) setGmailConnection(gmail);
+          const outlook = data.find(c => c.provider === "outlook");
+          if (outlook) setOutlookConnection(outlook);
           const resend = data.find(c => c.provider === "resend");
           if (resend) setResendConnection(resend);
         }
@@ -3748,6 +3733,33 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
       headers: { Authorization: `Bearer ${token}` },
     });
     setGmailConnection(null);
+  };
+
+  const connectOutlook = async () => {
+    setOutlookConnecting(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/outlook-oauth?action=url&user_id=${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { url } = await res.json();
+      if (url) window.open(url, "_blank", "width=500,height=650");
+    } catch (e) {
+      console.error("Outlook connect error:", e);
+    }
+    setOutlookConnecting(false);
+  };
+
+  const disconnectOutlook = async () => {
+    const session = await supabase.auth.getSession();
+    const token = session.data.session?.access_token;
+    await fetch(`${supabase.supabaseUrl}/functions/v1/outlook-oauth`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setOutlookConnection(null);
   };
 
   const connectResend = async () => {
@@ -4032,6 +4044,38 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
             ) : (
               <button onClick={connectGmail} disabled={gmailConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: gmailConnecting ? 0.6 : 1 }}>
                 {gmailConnecting ? "Opening…" : "Connect Gmail"}
+              </button>
+            )}
+          </div>
+
+          {/* Outlook */}
+          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginTop: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#0078D4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {/* Microsoft Outlook envelope icon */}
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="5" width="13" height="14" rx="1.5" fill="#fff" opacity="0.15"/>
+                  <path d="M2 8.5L8.5 13l5.5-4.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="2" y="5" width="13" height="14" rx="1.5" stroke="#fff" strokeWidth="1.4"/>
+                  <rect x="13" y="9" width="9" height="10" rx="1.5" fill="#0078D4" stroke="#fff" strokeWidth="1.2"/>
+                  <path d="M14 12.5h7M14 15h5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Outlook / Microsoft 365</div>
+                {outlookConnection
+                  ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {outlookConnection.email}</div>
+                  : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send from your Outlook or Microsoft 365 inbox</div>
+                }
+              </div>
+            </div>
+            {outlookConnection ? (
+              <button onClick={disconnectOutlook} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                Disconnect
+              </button>
+            ) : (
+              <button onClick={connectOutlook} disabled={outlookConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: outlookConnecting ? 0.6 : 1 }}>
+                {outlookConnecting ? "Opening…" : "Connect Outlook"}
               </button>
             )}
           </div>
@@ -4610,6 +4654,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
   const [replies, setReplies] = useState([]);
   const [repliesLoading, setRepliesLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [gmailConnected, setGmailConnected] = useState(false);
 
   // Format received_at timestamp
   const formatTime = (ts) => {
@@ -4641,13 +4686,49 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
     if (showLoader) setRepliesLoading(false);
   };
 
-  useEffect(() => { fetchReplies(); }, [userId]);
+  // Poll Gmail for new replies via edge function
+  const pollGmailReplies = async () => {
+    if (!supabase || !userId) return 0;
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) return 0;
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/gmail-poll-replies`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.new_replies ?? 0;
+    } catch { return 0; }
+  };
+
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    // Check if Gmail is connected, then auto-poll on mount
+    supabase.from("email_connections").select("provider").eq("user_id", userId).eq("provider", "gmail")
+      .then(({ data }) => {
+        const connected = data && data.length > 0;
+        setGmailConnected(connected);
+        if (connected) {
+          pollGmailReplies().then(() => fetchReplies());
+        } else {
+          fetchReplies();
+        }
+      });
+  }, [userId]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchReplies(false);
+    if (gmailConnected) {
+      const newCount = await pollGmailReplies();
+      await fetchReplies(false);
+      showToast(newCount > 0 ? `${newCount} new repl${newCount === 1 ? "y" : "ies"} found` : "Inbox up to date", newCount > 0 ? "success" : "info");
+    } else {
+      await fetchReplies(false);
+      showToast("Inbox refreshed", "success");
+    }
     setRefreshing(false);
-    showToast("Inbox refreshed", "success");
   };
 
   // Get replies for a specific lead
@@ -7599,6 +7680,18 @@ function NoxReachApp({ user, session, supabase }) {
       window.history.replaceState({}, "", window.location.pathname);
       setActiveTab("settings");
       showToast(`Gmail connection failed: ${params.get("gmail_error")}`, "error");
+    }
+
+    // Returning from Outlook OAuth
+    if (params.get("outlook_connected") === "1") {
+      window.history.replaceState({}, "", window.location.pathname);
+      setActiveTab("settings");
+      showToast("Outlook connected successfully!", "success");
+    }
+    if (params.get("outlook_error")) {
+      window.history.replaceState({}, "", window.location.pathname);
+      setActiveTab("settings");
+      showToast(`Outlook connection failed: ${params.get("outlook_error")}`, "error");
     }
 
     // Check if returning from Stripe checkout
