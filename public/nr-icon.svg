@@ -2,89 +2,108 @@
   <title>NoxReach</title>
   <defs>
 
-    <!-- Background: deep purple radial -->
+    <!-- Background: deep purple radial gradient -->
     <radialGradient id="bg" cx="52%" cy="34%" r="62%">
       <stop offset="0%"   stop-color="#2E0A52"/>
       <stop offset="55%"  stop-color="#18022E"/>
       <stop offset="100%" stop-color="#0A0016"/>
     </radialGradient>
 
-    <!-- N gradient: purple bottom-left → cyan top-right -->
-    <!-- spans the full NR width so the top of N matches the R colour -->
-    <linearGradient id="ng" x1="95" y1="800" x2="510" y2="200" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#6B32DC"/>
-      <stop offset="42%"  stop-color="#2480FF"/>
+    <!--
+      N gradient: purple bottom-left → cyan top-right.
+      Gradient spans the exact bounding box of the N so the top
+      of the N matches the R's cyan seamlessly at their shared border.
+    -->
+    <linearGradient id="ng" x1="90" y1="800" x2="510" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#6428CC"/>
+      <stop offset="42%"  stop-color="#2478FF"/>
       <stop offset="100%" stop-color="#00C8FF"/>
     </linearGradient>
 
     <!--
-      ECG mask — white = show letter, black = hide (reveals background).
-      This is cleaner than a coloured stroke because the background
-      gradient shows through perfectly at every position.
+      ECG mask — white = show, black = cut.
+      Using a mask instead of a coloured stroke so the background
+      gradient shows through perfectly regardless of position.
+      The flat line runs from x=90 (left edge of N) to x=910 (right
+      edge of R), fully spanning both letters.
+      The heartbeat spike sits in the R bowl area.
     -->
     <mask id="ecg">
       <rect width="1000" height="1000" fill="white"/>
       <path
-        d="M 95,498
-           L 535,498
-           L 562,448
-           L 594,552
-           L 630,385
-           L 660,615
-           L 690,498
-           L 905,498"
-        stroke="black" stroke-width="32"
-        stroke-linecap="round" stroke-linejoin="round"
+        d="M 90,500
+           L 520,500
+           L 548,452
+           L 580,550
+           L 616,388
+           L 648,614
+           L 678,500
+           L 910,500"
+        stroke="black"
+        stroke-width="34"
+        stroke-linecap="round"
+        stroke-linejoin="round"
         fill="none"/>
     </mask>
 
   </defs>
 
-  <!-- Background rounded square -->
+  <!-- Rounded square background -->
   <rect width="1000" height="1000" rx="118" fill="url(#bg)"/>
 
-  <!-- ── NR monogram, ECG mask cuts through both letters ── -->
+  <!-- ── NR monogram — masked by ECG cutout ── -->
   <g mask="url(#ecg)">
 
     <!--
-      N letter built from 3 non-overlapping solid fills:
-        • left stroke  (vertical bar, x 95–215)
-        • diagonal     (parallelogram from top-right of left stroke
-                        to bottom-left of right stroke)
-        • right stroke (vertical bar, x 380–500)
-      All three share the same gradient so they look like one shape.
-    -->
+      N — single self-intersecting polygon.
 
-    <!-- N: left vertical bar -->
-    <rect x="95" y="200" width="120" height="600" fill="url(#ng)"/>
+      SVG nonzero winding rule (the default) renders this correctly:
+      · The two counter-spaces (upper-right triangle and lower-left
+        triangle) have winding number 0  → transparent background shows
+      · Both vertical strokes and the cross-diagonal have winding ≠ 0 → filled
 
-    <!-- N: cross diagonal (parallelogram) -->
-    <!-- top edge: (215,200)→(335,200)  bottom edge: (380,800)→(260,800) -->
-    <polygon
-      points="215,200 335,200 380,800 260,800"
-      fill="url(#ng)"/>
+      Vertices (clockwise from bottom-left):
+        outer-BL → outer-TL → top-right-of-left-stroke
+        → [outer diagonal down-right] →
+        bottom-left-of-right-stroke → outer-BR → outer-TR
+        → top-left-of-right-stroke
+        → [inner diagonal down-left] →
+        bottom-right-of-left-stroke → close
 
-    <!-- N: right vertical bar -->
-    <rect x="380" y="200" width="120" height="600" fill="url(#ng)"/>
-
-    <!-- R: left vertical bar -->
-    <rect x="500" y="200" width="128" height="600" fill="#00C8FF"/>
-
-    <!--
-      R: bowl — single symmetric cubic bezier D-shape.
-      M (left,top) C (far-right,top) (far-right,bottom) (left,bottom) Z
-      Peaks at roughly x≈870 at mid-height.
-    -->
-    <path
-      d="M 608,200 C 950,200 950,500 608,500 Z"
-      fill="#00C8FF"/>
-
-    <!--
-      R: leg — diagonal parallelogram from bowl-bottom to lower-right.
+      Left stroke  : x  90 – 245  (155 px wide)
+      Right stroke : x 365 – 510  (145 px wide)
+      Height       : y 200 – 800  (600 px)
+      N shares its right edge (x=510) with the R's left edge.
     -->
     <polygon
-      points="608,500 740,500 905,800 775,800"
-      fill="#00C8FF"/>
+      points="90,800  90,200  245,200  365,800
+              510,800  510,200  365,200  245,800"
+      fill="url(#ng)"
+    />
+
+    <!--
+      R — three overlapping solid cyan shapes.
+      Slight overlaps (≈20 px) at every junction so no sub-pixel gap
+      can appear between the pieces.
+
+      Left bar : x 510 – 648, full height 200–800
+      Bowl     : D-curve from (628,200) to (628,500), peaking ~x 876
+      Leg      : parallelogram from bowl-bottom to lower-right
+    -->
+
+    <!-- R: left bar -->
+    <rect x="510" y="200" width="138" height="600" fill="#00C8FF"/>
+
+    <!-- R: bowl (single symmetric cubic bezier) -->
+    <!--
+      M (left,top)  C (far-right,top) (far-right,bottom) (left,bottom)  Z
+      The closing Z draws the straight left edge of the D automatically.
+      Peak at t=0.5 ≈ (0.25×628 + 0.75×960, 350) ≈ (877, 350)
+    -->
+    <path d="M 628,200 C 960,200 960,500 628,500 Z" fill="#00C8FF"/>
+
+    <!-- R: leg -->
+    <polygon points="628,500 762,500 908,800 778,800" fill="#00C8FF"/>
 
   </g>
 
