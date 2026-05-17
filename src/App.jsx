@@ -1512,9 +1512,13 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   const [aiDraft, setAiDraft]       = useState("");
   const [aiCopied, setAiCopied]     = useState(false);
   const [aiError, setAiError]       = useState("");
+  const [aiSubject, setAiSubject]   = useState("");
+  const [aiSending, setAiSending]   = useState(false);
+  const [aiSent, setAiSent]         = useState(false);
+  const [aiSendError, setAiSendError] = useState("");
 
   const generateDraft = async () => {
-    setAiLoading(true); setAiError(""); setAiDraft("");
+    setAiLoading(true); setAiError(""); setAiDraft(""); setAiSent(false); setAiSendError(""); setAiSubject("");
     try {
       const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", userId).single();
       const { data: assetData } = await supabase.from("user_assets").select("*").eq("user_id", userId).maybeSingle();
@@ -1536,6 +1540,25 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   const copyDraft = () => {
     navigator.clipboard.writeText(aiDraft);
     setAiCopied(true); setTimeout(() => setAiCopied(false), 2000);
+  };
+
+  const sendAiDraft = async () => {
+    if (!aiSubject.trim() || !aiDraft.trim() || !lead.contact || !emailConn) return;
+    setAiSending(true); setAiSendError("");
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const fn = emailConn?.provider === "gmail" ? "gmail-send" : "resend-send";
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ to: lead.contact, subject: aiSubject, message: aiDraft, lead_id: lead.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setAiSendError(data.detail || data.error || "Send failed"); }
+      else { setAiSent(true); setTimeout(() => setAiSent(false), 3000); }
+    } catch (e) { setAiSendError("Network error. Try again."); }
+    setAiSending(false);
   };
 
   const [form, setForm] = useState({
@@ -1852,18 +1875,38 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
               {/* Draft textarea + copy */}
               {aiDraft && (
                 <div>
+                  {aiFormat === "email" && (
+                    <input
+                      value={aiSubject}
+                      onChange={e => setAiSubject(e.target.value)}
+                      placeholder="Subject line…"
+                      style={{ width: "100%", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, padding: "7px 12px", marginBottom: 6, boxSizing: "border-box", outline: "none", fontFamily: "inherit" }}
+                    />
+                  )}
                   <textarea
                     value={aiDraft}
                     onChange={e => setAiDraft(e.target.value)}
                     rows={aiFormat === "email" ? 8 : 4}
                     style={{ width: "100%", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, lineHeight: 1.6, padding: "10px 12px", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box", outline: "none" }}
                   />
-                  <button
-                    onClick={copyDraft}
-                    style={{ width: "100%", marginTop: 6, padding: "6px 0", background: aiCopied ? COLORS.green : "rgba(139,92,246,0.15)", border: `1px solid ${aiCopied ? COLORS.green : COLORS.violetLight}`, borderRadius: 7, color: aiCopied ? "#fff" : COLORS.violetLight, fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
-                  >
-                    {aiCopied ? "✓ Copied!" : "Copy to clipboard"}
-                  </button>
+                  <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                    <button
+                      onClick={copyDraft}
+                      style={{ flex: 1, padding: "6px 0", background: aiCopied ? COLORS.green : "rgba(139,92,246,0.15)", border: `1px solid ${aiCopied ? COLORS.green : COLORS.violetLight}`, borderRadius: 7, color: aiCopied ? "#fff" : COLORS.violetLight, fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
+                    >
+                      {aiCopied ? "✓ Copied!" : "Copy"}
+                    </button>
+                    {aiFormat === "email" && lead.contact && emailConn && (
+                      <button
+                        onClick={sendAiDraft}
+                        disabled={aiSending || !aiSubject.trim()}
+                        style={{ flex: 1, padding: "6px 0", background: aiSent ? COLORS.green : COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontWeight: 700, cursor: aiSending || !aiSubject.trim() ? "not-allowed" : "pointer", opacity: aiSending ? 0.6 : 1, transition: "all 0.2s" }}
+                      >
+                        {aiSent ? "✓ Sent!" : aiSending ? "Sending…" : "✉ Send"}
+                      </button>
+                    )}
+                  </div>
+                  {aiSendError && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 4 }}>{aiSendError}</div>}
                 </div>
               )}
             </div>
