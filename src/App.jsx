@@ -1467,6 +1467,44 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
 
+  // Email compose
+  const [emailConn, setEmailConn]         = useState(null); // { provider, email }
+  const [composeOpen, setComposeOpen]     = useState(false);
+  const [composeSubject, setComposeSubject] = useState("");
+  const [composeBody, setComposeBody]     = useState("");
+  const [composeSending, setComposeSending] = useState(false);
+  const [composeSent, setComposeSent]     = useState(false);
+  const [composeError, setComposeError]   = useState("");
+
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    supabase.from("email_connections").select("provider, email").eq("user_id", userId)
+      .then(({ data }) => {
+        if (!data?.length) return;
+        const conn = data.find(c => c.provider === "resend") || data.find(c => c.provider === "gmail") || data[0];
+        setEmailConn(conn);
+      });
+  }, [userId]);
+
+  const sendEmail = async () => {
+    if (!composeSubject.trim() || !composeBody.trim()) return;
+    setComposeSending(true); setComposeError("");
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const fn = emailConn?.provider === "gmail" ? "gmail-send" : "resend-send";
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ to: lead.contact, subject: composeSubject, message: composeBody, lead_id: lead.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setComposeError(data.detail || data.error || "Send failed"); }
+      else { setComposeSent(true); setTimeout(() => { setComposeOpen(false); setComposeSent(false); setComposeSubject(""); setComposeBody(""); }, 2000); }
+    } catch (e) { setComposeError("Network error. Try again."); }
+    setComposeSending(false);
+  };
+
   // AI outreach draft
   const [aiOpen, setAiOpen]         = useState(false);
   const [aiFormat, setAiFormat]     = useState("email");
@@ -1840,7 +1878,52 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       {editing ? (
         <input value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} style={inputStyle} placeholder="booking@venue.com" />
       ) : (
-        <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3 }}>{lead.contact || <span style={{ color: COLORS.textMuted }}>—</span>}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3 }}>
+          <div style={{ fontSize: 12, color: COLORS.text, flex: 1 }}>{lead.contact || <span style={{ color: COLORS.textMuted }}>—</span>}</div>
+          {lead.contact && emailConn && (
+            <button
+              onClick={() => { setComposeOpen(o => !o); setComposeError(""); setComposeSent(false); }}
+              style={{ fontSize: 10, padding: "3px 8px", background: composeOpen ? COLORS.purple : "transparent", border: `1px solid ${composeOpen ? COLORS.purple : COLORS.border}`, borderRadius: 5, color: composeOpen ? "#fff" : COLORS.textMuted, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}
+            >
+              ✉ Send
+            </button>
+          )}
+          {lead.contact && !emailConn && (
+            <span style={{ fontSize: 10, color: COLORS.textMuted }}>Connect email in Settings</span>
+          )}
+        </div>
+      )}
+
+      {/* Inline compose panel */}
+      {composeOpen && !editing && (
+        <div style={{ marginTop: 10, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "14px 14px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ fontSize: 10, color: COLORS.textMuted, marginBottom: 2 }}>To: <span style={{ color: COLORS.text }}>{lead.contact}</span> · via <span style={{ color: COLORS.purpleLight }}>{emailConn?.email}</span></div>
+          <input
+            value={composeSubject}
+            onChange={e => setComposeSubject(e.target.value)}
+            placeholder="Subject"
+            style={{ ...INPUT.base, fontSize: 12, padding: "7px 10px" }}
+          />
+          <textarea
+            value={composeBody}
+            onChange={e => setComposeBody(e.target.value)}
+            placeholder="Write your message…"
+            rows={5}
+            style={{ ...INPUT.base, fontSize: 12, padding: "8px 10px", resize: "vertical", lineHeight: 1.6, fontFamily: "inherit" }}
+          />
+          {composeError && <div style={{ fontSize: 11, color: "#ef4444" }}>{composeError}</div>}
+          {composeSent && <div style={{ fontSize: 11, color: COLORS.green, fontWeight: 600 }}>✓ Email sent!</div>}
+          <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+            <button onClick={() => setComposeOpen(false)} style={{ fontSize: 11, padding: "5px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textMuted, cursor: "pointer" }}>Cancel</button>
+            <button
+              onClick={sendEmail}
+              disabled={composeSending || !composeSubject.trim() || !composeBody.trim()}
+              style={{ fontSize: 11, padding: "5px 12px", background: COLORS.purple, border: "none", borderRadius: 6, color: "#fff", cursor: "pointer", fontWeight: 700, opacity: composeSending ? 0.6 : 1 }}
+            >
+              {composeSending ? "Sending…" : "Send"}
+            </button>
+          </div>
+        </div>
       )}
 
       <div style={labelStyle}>Instagram</div>
@@ -3538,6 +3621,15 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   const [referralCopied, setReferralCopied] = useState(false);
   const [bookingLinkCopied, setBookingLinkCopied] = useState(false);
 
+  // Email connections
+  const [gmailConnection, setGmailConnection] = useState(null);
+  const [gmailConnecting, setGmailConnecting] = useState(false);
+  const [resendConnection, setResendConnection] = useState(null);
+  const [resendConnecting, setResendConnecting] = useState(false);
+  const [resendForm, setResendForm] = useState({ email: "", from_name: "", api_key: "" });
+  const [resendFormOpen, setResendFormOpen] = useState(false);
+  const [resendError, setResendError] = useState("");
+
   useEffect(() => {
     if (!user?.id || !supabase) return;
     supabase.from("profiles").select("username, display_name, referral_code, referral_count").eq("id", user.id).single()
@@ -3546,6 +3638,16 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         if (data?.display_name) setDisplayName(data.display_name);
         if (data?.referral_code) setReferralCode(data.referral_code);
         if (data?.referral_count) setReferralCount(data.referral_count);
+      });
+    // Load email connections
+    supabase.from("email_connections").select("provider, email, updated_at").eq("user_id", user.id)
+      .then(({ data }) => {
+        if (data) {
+          const gmail = data.find(c => c.provider === "gmail");
+          if (gmail) setGmailConnection(gmail);
+          const resend = data.find(c => c.provider === "resend");
+          if (resend) setResendConnection(resend);
+        }
       });
   }, [user?.id]);
 
@@ -3566,6 +3668,62 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     setDisplayNameSaved(true);
     setTimeout(() => setDisplayNameSaved(false), 2000);
     if (onDisplayNameChange) onDisplayNameChange(displayName.trim());
+  };
+
+  const connectGmail = async () => {
+    setGmailConnecting(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/gmail-oauth?action=url&user_id=${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { url } = await res.json();
+      if (url) window.open(url, "_blank", "width=500,height=650");
+    } catch (e) {
+      console.error("Gmail connect error:", e);
+    }
+    setGmailConnecting(false);
+  };
+
+  const disconnectGmail = async () => {
+    const session = await supabase.auth.getSession();
+    const token = session.data.session?.access_token;
+    await fetch(`${supabase.supabaseUrl}/functions/v1/gmail-oauth`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setGmailConnection(null);
+  };
+
+  const connectResend = async () => {
+    setResendError("");
+    if (!resendForm.email || !resendForm.email.includes("@")) { setResendError("Enter a valid email address"); return; }
+    setResendConnecting(true);
+    try {
+      // Delete existing first, then insert fresh
+      await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "resend");
+      const { error } = await supabase.from("email_connections").insert({
+        user_id:      user.id,
+        provider:     "resend",
+        email:        resendForm.email,
+        access_token: resendForm.api_key.trim() || "resend",
+        metadata:     { from_name: resendForm.from_name || null },
+      });
+      if (error) { console.error("Resend save error:", error); setResendError(error.message || "Failed to save."); }
+      else {
+        setResendConnection({ email: resendForm.email, metadata: { from_name: resendForm.from_name } });
+        setResendFormOpen(false);
+      }
+    } catch (e) { console.error("Resend save exception:", e); setResendError("Failed to save. Try again."); }
+    setResendConnecting(false);
+  };
+
+  const disconnectResend = async () => {
+    await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "resend");
+    setResendConnection(null);
+    setResendFormOpen(false);
   };
 
   const set = key => val => setLocal(s => ({ ...s, [key]: val }));
@@ -3793,6 +3951,100 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
           )}
           {!isDirty && !saved && <span style={{ fontSize: 11, color: COLORS.textMuted }}>No unsaved changes</span>}
           {saved && <span style={{ fontSize: 11, color: COLORS.green }}>Changes applied to all future reminders</span>}
+        </div>
+
+        {/* Email Connections */}
+        <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${COLORS.border}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Email Integration</div>
+          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Connect your inbox to send emails directly from NoxReach and auto-detect replies.</div>
+
+          {/* Gmail */}
+          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#EA4335" d="M6 18V8.4L2 5.6V18c0 1.1.9 2 2 2h2z"/><path fill="#34A853" d="M18 18V8.4l4-2.8V18c0 1.1-.9 2-2 2h-2z"/><path fill="#4285F4" d="M18 4H6L2 6.8 12 14l10-7.2L18 4z"/><path fill="#FBBC04" d="M2 6.8V5.6C2 4.72 2.72 4 3.6 4h.4L2 6.8z"/><path fill="#EA4335" d="M22 5.6v1.2L18 4h.4c.88 0 1.6.72 1.6 1.6v0z"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Gmail</div>
+                {gmailConnection
+                  ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {gmailConnection.email}</div>
+                  : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Not connected</div>
+                }
+              </div>
+            </div>
+            {gmailConnection ? (
+              <button onClick={disconnectGmail} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                Disconnect
+              </button>
+            ) : (
+              <button onClick={connectGmail} disabled={gmailConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: gmailConnecting ? 0.6 : 1 }}>
+                {gmailConnecting ? "Opening…" : "Connect Gmail"}
+              </button>
+            )}
+          </div>
+
+          {/* Resend / Custom domain */}
+          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Custom Domain Email</div>
+                  {resendConnection
+                    ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {resendConnection.email}</div>
+                    : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Requires a free <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend account</a> + verified domain</div>
+                  }
+                </div>
+              </div>
+              {resendConnection ? (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); setResendForm({ email: resendConnection.email, from_name: resendConnection.metadata?.from_name || "", api_key: "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                    Edit
+                  </button>
+                  <button onClick={disconnectResend} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                    Disconnect
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Connect
+                </button>
+              )}
+            </div>
+            {resendFormOpen && (
+              <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                {!resendConnection && (
+                  <div style={{ background: "rgba(14,116,144,0.08)", border: "1px solid rgba(14,116,144,0.2)", borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.text2, lineHeight: 1.6 }}>
+                    <strong style={{ color: COLORS.purpleLight }}>Setup required:</strong> Create a free account at <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>resend.com</a>, add and verify your domain, then create an API key with <em>Sending access</em> and paste it below.
+                  </div>
+                )}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
+                    <input value={resendForm.email} onChange={e => setResendForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
+                    <input value={resendForm.from_name} onChange={e => setResendForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Resend API Key <span style={{ color: COLORS.text3 }}>(optional — leave blank to use NoxReach default)</span></div>
+                    <input type="password" value={resendForm.api_key} onChange={e => setResendForm(f => ({ ...f, api_key: e.target.value }))} placeholder="re_xxxxxxxxxxxx" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted }}>Your domain must be verified in <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend</a> for sending to work.</div>
+                {resendError && <div style={{ fontSize: 12, color: "#ef4444" }}>{resendError}</div>}
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button onClick={() => { setResendFormOpen(false); setResendError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
+                  <button onClick={connectResend} disabled={resendConnecting || !resendForm.email} style={{ ...BTN.primary, ...BTN.sm, opacity: resendConnecting ? 0.6 : 1 }}>
+                    {resendConnecting ? "Saving…" : "Save"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Danger Zone */}
@@ -7184,8 +7436,22 @@ function NoxReachApp({ user, session, supabase }) {
 
   useEffect(function() {
     if (!user) return;
-    // Check if returning from Stripe checkout
     const params = new URLSearchParams(window.location.search);
+
+    // Returning from Gmail OAuth
+    if (params.get("gmail_connected") === "1") {
+      window.history.replaceState({}, "", window.location.pathname);
+      setActiveTab("settings");
+      showToast("Gmail connected successfully!", "success");
+      // SettingsView reloads email_connections on mount — no action needed here
+    }
+    if (params.get("gmail_error")) {
+      window.history.replaceState({}, "", window.location.pathname);
+      setActiveTab("settings");
+      showToast(`Gmail connection failed: ${params.get("gmail_error")}`, "error");
+    }
+
+    // Check if returning from Stripe checkout
     const fromStripe = params.get("upgraded") === "true";
     if (fromStripe) {
       window.history.replaceState({}, "", window.location.pathname);
