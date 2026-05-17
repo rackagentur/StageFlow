@@ -135,8 +135,8 @@ function LoginScreen({ onAuth }) {
       }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="52" height="52" style={{ borderRadius: 12, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
-          <img src="https://noxreach.com/public/nr-wordmark.png" height="18" style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
+          <img src="/nr-icon.svg" width="52" height="52" style={{ borderRadius: 12, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
+          <img src="/nr-wordmark.svg" height="18" style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
           <div style={{ fontSize: 11, color: COLORS.purple, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6, letterSpacing: "0.02em" }}>Track venues, replies, follow-ups, and booked gigs in one place.</div>
         </div>
@@ -369,9 +369,9 @@ function SetNewPasswordScreen({ onDone }) {
         animation: "authFadeIn 0.5s ease",
       }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="52" height="52"
+          <img src="/nr-icon.svg" width="52" height="52"
             style={{ borderRadius: 12, display: "block", margin: "0 auto 14px" }} alt="NR" />
-          <img src="https://noxreach.com/public/nr-wordmark.png" height="18"
+          <img src="/nr-wordmark.svg" height="18"
             style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
           <div style={{ fontSize: 11, color: COLORS.purple, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
         </div>
@@ -8147,8 +8147,8 @@ const activeLeads = leads.filter(l => !l.archived);
       <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: isMobile ? "none" : "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
           <a href="https://noxreach.com/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <img src="/nr-icon.png" alt="NoxReach" style={{ width: 54, height: 54, borderRadius: 13, flexShrink: 0 }} />
-            <img src="/nr-wordmark.png" alt="NoxReach" style={{ height: 17, objectFit: "contain", opacity: 0.8 }} />
+            <img src="/nr-icon.svg" alt="NoxReach" style={{ width: 54, height: 54, borderRadius: 13, flexShrink: 0 }} />
+            <img src="/nr-wordmark.svg" alt="NoxReach" style={{ height: 17, objectFit: "contain", opacity: 0.8 }} />
           </a>
         </div>
         <nav style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}>
@@ -8720,7 +8720,7 @@ function PublicAssetKit({ supabase }) {
     <div style={s}>
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '48px 24px 80px' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="40" height="40" style={{ borderRadius: 10, marginBottom: 20, opacity: 0.7 }} alt="NR" />
+          <img src="/nr-icon.svg" width="40" height="40" style={{ borderRadius: 10, marginBottom: 20, opacity: 0.7 }} alt="NR" />
           <h1 style={{ margin: '0 0 6px', fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>{kit.artist_name || username}</h1>
           {kit.tagline && <p style={{ margin: '0 0 6px', fontSize: 15, color: '#22D3EE', fontWeight: 600 }}>{kit.tagline}</p>}
           {kit.location && <p style={{ margin: '0 0 4px', fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>📍 {kit.location}</p>}
@@ -8832,7 +8832,7 @@ function PublicBookingForm({ supabase }) {
   if (step === 'success') return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, sans-serif', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 480 }}>
-        <img src="https://noxreach.com/public/nr-icon.png" width="48" height="48" style={{ borderRadius: 12, marginBottom: 24 }} alt="NR" />
+        <img src="/nr-icon.svg" width="48" height="48" style={{ borderRadius: 12, marginBottom: 24 }} alt="NR" />
         <div style={{ fontSize: 28, fontWeight: 700, color: '#fff', marginBottom: 12 }}>Booking request sent</div>
         <div style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 32 }}>{djProfile.display_name} will review your request and get back to you soon.</div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>Powered by NoxReach</div>
@@ -8844,7 +8844,7 @@ function PublicBookingForm({ supabase }) {
     <div style={{ minHeight: '100vh', background: '#0a0a0a', fontFamily: '-apple-system, sans-serif', padding: '40px 24px' }}>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="44" height="44" style={{ borderRadius: 11, marginBottom: 16 }} alt="NR" />
+          <img src="/nr-icon.svg" width="44" height="44" style={{ borderRadius: 11, marginBottom: 16 }} alt="NR" />
           <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Book {djProfile.display_name}</div>
           <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Fill out the form and we will get back to you</div>
         </div>
@@ -8962,7 +8962,7 @@ function PublicGigList({ supabase }) {
 
         {/* Header */}
         <div style={{ textAlign:'center', marginBottom:52, animation:'pgFadeUp 0.5s ease both' }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="40" height="40"
+          <img src="/nr-icon.svg" width="40" height="40"
             style={{ borderRadius:10, marginBottom:20, opacity:0.7 }} alt="NR" />
           <div style={{ fontSize:42, fontWeight:900, color:'#fff', letterSpacing:'-0.03em', lineHeight:1, marginBottom:10 }}>
             {djProfile?.display_name}
@@ -9269,7 +9269,7 @@ function InstallPrompt() {
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-            <img src="https://noxreach.com/public/nr-icon.png" width={40} height={40}
+            <img src="/nr-icon.svg" width={40} height={40}
               style={{ borderRadius: 10, flexShrink: 0 }} alt="NoxReach" />
             <div>
               <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, lineHeight: 1.2 }}>Add NoxReach to your home screen</div>
