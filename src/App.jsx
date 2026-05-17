@@ -4233,6 +4233,8 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
   const [selected,  setSelected]  = useState(null);
   const [showAdd,   setShowAdd]   = useState(false);
   const [addForm,   setAddForm]   = useState({ venue: "", city: "", date: "", status: "confirmed", fee: "", tag: "Tech-House", notes: "" });
+  const [editMode,  setEditMode]  = useState(false);
+  const [editForm,  setEditForm]  = useState(null);
 
   // Listen for "Add to Calendar" from Booked modal
   useEffect(() => {
@@ -4322,7 +4324,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
       setViewMonth(gigDate.getMonth());
       setViewYear(gigDate.getFullYear());
       
-      showToast(`${addForm.venue} added to calendar`, "success");
+      showToast(`Awesome! ${addForm.venue} locked in 🎉 Keep them coming!`, "success");
       setShowAdd(false);
       setAddForm({ venue: "", city: "", date: "", status: "confirmed", fee: "", tag: "Tech-House", notes: "" });
     } catch (err) {
@@ -4334,10 +4336,31 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
   const deleteGig = async (id) => {
     setGigs(prev => prev.filter(g => g.id !== id));
     setSelected(null);
+    setEditMode(false);
     showToast("Gig removed", "info");
     try {
       await supabase.from("gigs").delete().eq("id", id).eq("user_id", userId);
     } catch (err) { console.error("deleteGig sync failed:", err); }
+  };
+
+  const updateGig = async () => {
+    if (!editForm?.venue || !editForm?.date) return;
+    const updated = { ...selected, ...editForm };
+    setGigs(prev => prev.map(g => g.id === updated.id ? updated : g));
+    setSelected(updated);
+    setEditMode(false);
+    showToast("Gig updated", "success");
+    try {
+      await supabase.from("gigs").update({
+        venue:  editForm.venue,
+        city:   editForm.city || "",
+        date:   editForm.date,
+        status: editForm.status,
+        fee:    editForm.fee || "",
+        tag:    editForm.tag || "",
+        notes:  editForm.notes || "",
+      }).eq("id", updated.id).eq("user_id", userId);
+    } catch (err) { console.error("updateGig sync failed:", err); }
   };
 
   const upcoming = gigs.filter(g => new Date(g.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -4610,18 +4633,69 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
                   </div>
                 </div>
               );
-            })()}            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={async () => {
-                const newStatus = selected.status === "confirmed" ? "pending" : "confirmed";
-                setGigs(prev => prev.map(g => g.id === selected.id ? { ...g, status: newStatus } : g));
-                setSelected(prev => ({ ...prev, status: newStatus }));
-                try { await supabase.from("gigs").update({ status: newStatus }).eq("id", selected.id).eq("user_id", userId); } catch(e) { console.error(e); }
-              }}
-                style={{ flex: 1, padding: "8px", background: selected.status === "confirmed" ? "rgba(34,197,94,0.12)" : COLORS.purpleBg, border: `1px solid ${selected.status === "confirmed" ? "rgba(34,197,94,0.4)" : COLORS.purpleDim}`, borderRadius: 8, color: selected.status === "confirmed" ? COLORS.green : COLORS.purpleLight, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-                {selected.status === "confirmed" ? "Mark Pending" : "Confirm ✓"}
-              </button>
-              <button onClick={() => deleteGig(selected.id)} style={{ padding: "8px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.red + "AA", fontSize: 11, cursor: "pointer" }}>✕</button>
-            </div>
+            })()}            {editMode && editForm ? (
+              /* ── Edit form ── */
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 3 }}>Venue</div>
+                  <input value={editForm.venue} onChange={e => setEditForm(f => ({ ...f, venue: e.target.value }))}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: "7px 10px", color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 3 }}>City</div>
+                    <input value={editForm.city} onChange={e => setEditForm(f => ({ ...f, city: e.target.value }))}
+                      style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: "7px 10px", color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 3 }}>Date</div>
+                    <input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))}
+                      style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: "7px 10px", color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 3 }}>Fee</div>
+                    <input value={editForm.fee} onChange={e => setEditForm(f => ({ ...f, fee: e.target.value }))} placeholder="€"
+                      style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: "7px 10px", color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 3 }}>Status</div>
+                    <select value={editForm.status} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}
+                      style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: "7px 10px", color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="pending">Pending</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 3 }}>Notes</div>
+                  <textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 7, padding: "7px 10px", color: COLORS.text, fontSize: 12, outline: "none", fontFamily: "inherit", resize: "none", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => setEditMode(false)} style={{ flex: 1, padding: "8px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, cursor: "pointer" }}>Cancel</button>
+                  <button onClick={updateGig} disabled={!editForm.venue || !editForm.date}
+                    style={{ flex: 2, padding: "8px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: !editForm.venue || !editForm.date ? 0.5 : 1 }}>Save changes</button>
+                </div>
+              </div>
+            ) : (
+              /* ── Normal action buttons ── */
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={async () => {
+                  const newStatus = selected.status === "confirmed" ? "pending" : "confirmed";
+                  setGigs(prev => prev.map(g => g.id === selected.id ? { ...g, status: newStatus } : g));
+                  setSelected(prev => ({ ...prev, status: newStatus }));
+                  try { await supabase.from("gigs").update({ status: newStatus }).eq("id", selected.id).eq("user_id", userId); } catch(e) { console.error(e); }
+                }}
+                  style={{ flex: 1, padding: "8px", background: selected.status === "confirmed" ? "rgba(34,197,94,0.12)" : COLORS.purpleBg, border: `1px solid ${selected.status === "confirmed" ? "rgba(34,197,94,0.4)" : COLORS.purpleDim}`, borderRadius: 8, color: selected.status === "confirmed" ? COLORS.green : COLORS.purpleLight, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                  {selected.status === "confirmed" ? "Mark Pending" : "Confirm ✓"}
+                </button>
+                <button onClick={() => { setEditForm({ venue: selected.venue, city: selected.city, date: selected.date, status: selected.status, fee: selected.fee, tag: selected.tag, notes: selected.notes }); setEditMode(true); }}
+                  style={{ padding: "8px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textSecondary, fontSize: 11, cursor: "pointer" }} title="Edit">✎</button>
+                <button onClick={() => deleteGig(selected.id)} style={{ padding: "8px 12px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.red + "AA", fontSize: 11, cursor: "pointer" }} title="Delete">✕</button>
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ background: COLORS.surface, border: `1px dashed ${COLORS.border}`, borderRadius: 14, padding: "32px 20px", textAlign: "center" }}>
