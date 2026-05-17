@@ -1499,7 +1499,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         body: JSON.stringify({ to: lead.contact, subject: composeSubject, message: composeBody, lead_id: lead.id }),
       });
       const data = await res.json();
-      if (!res.ok) { setComposeError(data.error || "Send failed"); }
+      if (!res.ok) { setComposeError(data.detail || data.error || "Send failed"); }
       else { setComposeSent(true); setTimeout(() => { setComposeOpen(false); setComposeSent(false); setComposeSubject(""); setComposeBody(""); }, 2000); }
     } catch (e) { setComposeError("Network error. Try again."); }
     setComposeSending(false);
@@ -3626,7 +3626,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   const [gmailConnecting, setGmailConnecting] = useState(false);
   const [resendConnection, setResendConnection] = useState(null);
   const [resendConnecting, setResendConnecting] = useState(false);
-  const [resendForm, setResendForm] = useState({ email: "", from_name: "" });
+  const [resendForm, setResendForm] = useState({ email: "", from_name: "", api_key: "" });
   const [resendFormOpen, setResendFormOpen] = useState(false);
   const [resendError, setResendError] = useState("");
 
@@ -3708,7 +3708,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         user_id:      user.id,
         provider:     "resend",
         email:        resendForm.email,
-        access_token: "resend",
+        access_token: resendForm.api_key.trim() || "resend",
         metadata:     { from_name: resendForm.from_name || null },
       });
       if (error) { console.error("Resend save error:", error); setResendError(error.message || "Failed to save."); }
@@ -4000,7 +4000,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
               </div>
               {resendConnection ? (
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); setResendForm({ email: resendConnection.email, from_name: resendConnection.metadata?.from_name || "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); setResendForm({ email: resendConnection.email, from_name: resendConnection.metadata?.from_name || "", api_key: "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                     Edit
                   </button>
                   <button onClick={disconnectResend} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
@@ -4024,8 +4024,12 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
                     <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
                     <input value={resendForm.from_name} onChange={e => setResendForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
                   </div>
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Resend API Key <span style={{ color: COLORS.text3 }}>(optional — leave blank to use NoxReach default)</span></div>
+                    <input type="password" value={resendForm.api_key} onChange={e => setResendForm(f => ({ ...f, api_key: e.target.value }))} placeholder="re_xxxxxxxxxxxx" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
                 </div>
-                <div style={{ fontSize: 11, color: COLORS.textMuted }}>Your domain must be verified in Resend for sending to work.</div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted }}>Your domain must be verified in <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend</a> for sending to work.</div>
                 {resendError && <div style={{ fontSize: 12, color: "#ef4444" }}>{resendError}</div>}
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                   <button onClick={() => { setResendFormOpen(false); setResendError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
