@@ -1473,7 +1473,9 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : emailConn?.provider === "smtp" ? "smtp-send" : "resend-send";
+      if (!emailConn) { setComposeError("Connect an email account in Settings first."); setComposeSending(false); return; }
+      const fn = emailConn.provider === "gmail" ? "gmail-send" : emailConn.provider === "outlook" ? "outlook-send" : emailConn.provider === "smtp" ? "smtp-send" : null;
+      if (!fn) { setComposeError("Email provider not supported. Reconnect in Settings."); setComposeSending(false); return; }
       const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -1533,7 +1535,8 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : emailConn?.provider === "smtp" ? "smtp-send" : "resend-send";
+      const fn = emailConn.provider === "gmail" ? "gmail-send" : emailConn.provider === "outlook" ? "outlook-send" : emailConn.provider === "smtp" ? "smtp-send" : null;
+      if (!fn) { setAiSendError("Email provider not supported. Reconnect in Settings."); setAiSending(false); return; }
       const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -9180,10 +9183,8 @@ function PublicBookingForm({ supabase }) {
     });
     // Fire notification emails (non-blocking)
     try {
-      await fetch('https://ckttttvgvpvflgjzkbmy.supabase.co/functions/v1/booking-notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + 'sb_publishable_77AjzPzfXgMSvku0fRFD9w_l4hHVMvo' },
-        body: JSON.stringify({
+      await supabase.functions.invoke('booking-notify', {
+        body: {
           venue: form.venue,
           contact_email: form.contact_email,
           instagram: form.instagram,
@@ -9192,7 +9193,7 @@ function PublicBookingForm({ supabase }) {
           fee_offer: form.fee_offer,
           message: form.message,
           dj_user_id: djProfile.id,
-        }),
+        },
       });
     } catch (e) { console.warn('Notify failed', e); }
     setSubmitting(false);

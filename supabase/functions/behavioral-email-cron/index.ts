@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
 const FUNCTION_URL_BASE = Deno.env.get("FUNCTION_URL_BASE") || "https://ckttttvgvpvflgjzkbmy.supabase.co/functions/v1";
 
 const corsHeaders = {
@@ -24,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    const supabase = createClient(SUPABASE_URL!, SERVICE_ROLE_KEY!);
     const results: TriggerResult[] = [];
 
     console.log("🚀 Starting behavioral email cron job...");
@@ -191,7 +191,7 @@ async function callEmailFunction(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
       },
       body: JSON.stringify(payload),
     });
