@@ -3994,7 +3994,7 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
                   <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Custom Domain Email</div>
                   {resendConnection
                     ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {resendConnection.email}</div>
-                    : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send from your own domain (e.g. info@yourdomain.com)</div>
+                    : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Requires a free <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend account</a> + verified domain</div>
                   }
                 </div>
               </div>
@@ -4015,6 +4015,11 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
             </div>
             {resendFormOpen && (
               <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                {!resendConnection && (
+                  <div style={{ background: "rgba(14,116,144,0.08)", border: "1px solid rgba(14,116,144,0.2)", borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.text2, lineHeight: 1.6 }}>
+                    <strong style={{ color: COLORS.purpleLight }}>Setup required:</strong> Create a free account at <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>resend.com</a>, add and verify your domain, then create an API key with <em>Sending access</em> and paste it below.
+                  </div>
+                )}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div>
                     <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
