@@ -3876,6 +3876,32 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     setSmtpFormOpen(false);
   };
 
+  const [smtpTesting, setSmtpTesting] = useState(false);
+  const [smtpTestResult, setSmtpTestResult] = useState(null); // "ok" | "error" | null
+
+  const testSmtp = async () => {
+    setSmtpTesting(true);
+    setSmtpTestResult(null);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/smtp-send`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to:      user.email,
+          subject: "NoxReach — SMTP test",
+          message: `Your SMTP connection is working.\n\nHost: ${smtpConnection?.metadata?.host}:${smtpConnection?.metadata?.port}\nFrom: ${smtpConnection?.email}`,
+        }),
+      });
+      setSmtpTestResult(res.ok ? "ok" : "error");
+    } catch {
+      setSmtpTestResult("error");
+    }
+    setSmtpTesting(false);
+    setTimeout(() => setSmtpTestResult(null), 4000);
+  };
+
   const set = key => val => setLocal(s => ({ ...s, [key]: val }));
 
   const handleSave = () => {
@@ -4245,6 +4271,9 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
               </div>
               {smtpConnection ? (
                 <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={testSmtp} disabled={smtpTesting} style={{ padding: "7px 14px", background: smtpTestResult === "ok" ? "rgba(34,197,94,0.12)" : smtpTestResult === "error" ? "rgba(239,68,68,0.1)" : "transparent", border: `1px solid ${smtpTestResult === "ok" ? "rgba(34,197,94,0.3)" : smtpTestResult === "error" ? "rgba(239,68,68,0.3)" : COLORS.border}`, borderRadius: 8, color: smtpTestResult === "ok" ? COLORS.green : smtpTestResult === "error" ? "#ef4444" : COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: smtpTesting ? 0.6 : 1 }}>
+                    {smtpTesting ? "Sending…" : smtpTestResult === "ok" ? "✓ Sent" : smtpTestResult === "error" ? "✗ Failed" : "Test"}
+                  </button>
                   <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); setSmtpForm({ host: smtpConnection.metadata?.host || "", port: smtpConnection.metadata?.port || "465", email: smtpConnection.email, password: "", from_name: smtpConnection.metadata?.from_name || "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
                   <button onClick={disconnectSmtp} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
                 </div>
