@@ -1531,6 +1531,10 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       });
       if (res.error) throw new Error(res.error.message);
       setAiDraft(res.data?.message || "");
+      // Auto-populate subject so Send button is immediately active
+      if (aiFormat === "email" && !aiSubject) {
+        setAiSubject(res.data?.subject || `Booking Inquiry — ${lead.name}`);
+      }
     } catch (e) {
       setAiError("Generation failed — check your connection and try again.");
     }
@@ -1880,6 +1884,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                       value={aiSubject}
                       onChange={e => setAiSubject(e.target.value)}
                       placeholder="Subject line…"
+                      onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }}
                       style={{ width: "100%", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, padding: "7px 12px", marginBottom: 6, boxSizing: "border-box", outline: "none", fontFamily: "inherit" }}
                     />
                   )}
@@ -1891,6 +1896,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                   />
                   <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
                     <button
+                      type="button"
                       onClick={copyDraft}
                       style={{ flex: 1, padding: "6px 0", background: aiCopied ? COLORS.green : "rgba(139,92,246,0.15)", border: `1px solid ${aiCopied ? COLORS.green : COLORS.violetLight}`, borderRadius: 7, color: aiCopied ? "#fff" : COLORS.violetLight, fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
                     >
@@ -1898,6 +1904,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                     </button>
                     {aiFormat === "email" && lead.contact && emailConn && (
                       <button
+                        type="button"
                         onClick={sendAiDraft}
                         disabled={aiSending || !aiSubject.trim()}
                         style={{ flex: 1, padding: "6px 0", background: aiSent ? COLORS.green : COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontWeight: 700, cursor: aiSending || !aiSubject.trim() ? "not-allowed" : "pointer", opacity: aiSending ? 0.6 : 1, transition: "all 0.2s" }}
@@ -1925,6 +1932,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           <div style={{ fontSize: 12, color: COLORS.text, flex: 1 }}>{lead.contact || <span style={{ color: COLORS.textMuted }}>—</span>}</div>
           {lead.contact && emailConn && (
             <button
+              type="button"
               onClick={() => { setComposeOpen(o => !o); setComposeError(""); setComposeSent(false); }}
               style={{ fontSize: 10, padding: "3px 8px", background: composeOpen ? COLORS.purple : "transparent", border: `1px solid ${composeOpen ? COLORS.purple : COLORS.border}`, borderRadius: 5, color: composeOpen ? "#fff" : COLORS.textMuted, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}
             >
@@ -1945,6 +1953,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
             value={composeSubject}
             onChange={e => setComposeSubject(e.target.value)}
             placeholder="Subject"
+            onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }}
             style={{ ...INPUT.base, fontSize: 12, padding: "7px 10px" }}
           />
           <textarea
@@ -1957,8 +1966,9 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           {composeError && <div style={{ fontSize: 11, color: "#ef4444" }}>{composeError}</div>}
           {composeSent && <div style={{ fontSize: 11, color: COLORS.green, fontWeight: 600 }}>✓ Email sent!</div>}
           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-            <button onClick={() => setComposeOpen(false)} style={{ fontSize: 11, padding: "5px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textMuted, cursor: "pointer" }}>Cancel</button>
+            <button type="button" onClick={() => setComposeOpen(false)} style={{ fontSize: 11, padding: "5px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textMuted, cursor: "pointer" }}>Cancel</button>
             <button
+              type="button"
               onClick={sendEmail}
               disabled={composeSending || !composeSubject.trim() || !composeBody.trim()}
               style={{ fontSize: 11, padding: "5px 12px", background: COLORS.purple, border: "none", borderRadius: 6, color: "#fff", cursor: "pointer", fontWeight: 700, opacity: composeSending ? 0.6 : 1 }}
@@ -6718,10 +6728,10 @@ function useKeyboardShortcuts({
     function handleKeyDown(e) {
       // Don't trigger if user is typing in an input/textarea
       const isTyping = ['INPUT', 'TEXTAREA'].includes(e.target.tagName);
-      
-      // Esc - Close modals (works everywhere)
+
+      // Esc - Close modals, but NOT when user is actively typing (e.g. compose panel)
       if (e.key === 'Escape') {
-        onCloseModal?.();
+        if (!isTyping) onCloseModal?.();
         return;
       }
 
