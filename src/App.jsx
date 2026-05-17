@@ -4592,34 +4592,105 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 
 // ─── Reply Hub ─────────────────────────────────────────────────────────────────
 
-function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobile }) {
-  const [filter, setFilter]   = useState("all"); // all | unread | replied
+function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobile, supabase, userId, onUnreadChange }) {
+  const [filter, setFilter]   = useState("all"); // all | unread | booked
   const [selected, setSelected] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
-  const [readIds, setReadIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]")); } catch { return new Set(); }
-  });
+  const [replies, setReplies] = useState([]);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const markRead = (id) => {
-    setReadIds(prev => { const n = new Set(prev); n.add(id); try { localStorage.setItem("noxreach_read_replies", JSON.stringify([...n])); } catch {} return n; });
+  // Format received_at timestamp
+  const formatTime = (ts) => {
+    if (!ts) return "";
+    const d = new Date(ts);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffH = Math.floor(diffMs / 3600000);
+    const diffD = Math.floor(diffMs / 86400000);
+    if (diffH < 1) return "just now";
+    if (diffH < 24) return `${diffH}h ago`;
+    if (diffD < 7) return `${diffD}d ago`;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  // Load email_replies from DB
+  const fetchReplies = async (showLoader = true) => {
+    if (!supabase || !userId) return;
+    if (showLoader) setRepliesLoading(true);
+    const { data, error } = await supabase
+      .from("email_replies")
+      .select("*")
+      .eq("user_id", userId)
+      .order("received_at", { ascending: false });
+    if (!error && data) {
+      setReplies(data);
+      onUnreadChange?.(data.filter(r => !r.is_read).length);
+    }
+    if (showLoader) setRepliesLoading(false);
+  };
+
+  useEffect(() => { fetchReplies(); }, [userId]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchReplies(false);
+    setRefreshing(false);
+    showToast("Inbox refreshed", "success");
+  };
+
+  // Get replies for a specific lead
+  const getRepliesForLead = (leadId) => replies.filter(r => r.lead_id === leadId);
+  const getLatestReply = (leadId) => replies.filter(r => r.lead_id === leadId)[0] || null;
+
+  // Mark as read: update DB + local state + notify parent
+  const markRead = async (leadId) => {
+    const unread = replies.filter(r => r.lead_id === leadId && !r.is_read);
+    if (unread.length === 0) return;
+    // Optimistic update
+    setReplies(prev => {
+      const updated = prev.map(r => r.lead_id === leadId ? { ...r, is_read: true } : r);
+      // Update parent sidebar count
+      const newUnread = updated.filter(r => !r.is_read).length;
+      onUnreadChange?.(newUnread);
+      return updated;
+    });
+    if (supabase) {
+      await supabase.from("email_replies").update({ is_read: true })
+        .eq("user_id", userId).eq("lead_id", leadId).eq("is_read", false);
+    }
   };
 
   // Replied leads are the "inbox" — they represent inbound promoter interest
   const repliedLeads = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked"));
 
-  // Simulate some message previews based on lead data
-  const getMessage = (lead) => {
-    return { subject: `Re: Booking Inquiry`, preview: `Thanks for getting in touch. We'd like to discuss possible dates for a booking. Can you share your availability for the coming months?`, time: "3d ago", location: lead.instagram || "—" };
+  // Leads with real email replies
+  const leadsWithReplies = new Set(replies.map(r => r.lead_id));
+
+  // isUnread: has any unread email_reply OR no replies but in replied/booked stage and not in localStorage
+  const isLeadUnread = (lead) => {
+    const leadReplies = getRepliesForLead(lead.id);
+    if (leadReplies.length > 0) return leadReplies.some(r => !r.is_read);
+    // Fallback: use localStorage for stage-moved leads with no email replies
+    try { const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]")); return !read.has(lead.id); } catch { return true; }
+  };
+
+  const markReadFallback = (id) => {
+    try {
+      const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]"));
+      read.add(id);
+      localStorage.setItem("noxreach_read_replies", JSON.stringify([...read]));
+    } catch {}
   };
 
   const filtered = repliedLeads.filter(l => {
-    if (filter === "unread") return !readIds.has(l.id);
-    if (filter === "replied") return l.stage === "booked";
+    if (filter === "unread") return isLeadUnread(l);
+    if (filter === "booked") return l.stage === "booked";
     return true;
   });
 
-  const unreadCount = repliedLeads.filter(l => !readIds.has(l.id)).length;
+  const unreadCount = repliedLeads.filter(l => isLeadUnread(l)).length;
 
   const copyReply = () => {
     if (!replyText.trim()) return;
@@ -4632,9 +4703,9 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
 
       {/* Left: message list */}
       <div style={{ borderRight: isMobile ? "none" : `1px solid ${COLORS.border}`, display: isMobile && mobileShowDetail ? "none" : "flex", flexDirection: "column" }}>
-        {/* Filter tabs */}
-        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", gap: 6 }}>
-          {[["all", "All"], ["unread", `Unread`], ["replied", "Booked"]].map(([id, label]) => (
+        {/* Filter tabs + refresh */}
+        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", gap: 6, alignItems: "center" }}>
+          {[["all", "All"], ["unread", `Unread`], ["booked", "Booked"]].map(([id, label]) => (
             <button key={id} onClick={() => setFilter(id)} style={{ flex: 1, padding: "6px 4px", borderRadius: 7, cursor: "pointer", background: filter === id ? COLORS.purpleBg : "transparent", border: `1px solid ${filter === id ? COLORS.purple : COLORS.border}`, color: filter === id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 11, fontWeight: filter === id ? 700 : 500, position: "relative" }}>
               {label}
               {id === "unread" && unreadCount > 0 && (
@@ -4642,34 +4713,48 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
               )}
             </button>
           ))}
+          <button onClick={handleRefresh} title="Refresh inbox" style={{ padding: "6px 10px", borderRadius: 7, cursor: "pointer", background: "transparent", border: `1px solid ${COLORS.border}`, color: COLORS.textMuted, fontSize: 13, flexShrink: 0 }}>
+            {refreshing ? "…" : "↻"}
+          </button>
         </div>
 
         {/* Message list */}
         <div style={{ flex: 1, overflowY: "auto" }}>
-          {filtered.length === 0 ? (
+          {repliesLoading ? (
+            <div style={{ padding: "32px 16px", textAlign: "center", color: COLORS.textMuted, fontSize: 12 }}>Loading…</div>
+          ) : filtered.length === 0 ? (
             <div style={{ padding: "32px 16px", textAlign: "center", color: COLORS.textMuted, fontSize: 12 }}>
               {filter === "unread" ? "All caught up ✓" : "No messages yet"}
             </div>
           ) : (
             filtered.map(lead => {
-              const msg      = getMessage(lead);
-              const isUnread = !readIds.has(lead.id);
+              const latest   = getLatestReply(lead.id);
+              const isUnread = isLeadUnread(lead);
               const isActive = selected?.id === lead.id;
+              const subject  = latest?.subject || "Re: Booking Inquiry";
+              const preview  = latest?.body_text?.replace(/\s+/g, " ").trim() || "No preview available";
+              const timeStr  = latest ? formatTime(latest.received_at) : "—";
+              const hasReal  = leadsWithReplies.has(lead.id);
               return (
-                <div key={lead.id} onClick={() => { setSelected(lead); markRead(lead.id); setReplyText(""); if (isMobile) setMobileShowDetail(true); }}
+                <div key={lead.id} onClick={() => {
+                    setSelected(lead); setReplyText("");
+                    if (hasReal) markRead(lead.id); else markReadFallback(lead.id);
+                    if (isMobile) setMobileShowDetail(true);
+                  }}
                   style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer", background: isActive ? COLORS.purpleBg : "transparent", borderLeft: `3px solid ${isActive ? COLORS.purple : isUnread ? COLORS.purple : "transparent"}`, transition: "background 0.15s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       {isUnread && <div style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.purple, flexShrink: 0 }} />}
                       <div style={{ fontSize: 13, fontWeight: isUnread ? 800 : 600, color: COLORS.text }}>{lead.name}</div>
                     </div>
-                    <div style={{ fontSize: 10, color: COLORS.textMuted, flexShrink: 0, marginLeft: 6 }}>{msg.time}</div>
+                    <div style={{ fontSize: 10, color: COLORS.textMuted, flexShrink: 0, marginLeft: 6 }}>{timeStr}</div>
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: isUnread ? 700 : 400, color: isUnread ? COLORS.text : COLORS.textSecondary, marginBottom: 3 }}>{msg.subject}</div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{msg.preview}</div>
+                  <div style={{ fontSize: 11, fontWeight: isUnread ? 700 : 400, color: isUnread ? COLORS.text : COLORS.textSecondary, marginBottom: 3 }}>{subject}</div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{preview}</div>
                   <div style={{ marginTop: 6, display: "flex", gap: 4 }}>
                     <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
                     <Badge color={lead.stage === "booked" ? COLORS.green : COLORS.violetLight}>{lead.stage === "booked" ? "Booked" : "Replied"}</Badge>
+                    {hasReal && <Badge color={COLORS.purple}>✉ Email</Badge>}
                   </div>
                 </div>
               );
@@ -4688,7 +4773,9 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
 
       {/* Right: message detail + reply composer */}
       {(!isMobile || mobileShowDetail) && selected ? (() => {
-        const msg  = getMessage(selected);
+        const leadReplies = getRepliesForLead(selected.id);
+        const latest = leadReplies[0] || null;
+        const subject = latest?.subject || "Re: Booking Inquiry";
         const hint = selected.stage === "replied"
           ? { action: "Confirm booking", next: "booked", color: COLORS.green }
           : null;
@@ -4703,11 +4790,10 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
             <div style={{ padding: "18px 24px", borderBottom: `1px solid ${COLORS.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>{msg.subject}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>{subject}</div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ fontSize: 12, color: COLORS.textSecondary }}>from <strong style={{ color: COLORS.text }}>{selected.name}</strong></span>
-                    <span style={{ fontSize: 11, color: COLORS.textMuted }}>· {msg.location}</span>
-                    <span style={{ fontSize: 11, color: COLORS.textMuted }}>· {msg.time}</span>
+                    <span style={{ fontSize: 12, color: COLORS.textSecondary }}>from <strong style={{ color: COLORS.text }}>{latest?.from_email || selected.name}</strong></span>
+                    {latest && <span style={{ fontSize: 11, color: COLORS.textMuted }}>· {formatTime(latest.received_at)}</span>}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -4717,11 +4803,21 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
               </div>
             </div>
 
-            {/* Message body */}
+            {/* Message body — show all real replies, or fallback */}
             <div style={{ padding: "24px", flex: 1, overflowY: "auto" }}>
-              <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", fontSize: 13, color: COLORS.text, lineHeight: 1.8, marginBottom: 20 }}>
-                {msg.preview}
-              </div>
+              {leadReplies.length > 0 ? leadReplies.map((r, i) => (
+                <div key={r.id} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", fontSize: 13, color: COLORS.text, lineHeight: 1.8, marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 11, color: COLORS.textMuted }}>
+                    <span><strong style={{ color: COLORS.textSecondary }}>{r.from_email}</strong></span>
+                    <span>{formatTime(r.received_at)}</span>
+                  </div>
+                  <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{r.body_text || "(No content)"}</div>
+                </div>
+              )) : (
+                <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", fontSize: 13, color: COLORS.textMuted, lineHeight: 1.8, marginBottom: 20, fontStyle: "italic" }}>
+                  No email replies captured yet. Replies are synced every 15 minutes via Gmail. You can also hit ↻ to refresh manually.
+                </div>
+              )}
 
               {/* Pipeline action */}
               {hint && (
@@ -7466,6 +7562,7 @@ function NoxReachApp({ user, session, supabase }) {
   const emailTotal = adminEmailSends.reduce((s, x) => s + (x.count || 0), 0);
   const [adminRefCodes, setAdminRefCodes]       = useState({ permanent: "", trial: "" });
   const [adminRefCopied, setAdminRefCopied]     = useState(null); // "permanent" | "trial" | null
+  const [emailUnreadCount, setEmailUnreadCount] = useState(0);
 
   const [showWelcomeNew, setShowWelcomeNew] = useState(() => {
     try { return !localStorage.getItem("nr_welcomed_" + user.id); } catch { return true; }
@@ -7573,6 +7670,14 @@ function NoxReachApp({ user, session, supabase }) {
 
   useEffect(() => {
     loadData();
+  }, [user?.id]);
+
+  // Fetch unread email_replies count for sidebar badge
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("email_replies").select("id", { count: "exact", head: true })
+      .eq("user_id", user.id).eq("is_read", false)
+      .then(({ count }) => { if (count !== null) setEmailUnreadCount(count); });
   }, [user?.id]);
 
 const loadAdminUsers = async () => {
@@ -7937,12 +8042,14 @@ const dueCount = leads.filter(l => {
   }).length;
   const repliedCount = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked")).length;
   const inboundCount = leads.filter(l => !l.archived && l.is_inbound && l.stage === "replied").length;
+  // Use real email_replies unread count when available, fallback to stage-based count
   const unreadCount  = useMemo(() => {
+    if (emailUnreadCount > 0) return emailUnreadCount;
     try {
       const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]"));
       return leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked") && !read.has(l.id)).length;
     } catch { return 0; }
-  }, [leads]);
+  }, [leads, emailUnreadCount]);
 const activeLeads = leads.filter(l => !l.archived);
   const hasFilter   = search || filters.tier || filters.tag || filters.stage;
 
@@ -8247,7 +8354,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} isMobile={isMobile} />}
-          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} isMobile={isMobile} />}
+          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} isMobile={isMobile} supabase={supabase} userId={user?.id} onUnreadChange={setEmailUnreadCount} />}
           {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} onDisplayNameChange={name => setProfileDisplayName(name)} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
