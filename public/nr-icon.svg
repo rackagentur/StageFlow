@@ -1,81 +1,91 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="img" aria-label="NoxReach">
   <title>NoxReach</title>
   <defs>
-    <!-- Dark purple background gradient -->
-    <radialGradient id="bgGrad" cx="55%" cy="32%" r="68%" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#2C0858"/>
-      <stop offset="100%" stop-color="#0F0018"/>
+
+    <!-- Background: deep purple radial -->
+    <radialGradient id="bg" cx="52%" cy="34%" r="62%">
+      <stop offset="0%"   stop-color="#2E0A52"/>
+      <stop offset="55%"  stop-color="#18022E"/>
+      <stop offset="100%" stop-color="#0A0016"/>
     </radialGradient>
 
-    <!-- N letter gradient: purple (bottom-left) → cyan (top-right) -->
-    <linearGradient id="nGrad" x1="100" y1="790" x2="530" y2="220" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#7040DF"/>
-      <stop offset="48%"  stop-color="#2B8EFF"/>
-      <stop offset="100%" stop-color="#00CCFF"/>
+    <!-- N gradient: purple bottom-left → cyan top-right -->
+    <!-- spans the full NR width so the top of N matches the R colour -->
+    <linearGradient id="ng" x1="95" y1="800" x2="510" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#6B32DC"/>
+      <stop offset="42%"  stop-color="#2480FF"/>
+      <stop offset="100%" stop-color="#00C8FF"/>
     </linearGradient>
+
+    <!--
+      ECG mask — white = show letter, black = hide (reveals background).
+      This is cleaner than a coloured stroke because the background
+      gradient shows through perfectly at every position.
+    -->
+    <mask id="ecg">
+      <rect width="1000" height="1000" fill="white"/>
+      <path
+        d="M 95,498
+           L 535,498
+           L 562,448
+           L 594,552
+           L 630,385
+           L 660,615
+           L 690,498
+           L 905,498"
+        stroke="black" stroke-width="32"
+        stroke-linecap="round" stroke-linejoin="round"
+        fill="none"/>
+    </mask>
+
   </defs>
 
   <!-- Background rounded square -->
-  <rect width="1000" height="1000" rx="120" fill="url(#bgGrad)"/>
+  <rect width="1000" height="1000" rx="118" fill="url(#bg)"/>
 
-  <!--
-    N letter — single polygon tracing the full letter silhouette.
-    Left stroke: x 100–225  |  Right stroke: x 390–510
-    Height: y 220–790       |  Cross-diagonal connects them.
+  <!-- ── NR monogram, ECG mask cuts through both letters ── -->
+  <g mask="url(#ecg)">
 
-    Going clockwise from bottom-left:
-      outer-left-bottom → outer-left-top → top-of-left-stroke →
-      diagonal-down-right → bottom-of-right-stroke → outer-right-bottom →
-      outer-right-top → top-of-right-stroke → inner-diagonal-back → bottom-of-left-stroke
-  -->
-  <polygon
-    points="100,790 100,220 225,220 390,790 510,790 510,220 390,220 225,790"
-    fill="url(#nGrad)"
-  />
+    <!--
+      N letter built from 3 non-overlapping solid fills:
+        • left stroke  (vertical bar, x 95–215)
+        • diagonal     (parallelogram from top-right of left stroke
+                        to bottom-left of right stroke)
+        • right stroke (vertical bar, x 380–500)
+      All three share the same gradient so they look like one shape.
+    -->
 
-  <!--
-    R letter — three overlapping filled shapes, all solid cyan.
-    Left bar: x 510–630, full height.
-    Bowl: cubic-bezier D-shape from y=220 to y=505, peaking ~x=875.
-    Leg: parallelogram from bowl-bottom diagonally to lower-right.
-  -->
+    <!-- N: left vertical bar -->
+    <rect x="95" y="200" width="120" height="600" fill="url(#ng)"/>
 
-  <!-- R: vertical bar -->
-  <rect x="510" y="220" width="118" height="570" fill="#00CCFF"/>
+    <!-- N: cross diagonal (parallelogram) -->
+    <!-- top edge: (215,200)→(335,200)  bottom edge: (380,800)→(260,800) -->
+    <polygon
+      points="215,200 335,200 380,800 260,800"
+      fill="url(#ng)"/>
 
-  <!-- R: bowl (filled D-shape) -->
-  <path
-    d="M 628,220
-       C 628,220 882,220 882,363
-       C 882,505 628,505 628,505
-       Z"
-    fill="#00CCFF"
-  />
+    <!-- N: right vertical bar -->
+    <rect x="380" y="200" width="120" height="600" fill="url(#ng)"/>
 
-  <!-- R: leg -->
-  <polygon
-    points="628,505 748,505 900,790 775,790"
-    fill="#00CCFF"
-  />
+    <!-- R: left vertical bar -->
+    <rect x="500" y="200" width="128" height="600" fill="#00C8FF"/>
 
-  <!--
-    ECG / heartbeat waveform — drawn in the background dark color
-    so it appears as a "cut" through both letters at mid-height (y≈505).
-    Spike sits inside the R bowl area.
-  -->
-  <path
-    d="M 100,502
-       L 540,502
-       L 564,445
-       L 594,568
-       L 628,400
-       L 662,612
-       L 696,502
-       L 900,502"
-    stroke="#0F0018"
-    stroke-width="28"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    fill="none"
-  />
+    <!--
+      R: bowl — single symmetric cubic bezier D-shape.
+      M (left,top) C (far-right,top) (far-right,bottom) (left,bottom) Z
+      Peaks at roughly x≈870 at mid-height.
+    -->
+    <path
+      d="M 608,200 C 950,200 950,500 608,500 Z"
+      fill="#00C8FF"/>
+
+    <!--
+      R: leg — diagonal parallelogram from bowl-bottom to lower-right.
+    -->
+    <polygon
+      points="608,500 740,500 905,800 775,800"
+      fill="#00C8FF"/>
+
+  </g>
+
 </svg>
