@@ -135,8 +135,8 @@ function LoginScreen({ onAuth }) {
       }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="52" height="52" style={{ borderRadius: 12, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
-          <img src="https://noxreach.com/public/nr-wordmark.png" height="18" style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
+          <img src="/nr-icon.svg" width="104" height="104" style={{ borderRadius: 24, marginBottom: 14, display: "block", margin: "0 auto 14px" }} alt="NR" />
+          <img src="/nr-wordmark.svg" height="18" style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
           <div style={{ fontSize: 11, color: COLORS.purple, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 6, letterSpacing: "0.02em" }}>Track venues, replies, follow-ups, and booked gigs in one place.</div>
         </div>
@@ -268,14 +268,13 @@ function LoginScreen({ onAuth }) {
                 if (err) setError("Demo unavailable right now.");
                 else onAuth(data.session, data.user);
               }} disabled={loading} style={{
-                width: "100%", padding: "12px 0", borderRadius: 8,
-                background: "transparent", border: `1px solid ${COLORS.border}`,
-                color: COLORS.text2, fontSize: 13, fontWeight: 600,
+                width: "100%", padding: "12px 0", borderRadius: 10, border: "none",
+                background: `linear-gradient(135deg, ${COLORS.purple}, ${COLORS.purpleLight})`,
+                color: "#fff", fontSize: 13, fontWeight: 700,
                 fontFamily: "'DM Sans', sans-serif", cursor: "pointer",
+                boxShadow: "0 4px 20px rgba(14,116,144,0.30)",
                 transition: "all 0.15s",
               }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.purple; e.currentTarget.style.color = COLORS.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.text2; }}
               >Try Demo →</button>
             </div>
           )}
@@ -369,9 +368,9 @@ function SetNewPasswordScreen({ onDone }) {
         animation: "authFadeIn 0.5s ease",
       }}>
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="52" height="52"
+          <img src="/nr-icon.svg" width="52" height="52"
             style={{ borderRadius: 12, display: "block", margin: "0 auto 14px" }} alt="NR" />
-          <img src="https://noxreach.com/public/nr-wordmark.png" height="18"
+          <img src="/nr-wordmark.svg" height="18"
             style={{ display: "block", margin: "0 auto 6px", opacity: 0.9 }} alt="NoxReach" />
           <div style={{ fontSize: 11, color: COLORS.purple, letterSpacing: "0.14em", opacity: 0.8, marginTop: 2 }}>NIGHTLIFE OS</div>
         </div>
@@ -725,26 +724,8 @@ function Toast({ toast }) {
 }
 
 function Logo({ size = 24 }) {
-  const s = size;
   return (
-    <svg width={s} height={s} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" rx="6" fill="#0F0820"/>
-      {/* N */}
-      <path d="M3 23V9h2.8l5.6 9.2V9H14v14h-2.8L5.6 13.8V23H3z" fill="url(#nl)"/>
-      {/* R */}
-      <path d="M16 9h5.2c2.1 0 3.8 1.7 3.8 3.8 0 1.5-.8 2.8-2.1 3.4L26 23h-3.2l-2.6-7.4H19V23h-3V9z M19 11.8v3.4h2.1c.7 0 1.3-.6 1.3-1.3v-.8c0-.7-.6-1.3-1.3-1.3H19z" fill="url(#rl)"/>
-      <line x1="10" y1="16" x2="22" y2="16" stroke={COLORS.purple} strokeWidth="1.2" strokeOpacity="0.7"/>
-      <defs>
-        <linearGradient id="nl" x1="3" y1="9" x2="14" y2="23" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={COLORS.purpleLight}/>
-          <stop offset="100%" stopColor={COLORS.purple}/>
-        </linearGradient>
-        <linearGradient id="rl" x1="16" y1="9" x2="26" y2="23" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={COLORS.purpleLight}/>
-          <stop offset="100%" stopColor={COLORS.purple}/>
-        </linearGradient>
-      </defs>
-    </svg>
+    <img src="/nr-icon.svg" width={size} height={size} alt="NoxReach" style={{ borderRadius: size * 0.117, display: "block" }} />
   );
 }
 
@@ -1481,7 +1462,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     supabase.from("email_connections").select("provider, email").eq("user_id", userId)
       .then(({ data }) => {
         if (!data?.length) return;
-        const conn = data.find(c => c.provider === "resend") || data.find(c => c.provider === "gmail") || data[0];
+        const conn = data.find(c => c.provider === "gmail") || data.find(c => c.provider === "outlook") || data.find(c => c.provider === "resend") || data[0];
         setEmailConn(conn);
       });
   }, [userId]);
@@ -1492,7 +1473,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const fn = emailConn?.provider === "gmail" ? "gmail-send" : "resend-send";
+      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : "resend-send";
       const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -1512,9 +1493,13 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   const [aiDraft, setAiDraft]       = useState("");
   const [aiCopied, setAiCopied]     = useState(false);
   const [aiError, setAiError]       = useState("");
+  const [aiSubject, setAiSubject]   = useState("");
+  const [aiSending, setAiSending]   = useState(false);
+  const [aiSent, setAiSent]         = useState(false);
+  const [aiSendError, setAiSendError] = useState("");
 
   const generateDraft = async () => {
-    setAiLoading(true); setAiError(""); setAiDraft("");
+    setAiLoading(true); setAiError(""); setAiDraft(""); setAiSent(false); setAiSendError(""); setAiSubject("");
     try {
       const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", userId).single();
       const { data: assetData } = await supabase.from("user_assets").select("*").eq("user_id", userId).maybeSingle();
@@ -1527,6 +1512,10 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       });
       if (res.error) throw new Error(res.error.message);
       setAiDraft(res.data?.message || "");
+      // Auto-populate subject so Send button is immediately active
+      if (aiFormat === "email" && !aiSubject) {
+        setAiSubject(res.data?.subject || `Booking Inquiry — ${lead.name}`);
+      }
     } catch (e) {
       setAiError("Generation failed — check your connection and try again.");
     }
@@ -1536,6 +1525,25 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
   const copyDraft = () => {
     navigator.clipboard.writeText(aiDraft);
     setAiCopied(true); setTimeout(() => setAiCopied(false), 2000);
+  };
+
+  const sendAiDraft = async () => {
+    if (!aiSubject.trim() || !aiDraft.trim() || !lead.contact || !emailConn) return;
+    setAiSending(true); setAiSendError("");
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : "resend-send";
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ to: lead.contact, subject: aiSubject, message: aiDraft, lead_id: lead.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setAiSendError(data.detail || data.error || "Send failed"); }
+      else { setAiSent(true); setTimeout(() => setAiSent(false), 3000); }
+    } catch (e) { setAiSendError("Network error. Try again."); }
+    setAiSending(false);
   };
 
   const [form, setForm] = useState({
@@ -1852,18 +1860,41 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
               {/* Draft textarea + copy */}
               {aiDraft && (
                 <div>
+                  {aiFormat === "email" && (
+                    <input
+                      value={aiSubject}
+                      onChange={e => setAiSubject(e.target.value)}
+                      placeholder="Subject line…"
+                      onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }}
+                      style={{ width: "100%", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, padding: "7px 12px", marginBottom: 6, boxSizing: "border-box", outline: "none", fontFamily: "inherit" }}
+                    />
+                  )}
                   <textarea
                     value={aiDraft}
                     onChange={e => setAiDraft(e.target.value)}
                     rows={aiFormat === "email" ? 8 : 4}
                     style={{ width: "100%", background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 7, color: COLORS.text, fontSize: 12, lineHeight: 1.6, padding: "10px 12px", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box", outline: "none" }}
                   />
-                  <button
-                    onClick={copyDraft}
-                    style={{ width: "100%", marginTop: 6, padding: "6px 0", background: aiCopied ? COLORS.green : "rgba(139,92,246,0.15)", border: `1px solid ${aiCopied ? COLORS.green : COLORS.violetLight}`, borderRadius: 7, color: aiCopied ? "#fff" : COLORS.violetLight, fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
-                  >
-                    {aiCopied ? "✓ Copied!" : "Copy to clipboard"}
-                  </button>
+                  <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                    <button
+                      type="button"
+                      onClick={copyDraft}
+                      style={{ flex: 1, padding: "6px 0", background: aiCopied ? COLORS.green : "rgba(139,92,246,0.15)", border: `1px solid ${aiCopied ? COLORS.green : COLORS.violetLight}`, borderRadius: 7, color: aiCopied ? "#fff" : COLORS.violetLight, fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}
+                    >
+                      {aiCopied ? "✓ Copied!" : "Copy"}
+                    </button>
+                    {aiFormat === "email" && lead.contact && emailConn && (
+                      <button
+                        type="button"
+                        onClick={sendAiDraft}
+                        disabled={aiSending || !aiSubject.trim()}
+                        style={{ flex: 1, padding: "6px 0", background: aiSent ? COLORS.green : COLORS.purple, border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontWeight: 700, cursor: aiSending || !aiSubject.trim() ? "not-allowed" : "pointer", opacity: aiSending ? 0.6 : 1, transition: "all 0.2s" }}
+                      >
+                        {aiSent ? "✓ Sent!" : aiSending ? "Sending…" : "✉ Send"}
+                      </button>
+                    )}
+                  </div>
+                  {aiSendError && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 4 }}>{aiSendError}</div>}
                 </div>
               )}
             </div>
@@ -1882,6 +1913,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           <div style={{ fontSize: 12, color: COLORS.text, flex: 1 }}>{lead.contact || <span style={{ color: COLORS.textMuted }}>—</span>}</div>
           {lead.contact && emailConn && (
             <button
+              type="button"
               onClick={() => { setComposeOpen(o => !o); setComposeError(""); setComposeSent(false); }}
               style={{ fontSize: 10, padding: "3px 8px", background: composeOpen ? COLORS.purple : "transparent", border: `1px solid ${composeOpen ? COLORS.purple : COLORS.border}`, borderRadius: 5, color: composeOpen ? "#fff" : COLORS.textMuted, cursor: "pointer", fontWeight: 600, flexShrink: 0 }}
             >
@@ -1902,6 +1934,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
             value={composeSubject}
             onChange={e => setComposeSubject(e.target.value)}
             placeholder="Subject"
+            onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }}
             style={{ ...INPUT.base, fontSize: 12, padding: "7px 10px" }}
           />
           <textarea
@@ -1914,8 +1947,9 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           {composeError && <div style={{ fontSize: 11, color: "#ef4444" }}>{composeError}</div>}
           {composeSent && <div style={{ fontSize: 11, color: COLORS.green, fontWeight: 600 }}>✓ Email sent!</div>}
           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-            <button onClick={() => setComposeOpen(false)} style={{ fontSize: 11, padding: "5px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textMuted, cursor: "pointer" }}>Cancel</button>
+            <button type="button" onClick={() => setComposeOpen(false)} style={{ fontSize: 11, padding: "5px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textMuted, cursor: "pointer" }}>Cancel</button>
             <button
+              type="button"
               onClick={sendEmail}
               disabled={composeSending || !composeSubject.trim() || !composeBody.trim()}
               style={{ fontSize: 11, padding: "5px 12px", background: COLORS.purple, border: "none", borderRadius: 6, color: "#fff", cursor: "pointer", fontWeight: 700, opacity: composeSending ? 0.6 : 1 }}
@@ -3624,6 +3658,8 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   // Email connections
   const [gmailConnection, setGmailConnection] = useState(null);
   const [gmailConnecting, setGmailConnecting] = useState(false);
+  const [outlookConnection, setOutlookConnection] = useState(null);
+  const [outlookConnecting, setOutlookConnecting] = useState(false);
   const [resendConnection, setResendConnection] = useState(null);
   const [resendConnecting, setResendConnecting] = useState(false);
   const [resendForm, setResendForm] = useState({ email: "", from_name: "", api_key: "" });
@@ -3645,6 +3681,8 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         if (data) {
           const gmail = data.find(c => c.provider === "gmail");
           if (gmail) setGmailConnection(gmail);
+          const outlook = data.find(c => c.provider === "outlook");
+          if (outlook) setOutlookConnection(outlook);
           const resend = data.find(c => c.provider === "resend");
           if (resend) setResendConnection(resend);
         }
@@ -3695,6 +3733,33 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
       headers: { Authorization: `Bearer ${token}` },
     });
     setGmailConnection(null);
+  };
+
+  const connectOutlook = async () => {
+    setOutlookConnecting(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/outlook-oauth?action=url&user_id=${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { url } = await res.json();
+      if (url) window.open(url, "_blank", "width=500,height=650");
+    } catch (e) {
+      console.error("Outlook connect error:", e);
+    }
+    setOutlookConnecting(false);
+  };
+
+  const disconnectOutlook = async () => {
+    const session = await supabase.auth.getSession();
+    const token = session.data.session?.access_token;
+    await fetch(`${supabase.supabaseUrl}/functions/v1/outlook-oauth`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setOutlookConnection(null);
   };
 
   const connectResend = async () => {
@@ -3979,6 +4044,38 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
             ) : (
               <button onClick={connectGmail} disabled={gmailConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: gmailConnecting ? 0.6 : 1 }}>
                 {gmailConnecting ? "Opening…" : "Connect Gmail"}
+              </button>
+            )}
+          </div>
+
+          {/* Outlook */}
+          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginTop: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#0078D4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {/* Microsoft Outlook envelope icon */}
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="5" width="13" height="14" rx="1.5" fill="#fff" opacity="0.15"/>
+                  <path d="M2 8.5L8.5 13l5.5-4.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="2" y="5" width="13" height="14" rx="1.5" stroke="#fff" strokeWidth="1.4"/>
+                  <rect x="13" y="9" width="9" height="10" rx="1.5" fill="#0078D4" stroke="#fff" strokeWidth="1.2"/>
+                  <path d="M14 12.5h7M14 15h5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Outlook / Microsoft 365</div>
+                {outlookConnection
+                  ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {outlookConnection.email}</div>
+                  : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send from your Outlook or Microsoft 365 inbox</div>
+                }
+              </div>
+            </div>
+            {outlookConnection ? (
+              <button onClick={disconnectOutlook} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                Disconnect
+              </button>
+            ) : (
+              <button onClick={connectOutlook} disabled={outlookConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: outlookConnecting ? 0.6 : 1 }}>
+                {outlookConnecting ? "Opening…" : "Connect Outlook"}
               </button>
             )}
           </div>
@@ -4549,34 +4646,142 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 
 // ─── Reply Hub ─────────────────────────────────────────────────────────────────
 
-function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobile }) {
-  const [filter, setFilter]   = useState("all"); // all | unread | replied
+function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobile, supabase, userId, onUnreadChange }) {
+  const [filter, setFilter]   = useState("all"); // all | unread | booked
   const [selected, setSelected] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
-  const [readIds, setReadIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]")); } catch { return new Set(); }
-  });
+  const [replies, setReplies] = useState([]);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [gmailConnected, setGmailConnected] = useState(false);
 
-  const markRead = (id) => {
-    setReadIds(prev => { const n = new Set(prev); n.add(id); try { localStorage.setItem("noxreach_read_replies", JSON.stringify([...n])); } catch {} return n; });
+  // Format received_at timestamp
+  const formatTime = (ts) => {
+    if (!ts) return "";
+    const d = new Date(ts);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffH = Math.floor(diffMs / 3600000);
+    const diffD = Math.floor(diffMs / 86400000);
+    if (diffH < 1) return "just now";
+    if (diffH < 24) return `${diffH}h ago`;
+    if (diffD < 7) return `${diffD}d ago`;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  // Load email_replies from DB
+  const fetchReplies = async (showLoader = true) => {
+    if (!supabase || !userId) return;
+    if (showLoader) setRepliesLoading(true);
+    const { data, error } = await supabase
+      .from("email_replies")
+      .select("*")
+      .eq("user_id", userId)
+      .order("received_at", { ascending: false });
+    if (!error && data) {
+      setReplies(data);
+      onUnreadChange?.(data.filter(r => !r.is_read).length);
+    }
+    if (showLoader) setRepliesLoading(false);
+  };
+
+  // Poll Gmail for new replies via edge function
+  const pollGmailReplies = async () => {
+    if (!supabase || !userId) return 0;
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) return 0;
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/gmail-poll-replies`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.new_replies ?? 0;
+    } catch { return 0; }
+  };
+
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    // Check if Gmail is connected, then auto-poll on mount
+    supabase.from("email_connections").select("provider").eq("user_id", userId).eq("provider", "gmail")
+      .then(({ data }) => {
+        const connected = data && data.length > 0;
+        setGmailConnected(connected);
+        if (connected) {
+          pollGmailReplies().then(() => fetchReplies());
+        } else {
+          fetchReplies();
+        }
+      });
+  }, [userId]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    if (gmailConnected) {
+      const newCount = await pollGmailReplies();
+      await fetchReplies(false);
+      showToast(newCount > 0 ? `${newCount} new repl${newCount === 1 ? "y" : "ies"} found` : "Inbox up to date", newCount > 0 ? "success" : "info");
+    } else {
+      await fetchReplies(false);
+      showToast("Inbox refreshed", "success");
+    }
+    setRefreshing(false);
+  };
+
+  // Get replies for a specific lead
+  const getRepliesForLead = (leadId) => replies.filter(r => r.lead_id === leadId);
+  const getLatestReply = (leadId) => replies.filter(r => r.lead_id === leadId)[0] || null;
+
+  // Mark as read: update DB + local state + notify parent
+  const markRead = async (leadId) => {
+    const unread = replies.filter(r => r.lead_id === leadId && !r.is_read);
+    if (unread.length === 0) return;
+    // Optimistic update
+    setReplies(prev => {
+      const updated = prev.map(r => r.lead_id === leadId ? { ...r, is_read: true } : r);
+      // Update parent sidebar count
+      const newUnread = updated.filter(r => !r.is_read).length;
+      onUnreadChange?.(newUnread);
+      return updated;
+    });
+    if (supabase) {
+      await supabase.from("email_replies").update({ is_read: true })
+        .eq("user_id", userId).eq("lead_id", leadId).eq("is_read", false);
+    }
   };
 
   // Replied leads are the "inbox" — they represent inbound promoter interest
   const repliedLeads = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked"));
 
-  // Simulate some message previews based on lead data
-  const getMessage = (lead) => {
-    return { subject: `Re: Booking Inquiry`, preview: `Thanks for getting in touch. We'd like to discuss possible dates for a booking. Can you share your availability for the coming months?`, time: "3d ago", location: lead.instagram || "—" };
+  // Leads with real email replies
+  const leadsWithReplies = new Set(replies.map(r => r.lead_id));
+
+  // isUnread: has any unread email_reply OR no replies but in replied/booked stage and not in localStorage
+  const isLeadUnread = (lead) => {
+    const leadReplies = getRepliesForLead(lead.id);
+    if (leadReplies.length > 0) return leadReplies.some(r => !r.is_read);
+    // Fallback: use localStorage for stage-moved leads with no email replies
+    try { const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]")); return !read.has(lead.id); } catch { return true; }
+  };
+
+  const markReadFallback = (id) => {
+    try {
+      const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]"));
+      read.add(id);
+      localStorage.setItem("noxreach_read_replies", JSON.stringify([...read]));
+    } catch {}
   };
 
   const filtered = repliedLeads.filter(l => {
-    if (filter === "unread") return !readIds.has(l.id);
-    if (filter === "replied") return l.stage === "booked";
+    if (filter === "unread") return isLeadUnread(l);
+    if (filter === "booked") return l.stage === "booked";
     return true;
   });
 
-  const unreadCount = repliedLeads.filter(l => !readIds.has(l.id)).length;
+  const unreadCount = repliedLeads.filter(l => isLeadUnread(l)).length;
 
   const copyReply = () => {
     if (!replyText.trim()) return;
@@ -4589,9 +4794,9 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
 
       {/* Left: message list */}
       <div style={{ borderRight: isMobile ? "none" : `1px solid ${COLORS.border}`, display: isMobile && mobileShowDetail ? "none" : "flex", flexDirection: "column" }}>
-        {/* Filter tabs */}
-        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", gap: 6 }}>
-          {[["all", "All"], ["unread", `Unread`], ["replied", "Booked"]].map(([id, label]) => (
+        {/* Filter tabs + refresh */}
+        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", gap: 6, alignItems: "center" }}>
+          {[["all", "All"], ["unread", `Unread`], ["booked", "Booked"]].map(([id, label]) => (
             <button key={id} onClick={() => setFilter(id)} style={{ flex: 1, padding: "6px 4px", borderRadius: 7, cursor: "pointer", background: filter === id ? COLORS.purpleBg : "transparent", border: `1px solid ${filter === id ? COLORS.purple : COLORS.border}`, color: filter === id ? COLORS.purpleLight : COLORS.textSecondary, fontSize: 11, fontWeight: filter === id ? 700 : 500, position: "relative" }}>
               {label}
               {id === "unread" && unreadCount > 0 && (
@@ -4599,34 +4804,48 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
               )}
             </button>
           ))}
+          <button onClick={handleRefresh} title="Refresh inbox" style={{ padding: "6px 10px", borderRadius: 7, cursor: "pointer", background: "transparent", border: `1px solid ${COLORS.border}`, color: COLORS.textMuted, fontSize: 13, flexShrink: 0 }}>
+            {refreshing ? "…" : "↻"}
+          </button>
         </div>
 
         {/* Message list */}
         <div style={{ flex: 1, overflowY: "auto" }}>
-          {filtered.length === 0 ? (
+          {repliesLoading ? (
+            <div style={{ padding: "32px 16px", textAlign: "center", color: COLORS.textMuted, fontSize: 12 }}>Loading…</div>
+          ) : filtered.length === 0 ? (
             <div style={{ padding: "32px 16px", textAlign: "center", color: COLORS.textMuted, fontSize: 12 }}>
               {filter === "unread" ? "All caught up ✓" : "No messages yet"}
             </div>
           ) : (
             filtered.map(lead => {
-              const msg      = getMessage(lead);
-              const isUnread = !readIds.has(lead.id);
+              const latest   = getLatestReply(lead.id);
+              const isUnread = isLeadUnread(lead);
               const isActive = selected?.id === lead.id;
+              const subject  = latest?.subject || "Re: Booking Inquiry";
+              const preview  = latest?.body_text?.replace(/\s+/g, " ").trim() || "No preview available";
+              const timeStr  = latest ? formatTime(latest.received_at) : "—";
+              const hasReal  = leadsWithReplies.has(lead.id);
               return (
-                <div key={lead.id} onClick={() => { setSelected(lead); markRead(lead.id); setReplyText(""); if (isMobile) setMobileShowDetail(true); }}
+                <div key={lead.id} onClick={() => {
+                    setSelected(lead); setReplyText("");
+                    if (hasReal) markRead(lead.id); else markReadFallback(lead.id);
+                    if (isMobile) setMobileShowDetail(true);
+                  }}
                   style={{ padding: "14px 16px", borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer", background: isActive ? COLORS.purpleBg : "transparent", borderLeft: `3px solid ${isActive ? COLORS.purple : isUnread ? COLORS.purple : "transparent"}`, transition: "background 0.15s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       {isUnread && <div style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.purple, flexShrink: 0 }} />}
                       <div style={{ fontSize: 13, fontWeight: isUnread ? 800 : 600, color: COLORS.text }}>{lead.name}</div>
                     </div>
-                    <div style={{ fontSize: 10, color: COLORS.textMuted, flexShrink: 0, marginLeft: 6 }}>{msg.time}</div>
+                    <div style={{ fontSize: 10, color: COLORS.textMuted, flexShrink: 0, marginLeft: 6 }}>{timeStr}</div>
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: isUnread ? 700 : 400, color: isUnread ? COLORS.text : COLORS.textSecondary, marginBottom: 3 }}>{msg.subject}</div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{msg.preview}</div>
+                  <div style={{ fontSize: 11, fontWeight: isUnread ? 700 : 400, color: isUnread ? COLORS.text : COLORS.textSecondary, marginBottom: 3 }}>{subject}</div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{preview}</div>
                   <div style={{ marginTop: 6, display: "flex", gap: 4 }}>
                     <Badge color={TIER_COLORS[lead.tier]}>{lead.tier}</Badge>
                     <Badge color={lead.stage === "booked" ? COLORS.green : COLORS.violetLight}>{lead.stage === "booked" ? "Booked" : "Replied"}</Badge>
+                    {hasReal && <Badge color={COLORS.purple}>✉ Email</Badge>}
                   </div>
                 </div>
               );
@@ -4645,7 +4864,9 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
 
       {/* Right: message detail + reply composer */}
       {(!isMobile || mobileShowDetail) && selected ? (() => {
-        const msg  = getMessage(selected);
+        const leadReplies = getRepliesForLead(selected.id);
+        const latest = leadReplies[0] || null;
+        const subject = latest?.subject || "Re: Booking Inquiry";
         const hint = selected.stage === "replied"
           ? { action: "Confirm booking", next: "booked", color: COLORS.green }
           : null;
@@ -4660,11 +4881,10 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
             <div style={{ padding: "18px 24px", borderBottom: `1px solid ${COLORS.border}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>{msg.subject}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, marginBottom: 4 }}>{subject}</div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ fontSize: 12, color: COLORS.textSecondary }}>from <strong style={{ color: COLORS.text }}>{selected.name}</strong></span>
-                    <span style={{ fontSize: 11, color: COLORS.textMuted }}>· {msg.location}</span>
-                    <span style={{ fontSize: 11, color: COLORS.textMuted }}>· {msg.time}</span>
+                    <span style={{ fontSize: 12, color: COLORS.textSecondary }}>from <strong style={{ color: COLORS.text }}>{latest?.from_email || selected.name}</strong></span>
+                    {latest && <span style={{ fontSize: 11, color: COLORS.textMuted }}>· {formatTime(latest.received_at)}</span>}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -4674,11 +4894,21 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
               </div>
             </div>
 
-            {/* Message body */}
+            {/* Message body — show all real replies, or fallback */}
             <div style={{ padding: "24px", flex: 1, overflowY: "auto" }}>
-              <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", fontSize: 13, color: COLORS.text, lineHeight: 1.8, marginBottom: 20 }}>
-                {msg.preview}
-              </div>
+              {leadReplies.length > 0 ? leadReplies.map((r, i) => (
+                <div key={r.id} style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", fontSize: 13, color: COLORS.text, lineHeight: 1.8, marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 11, color: COLORS.textMuted }}>
+                    <span><strong style={{ color: COLORS.textSecondary }}>{r.from_email}</strong></span>
+                    <span>{formatTime(r.received_at)}</span>
+                  </div>
+                  <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{r.body_text || "(No content)"}</div>
+                </div>
+              )) : (
+                <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", fontSize: 13, color: COLORS.textMuted, lineHeight: 1.8, marginBottom: 20, fontStyle: "italic" }}>
+                  No email replies captured yet. Replies are synced every 15 minutes via Gmail. You can also hit ↻ to refresh manually.
+                </div>
+              )}
 
               {/* Pipeline action */}
               {hint && (
@@ -6579,10 +6809,10 @@ function useKeyboardShortcuts({
     function handleKeyDown(e) {
       // Don't trigger if user is typing in an input/textarea
       const isTyping = ['INPUT', 'TEXTAREA'].includes(e.target.tagName);
-      
-      // Esc - Close modals (works everywhere)
+
+      // Esc - Close modals, but NOT when user is actively typing (e.g. compose panel)
       if (e.key === 'Escape') {
-        onCloseModal?.();
+        if (!isTyping) onCloseModal?.();
         return;
       }
 
@@ -7423,6 +7653,7 @@ function NoxReachApp({ user, session, supabase }) {
   const emailTotal = adminEmailSends.reduce((s, x) => s + (x.count || 0), 0);
   const [adminRefCodes, setAdminRefCodes]       = useState({ permanent: "", trial: "" });
   const [adminRefCopied, setAdminRefCopied]     = useState(null); // "permanent" | "trial" | null
+  const [emailUnreadCount, setEmailUnreadCount] = useState(0);
 
   const [showWelcomeNew, setShowWelcomeNew] = useState(() => {
     try { return !localStorage.getItem("nr_welcomed_" + user.id); } catch { return true; }
@@ -7449,6 +7680,18 @@ function NoxReachApp({ user, session, supabase }) {
       window.history.replaceState({}, "", window.location.pathname);
       setActiveTab("settings");
       showToast(`Gmail connection failed: ${params.get("gmail_error")}`, "error");
+    }
+
+    // Returning from Outlook OAuth
+    if (params.get("outlook_connected") === "1") {
+      window.history.replaceState({}, "", window.location.pathname);
+      setActiveTab("settings");
+      showToast("Outlook connected successfully!", "success");
+    }
+    if (params.get("outlook_error")) {
+      window.history.replaceState({}, "", window.location.pathname);
+      setActiveTab("settings");
+      showToast(`Outlook connection failed: ${params.get("outlook_error")}`, "error");
     }
 
     // Check if returning from Stripe checkout
@@ -7530,6 +7773,14 @@ function NoxReachApp({ user, session, supabase }) {
 
   useEffect(() => {
     loadData();
+  }, [user?.id]);
+
+  // Fetch unread email_replies count for sidebar badge
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("email_replies").select("id", { count: "exact", head: true })
+      .eq("user_id", user.id).eq("is_read", false)
+      .then(({ count }) => { if (count !== null) setEmailUnreadCount(count); });
   }, [user?.id]);
 
 const loadAdminUsers = async () => {
@@ -7894,12 +8145,14 @@ const dueCount = leads.filter(l => {
   }).length;
   const repliedCount = leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked")).length;
   const inboundCount = leads.filter(l => !l.archived && l.is_inbound && l.stage === "replied").length;
+  // Use real email_replies unread count when available, fallback to stage-based count
   const unreadCount  = useMemo(() => {
+    if (emailUnreadCount > 0) return emailUnreadCount;
     try {
       const read = new Set(JSON.parse(localStorage.getItem("noxreach_read_replies") || "[]"));
       return leads.filter(l => !l.archived && !l.is_inbound && (l.stage === "replied" || l.stage === "booked") && !read.has(l.id)).length;
     } catch { return 0; }
-  }, [leads]);
+  }, [leads, emailUnreadCount]);
 const activeLeads = leads.filter(l => !l.archived);
   const hasFilter   = search || filters.tier || filters.tag || filters.stage;
 
@@ -7987,8 +8240,8 @@ const activeLeads = leads.filter(l => !l.archived);
       <div style={{ position: "fixed", left: 0, top: 0, bottom: 0, width: 220, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: isMobile ? "none" : "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "24px 20px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
           <a href="https://noxreach.com/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <img src="/nr-icon.png" alt="NoxReach" style={{ width: 54, height: 54, borderRadius: 13, flexShrink: 0 }} />
-            <img src="/nr-wordmark.png" alt="NoxReach" style={{ height: 17, objectFit: "contain", opacity: 0.8 }} />
+            <img src="/nr-icon.svg" alt="NoxReach" style={{ width: 54, height: 54, borderRadius: 13, flexShrink: 0 }} />
+            <img src="/nr-wordmark.svg" alt="NoxReach" style={{ height: 17, objectFit: "contain", opacity: 0.8 }} />
           </a>
         </div>
         <nav style={{ padding: "16px 12px", flex: 1, overflowY: "auto" }}>
@@ -8204,7 +8457,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} isMobile={isMobile} />}
-          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} isMobile={isMobile} />}
+          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} isMobile={isMobile} supabase={supabase} userId={user?.id} onUnreadChange={setEmailUnreadCount} />}
           {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} onDisplayNameChange={name => setProfileDisplayName(name)} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
@@ -8560,7 +8813,7 @@ function PublicAssetKit({ supabase }) {
     <div style={s}>
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '48px 24px 80px' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="40" height="40" style={{ borderRadius: 10, marginBottom: 20, opacity: 0.7 }} alt="NR" />
+          <img src="/nr-icon.svg" width="40" height="40" style={{ borderRadius: 10, marginBottom: 20, opacity: 0.7 }} alt="NR" />
           <h1 style={{ margin: '0 0 6px', fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>{kit.artist_name || username}</h1>
           {kit.tagline && <p style={{ margin: '0 0 6px', fontSize: 15, color: '#22D3EE', fontWeight: 600 }}>{kit.tagline}</p>}
           {kit.location && <p style={{ margin: '0 0 4px', fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>📍 {kit.location}</p>}
@@ -8672,7 +8925,7 @@ function PublicBookingForm({ supabase }) {
   if (step === 'success') return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, sans-serif', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 480 }}>
-        <img src="https://noxreach.com/public/nr-icon.png" width="48" height="48" style={{ borderRadius: 12, marginBottom: 24 }} alt="NR" />
+        <img src="/nr-icon.svg" width="48" height="48" style={{ borderRadius: 12, marginBottom: 24 }} alt="NR" />
         <div style={{ fontSize: 28, fontWeight: 700, color: '#fff', marginBottom: 12 }}>Booking request sent</div>
         <div style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 32 }}>{djProfile.display_name} will review your request and get back to you soon.</div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>Powered by NoxReach</div>
@@ -8684,7 +8937,7 @@ function PublicBookingForm({ supabase }) {
     <div style={{ minHeight: '100vh', background: '#0a0a0a', fontFamily: '-apple-system, sans-serif', padding: '40px 24px' }}>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="44" height="44" style={{ borderRadius: 11, marginBottom: 16 }} alt="NR" />
+          <img src="/nr-icon.svg" width="44" height="44" style={{ borderRadius: 11, marginBottom: 16 }} alt="NR" />
           <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Book {djProfile.display_name}</div>
           <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Fill out the form and we will get back to you</div>
         </div>
@@ -8802,7 +9055,7 @@ function PublicGigList({ supabase }) {
 
         {/* Header */}
         <div style={{ textAlign:'center', marginBottom:52, animation:'pgFadeUp 0.5s ease both' }}>
-          <img src="https://noxreach.com/public/nr-icon.png" width="40" height="40"
+          <img src="/nr-icon.svg" width="40" height="40"
             style={{ borderRadius:10, marginBottom:20, opacity:0.7 }} alt="NR" />
           <div style={{ fontSize:42, fontWeight:900, color:'#fff', letterSpacing:'-0.03em', lineHeight:1, marginBottom:10 }}>
             {djProfile?.display_name}
@@ -9109,7 +9362,7 @@ function InstallPrompt() {
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-            <img src="https://noxreach.com/public/nr-icon.png" width={40} height={40}
+            <img src="/nr-icon.svg" width={40} height={40}
               style={{ borderRadius: 10, flexShrink: 0 }} alt="NoxReach" />
             <div>
               <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.text, lineHeight: 1.2 }}>Add NoxReach to your home screen</div>
