@@ -12,9 +12,10 @@ const SERVICE_ROLE_KEY        = Deno.env.get("SERVICE_ROLE_KEY")!;
 // Must match the redirect URI registered in Azure App Registration
 const REDIRECT_URI = `${SUPABASE_URL}/functions/v1/outlook-oauth/callback`;
 
-// Scopes: send mail + read profile + refresh token
+// Scopes: send + read mail (read needed for reply polling) + profile + refresh token
 const SCOPES = [
   "https://graph.microsoft.com/Mail.Send",
+  "https://graph.microsoft.com/Mail.ReadWrite",
   "https://graph.microsoft.com/User.Read",
   "offline_access",
 ].join(" ");
