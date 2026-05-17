@@ -76,6 +76,7 @@ async function logSend(params: {
   subject: string;
   bodyText: string;
   messageId?: string;
+  conversationId?: string;
 }) {
   await fetch(`${SUPABASE_URL}/rest/v1/email_sends`, {
     method: "POST",
@@ -92,7 +93,8 @@ async function logSend(params: {
       to_email:   params.toEmail,
       subject:    params.subject,
       body_text:  params.bodyText,
-      thread_id:  null,
+      // thread_id stores the Outlook conversationId for reply polling
+      thread_id:  params.conversationId ?? null,
       message_id: params.messageId ?? null,
     }),
   });
@@ -162,37 +164,46 @@ Deno.serve(async (req: Request) => {
     await updateTokens(userId, accessToken, newExpiry);
   }
 
-  // Send via Microsoft Graph — plain text body
-  const sendPayload = {
-    message: {
-      subject,
-      body: {
-        contentType: "Text",
-        content: message,
-      },
-      toRecipients: [
-        { emailAddress: { address: to } },
-      ],
-      from: {
-        emailAddress: { address: conn.email },
-      },
-    },
-    saveToSentItems: true,
-  };
-
-  const sendRes = await fetch(
-    "https://graph.microsoft.com/v1.0/me/sendMail",
+  // Use draft-then-send to capture conversationId for reply polling
+  const draftRes = await fetch(
+    "https://graph.microsoft.com/v1.0/me/messages",
     {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(sendPayload),
+      body: JSON.stringify({
+        subject,
+        body: { contentType: "Text", content: message },
+        toRecipients: [{ emailAddress: { address: to } }],
+        from: { emailAddress: { address: conn.email } },
+      }),
     }
   );
 
-  // Graph returns 202 Accepted on success (no body)
+  if (!draftRes.ok) {
+    const errText = await draftRes.text();
+    console.error("Graph draft create failed:", errText);
+    return new Response(JSON.stringify({ error: "Microsoft Graph API error", detail: errText }), {
+      status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const draft = await draftRes.json();
+  const messageId     = draft.id as string;
+  const conversationId = draft.conversationId as string | undefined;
+  const internetMsgId  = draft.internetMessageId as string | undefined;
+
+  // Send the draft
+  const sendRes = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${messageId}/send`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+
   if (!sendRes.ok) {
     const errText = await sendRes.text();
     console.error("Graph send failed:", errText);
@@ -201,14 +212,16 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Log to email_sends
+  // Log to email_sends (conversationId stored in thread_id for reply polling)
   await logSend({
     userId,
-    leadId:    lead_id,
-    fromEmail: conn.email,
-    toEmail:   to,
+    leadId:         lead_id,
+    fromEmail:      conn.email,
+    toEmail:        to,
     subject,
-    bodyText:  message,
+    bodyText:       message,
+    messageId:      internetMsgId,
+    conversationId,
   });
 
   return new Response(JSON.stringify({ ok: true }), {
