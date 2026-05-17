@@ -1462,7 +1462,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     supabase.from("email_connections").select("provider, email").eq("user_id", userId)
       .then(({ data }) => {
         if (!data?.length) return;
-        const conn = data.find(c => c.provider === "gmail") || data.find(c => c.provider === "outlook") || data.find(c => c.provider === "smtp") || data.find(c => c.provider === "resend") || data[0];
+        const conn = data.find(c => c.provider === "resend") || data.find(c => c.provider === "smtp") || data.find(c => c.provider === "gmail") || data.find(c => c.provider === "outlook") || data[0];
         setEmailConn(conn);
       });
   }, [userId]);
@@ -1474,7 +1474,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
       if (!emailConn) { setComposeError("Connect an email account in Settings first."); setComposeSending(false); return; }
-      const fn = emailConn.provider === "gmail" ? "gmail-send" : emailConn.provider === "outlook" ? "outlook-send" : emailConn.provider === "smtp" ? "smtp-send" : null;
+      const fn = emailConn.provider === "gmail" ? "gmail-send" : emailConn.provider === "outlook" ? "outlook-send" : emailConn.provider === "smtp" ? "smtp-send" : emailConn.provider === "resend" ? "resend-send" : null;
       if (!fn) { setComposeError("Email provider not supported. Reconnect in Settings."); setComposeSending(false); return; }
       const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
         method: "POST",
@@ -1535,7 +1535,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const fn = emailConn.provider === "gmail" ? "gmail-send" : emailConn.provider === "outlook" ? "outlook-send" : emailConn.provider === "smtp" ? "smtp-send" : null;
+      const fn = emailConn.provider === "gmail" ? "gmail-send" : emailConn.provider === "outlook" ? "outlook-send" : emailConn.provider === "smtp" ? "smtp-send" : emailConn.provider === "resend" ? "resend-send" : null;
       if (!fn) { setAiSendError("Email provider not supported. Reconnect in Settings."); setAiSending(false); return; }
       const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
         method: "POST",
