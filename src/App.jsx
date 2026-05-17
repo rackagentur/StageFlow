@@ -1462,7 +1462,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     supabase.from("email_connections").select("provider, email").eq("user_id", userId)
       .then(({ data }) => {
         if (!data?.length) return;
-        const conn = data.find(c => c.provider === "gmail") || data.find(c => c.provider === "outlook") || data.find(c => c.provider === "resend") || data[0];
+        const conn = data.find(c => c.provider === "gmail") || data.find(c => c.provider === "outlook") || data.find(c => c.provider === "smtp") || data.find(c => c.provider === "resend") || data[0];
         setEmailConn(conn);
       });
   }, [userId]);
@@ -1473,7 +1473,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : "resend-send";
+      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : emailConn?.provider === "smtp" ? "smtp-send" : "resend-send";
       const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -1533,7 +1533,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : "resend-send";
+      const fn = emailConn?.provider === "gmail" ? "gmail-send" : emailConn?.provider === "outlook" ? "outlook-send" : emailConn?.provider === "smtp" ? "smtp-send" : "resend-send";
       const res = await fetch(`${supabase.supabaseUrl}/functions/v1/${fn}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -3410,6 +3410,53 @@ function InboundView({ leads, user, supabase }) {
 
 
 
+// ─── Follow-up Popup Banner ───────────────────────────────────────────────────
+
+function FollowUpPopup({ dueCount, onNavigate }) {
+  const todayKey = new Date().toISOString().split("T")[0];
+  const storageKey = "nr_followup_dismissed_" + todayKey;
+
+  const [visible, setVisible] = useState(() => {
+    try { return !localStorage.getItem(storageKey); } catch { return true; }
+  });
+
+  if (!visible || dueCount === 0) return null;
+
+  const dismiss = () => {
+    try { localStorage.setItem(storageKey, "1"); } catch {}
+    setVisible(false);
+  };
+
+  return (
+    <div style={{
+      position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)",
+      zIndex: 900, display: "flex", alignItems: "center", gap: 14,
+      background: "#1a1230", border: "1px solid rgba(107,47,212,0.5)",
+      borderRadius: 12, padding: "13px 18px", maxWidth: 440, width: "calc(100% - 32px)",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+    }}>
+      <div style={{ fontSize: 20, flexShrink: 0 }}>⏰</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#f0f0f0" }}>
+          {dueCount} follow-up{dueCount > 1 ? "s" : ""} due today
+        </div>
+        <div style={{ fontSize: 12, color: "#9090a8", marginTop: 2 }}>Don't let them go cold.</div>
+      </div>
+      <button
+        onClick={() => { onNavigate("followups"); dismiss(); }}
+        style={{ padding: "7px 14px", background: "#6B2FD4", border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+      >
+        View →
+      </button>
+      <button
+        onClick={dismiss}
+        style={{ background: "none", border: "none", color: "#50506a", fontSize: 16, cursor: "pointer", padding: 4, flexShrink: 0, lineHeight: 1 }}
+        aria-label="Dismiss"
+      >✕</button>
+    </div>
+  );
+}
+
 // ─── Cookie Banner ─────────────────────────────────────────────────────────────
 
 function CookieBanner() {
@@ -3665,6 +3712,11 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   const [resendForm, setResendForm] = useState({ email: "", from_name: "", api_key: "" });
   const [resendFormOpen, setResendFormOpen] = useState(false);
   const [resendError, setResendError] = useState("");
+  const [smtpConnection, setSmtpConnection] = useState(null);
+  const [smtpConnecting, setSmtpConnecting] = useState(false);
+  const [smtpForm, setSmtpForm] = useState({ host: "", port: "465", email: "", password: "", from_name: "" });
+  const [smtpFormOpen, setSmtpFormOpen] = useState(false);
+  const [smtpError, setSmtpError] = useState("");
 
   useEffect(() => {
     if (!user?.id || !supabase) return;
@@ -3685,6 +3737,8 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
           if (outlook) setOutlookConnection(outlook);
           const resend = data.find(c => c.provider === "resend");
           if (resend) setResendConnection(resend);
+          const smtp = data.find(c => c.provider === "smtp");
+          if (smtp) setSmtpConnection(smtp);
         }
       });
   }, [user?.id]);
@@ -3789,6 +3843,37 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "resend");
     setResendConnection(null);
     setResendFormOpen(false);
+  };
+
+  const connectSmtp = async () => {
+    setSmtpError("");
+    if (!smtpForm.host.trim()) { setSmtpError("Enter SMTP host"); return; }
+    if (!smtpForm.email || !smtpForm.email.includes("@")) { setSmtpError("Enter a valid from email"); return; }
+    if (!smtpForm.password.trim()) { setSmtpError("Enter SMTP password"); return; }
+    setSmtpConnecting(true);
+    try {
+      await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "smtp");
+      const { error } = await supabase.from("email_connections").insert({
+        user_id:      user.id,
+        provider:     "smtp",
+        email:        smtpForm.email.trim(),
+        access_token: smtpForm.password.trim(),
+        metadata:     { host: smtpForm.host.trim(), port: smtpForm.port || "465", from_name: smtpForm.from_name.trim() || null },
+      });
+      if (error) { setSmtpError(error.message || "Failed to save."); }
+      else {
+        setSmtpConnection({ email: smtpForm.email.trim(), metadata: { host: smtpForm.host.trim(), port: smtpForm.port, from_name: smtpForm.from_name.trim() || null } });
+        setSmtpFormOpen(false);
+        setSmtpForm(f => ({ ...f, password: "" }));
+      }
+    } catch (e) { setSmtpError("Failed to save. Try again."); }
+    setSmtpConnecting(false);
+  };
+
+  const disconnectSmtp = async () => {
+    await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "smtp");
+    setSmtpConnection(null);
+    setSmtpFormOpen(false);
   };
 
   const set = key => val => setLocal(s => ({ ...s, [key]: val }));
@@ -4138,6 +4223,66 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
                   <button onClick={connectResend} disabled={resendConnecting || !resendForm.email} style={{ ...BTN.primary, ...BTN.sm, opacity: resendConnecting ? 0.6 : 1 }}>
                     {resendConnecting ? "Saving…" : "Save"}
                   </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* SMTP / Custom SMTP (e.g. smtp.ionos.de) */}
+          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#1a1a2e", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="m2 7 10 8 10-8"/></svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>SMTP</div>
+                  {smtpConnection
+                    ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {smtpConnection.email} via {smtpConnection.metadata?.host}</div>
+                    : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send with any SMTP provider — IONOS, Fastmail, custom mail server</div>
+                  }
+                </div>
+              </div>
+              {smtpConnection ? (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); setSmtpForm({ host: smtpConnection.metadata?.host || "", port: smtpConnection.metadata?.port || "465", email: smtpConnection.email, password: "", from_name: smtpConnection.metadata?.from_name || "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                  <button onClick={disconnectSmtp} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
+                </div>
+              ) : (
+                <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Connect</button>
+              )}
+            </div>
+            {smtpFormOpen && (
+              <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>SMTP Host</div>
+                    <input value={smtpForm.host} onChange={e => setSmtpForm(f => ({ ...f, host: e.target.value }))} placeholder="smtp.ionos.de" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                  <div style={{ minWidth: 80 }}>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Port</div>
+                    <input value={smtpForm.port} onChange={e => setSmtpForm(f => ({ ...f, port: e.target.value }))} placeholder="465" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
+                    <input value={smtpForm.email} onChange={e => setSmtpForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
+                    <input value={smtpForm.from_name} onChange={e => setSmtpForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Password / App password</div>
+                  <input type="password" value={smtpForm.password} onChange={e => setSmtpForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" style={{ ...INPUT.base, fontSize: 12 }} />
+                </div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted }}>Port 465 = SSL · Port 587 = STARTTLS. For IONOS use smtp.ionos.de : 465.</div>
+                {smtpError && <div style={{ fontSize: 12, color: "#ef4444" }}>{smtpError}</div>}
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button onClick={() => { setSmtpFormOpen(false); setSmtpError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
+                  <button onClick={connectSmtp} disabled={smtpConnecting || !smtpForm.email || !smtpForm.host} style={{ ...BTN.primary, ...BTN.sm, opacity: smtpConnecting ? 0.6 : 1 }}>{smtpConnecting ? "Saving…" : "Save"}</button>
                 </div>
               </div>
             )}
@@ -4729,6 +4874,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
   const [repliesLoading, setRepliesLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [gmailConnected, setGmailConnected] = useState(false);
+  const [outlookConnected, setOutlookConnected] = useState(false);
 
   // Format received_at timestamp
   const formatTime = (ts) => {
@@ -4760,6 +4906,21 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
     if (showLoader) setRepliesLoading(false);
   };
 
+  // Request browser notification permission once
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  const sendBrowserNotification = (count) => {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    new Notification("NoxReach — new repl" + (count === 1 ? "y" : "ies"), {
+      body: `${count} new repl${count === 1 ? "y" : "ies"} in your inbox`,
+      icon: "/nr-icon.svg",
+    });
+  };
+
   // Poll Gmail for new replies via edge function
   const pollGmailReplies = async () => {
     if (!supabase || !userId) return 0;
@@ -4777,29 +4938,56 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
     } catch { return 0; }
   };
 
+  // Poll Outlook for new replies via edge function
+  const pollOutlookReplies = async () => {
+    if (!supabase || !userId) return 0;
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (!token) return 0;
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/outlook-poll-replies`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.new_replies ?? 0;
+    } catch { return 0; }
+  };
+
   useEffect(() => {
     if (!supabase || !userId) return;
-    // Check if Gmail is connected, then auto-poll on mount
-    supabase.from("email_connections").select("provider").eq("user_id", userId).eq("provider", "gmail")
+    // Check which providers are connected, then auto-poll on mount
+    supabase.from("email_connections").select("provider").eq("user_id", userId)
       .then(({ data }) => {
-        const connected = data && data.length > 0;
-        setGmailConnected(connected);
-        if (connected) {
-          pollGmailReplies().then(() => fetchReplies());
-        } else {
+        const gmail = data?.some(c => c.provider === "gmail") ?? false;
+        const outlook = data?.some(c => c.provider === "outlook") ?? false;
+        setGmailConnected(gmail);
+        setOutlookConnected(outlook);
+        const polls = [];
+        if (gmail) polls.push(pollGmailReplies());
+        if (outlook) polls.push(pollOutlookReplies());
+        Promise.all(polls).then(counts => {
+          const total = counts.reduce((a, b) => a + b, 0);
+          if (total > 0) sendBrowserNotification(total);
           fetchReplies();
-        }
+        }).catch(() => fetchReplies());
+        if (!gmail && !outlook) fetchReplies();
       });
   }, [userId]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    if (gmailConnected) {
-      const newCount = await pollGmailReplies();
-      await fetchReplies(false);
+    const polls = [];
+    if (gmailConnected) polls.push(pollGmailReplies());
+    if (outlookConnected) polls.push(pollOutlookReplies());
+    const counts = await Promise.all(polls).catch(() => []);
+    const newCount = counts.reduce((a, b) => a + b, 0);
+    await fetchReplies(false);
+    if (polls.length > 0) {
+      if (newCount > 0) sendBrowserNotification(newCount);
       showToast(newCount > 0 ? `${newCount} new repl${newCount === 1 ? "y" : "ies"} found` : "Inbox up to date", newCount > 0 ? "success" : "info");
     } else {
-      await fetchReplies(false);
       showToast("Inbox refreshed", "success");
     }
     setRefreshing(false);
@@ -8292,6 +8480,7 @@ const activeLeads = leads.filter(l => !l.archived);
       {showWelcomePro && <ProWelcomeModal onClose={() => setShowWelcomePro(false)} />}
       {showCSVImport && <CSVImportModal onClose={() => setShowCSVImport(false)} onImport={() => { loadData(); setShowCSVImport(false); }} userId={user.id} supabase={supabase} COLORS={COLORS} />}
       {showWhatsNew && <WhatsNewModal onClose={dismissWhatsNew} />}
+      <FollowUpPopup dueCount={dueCount} onNavigate={setActiveTab} />
       {upgradeModal     && <UpgradeModal reason={upgradeModal} onClose={() => setUpgradeModal(null)} onUpgrade={handleUpgrade} />}
       {reviewNudge && <ReviewNudgeModal lead={reviewNudge} onClose={() => setReviewNudge(null)} reviewEmail={user?.email || "hello@noxreach.io"} />
 }
