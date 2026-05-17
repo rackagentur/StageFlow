@@ -5197,7 +5197,7 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
                 </div>
               )) : (
                 <div style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", fontSize: 13, color: COLORS.textMuted, lineHeight: 1.8, marginBottom: 20, fontStyle: "italic" }}>
-                  No email replies captured yet. Replies are synced every 15 minutes via Gmail. You can also hit ↻ to refresh manually.
+                  No email replies captured yet. Replies are synced when you connect Gmail or Outlook in Settings and hit ↻ to refresh.
                 </div>
               )}
 
