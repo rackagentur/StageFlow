@@ -1807,6 +1807,53 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         </div>
       )}
 
+      {/* Manual Compose Button */}
+      {!lead.archived && lead.stage !== "booked" && lead.contact && emailConn && (
+        <div style={{ marginBottom: 8 }}>
+          <button
+            onClick={() => { setComposeOpen(o => !o); setComposeError(""); setComposeSent(false); }}
+            style={{ width: "100%", padding: "8px 12px", background: composeOpen ? COLORS.surface2 : "transparent", border: `1px solid ${composeOpen ? COLORS.border : COLORS.border}`, borderRadius: 8, color: composeOpen ? COLORS.text : COLORS.text2, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "all 0.15s" }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 14 }}>✉</span> Compose Email
+            </span>
+            <span style={{ fontSize: 10, opacity: 0.6 }}>{composeOpen ? "▲" : "▼"}</span>
+          </button>
+          {composeOpen && (
+            <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderTop: "none", borderRadius: "0 0 8px 8px", padding: "12px 12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 10, color: COLORS.textMuted }}>To: <span style={{ color: COLORS.text }}>{lead.contact}</span> · via <span style={{ color: COLORS.purpleLight }}>{emailConn?.email}</span></div>
+              <input
+                value={composeSubject}
+                onChange={e => setComposeSubject(e.target.value)}
+                placeholder="Subject"
+                onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }}
+                style={{ ...INPUT.base, fontSize: 12, padding: "7px 10px" }}
+              />
+              <textarea
+                value={composeBody}
+                onChange={e => setComposeBody(e.target.value)}
+                placeholder="Write your message…"
+                rows={6}
+                style={{ ...INPUT.base, fontSize: 12, padding: "8px 10px", resize: "vertical", lineHeight: 1.6, fontFamily: "inherit" }}
+              />
+              {composeError && <div style={{ fontSize: 11, color: "#ef4444" }}>{composeError}</div>}
+              {composeSent && <div style={{ fontSize: 11, color: COLORS.green, fontWeight: 600 }}>✓ Email sent!</div>}
+              <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                <button type="button" onClick={() => setComposeOpen(false)} style={{ fontSize: 11, padding: "5px 10px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textMuted, cursor: "pointer" }}>Cancel</button>
+                <button
+                  type="button"
+                  onClick={sendEmail}
+                  disabled={composeSending || !composeSubject.trim() || !composeBody.trim()}
+                  style={{ fontSize: 11, padding: "5px 14px", background: COLORS.purple, border: "none", borderRadius: 6, color: "#fff", cursor: "pointer", fontWeight: 700, opacity: composeSending ? 0.6 : 1 }}
+                >
+                  {composeSending ? "Sending…" : composeSent ? "✓ Sent!" : "Send"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* AI Draft Panel */}
       {!lead.archived && lead.stage !== "booked" && (
         <div style={{ marginBottom: 12 }}>
