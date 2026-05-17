@@ -4044,6 +4044,164 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         </div>
       </div>
 
+      {/* Email Integration */}
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Email Integration</div>
+        <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 16 }}>Connect your inbox to send emails directly from NoxReach and auto-detect replies.</div>
+
+        {/* Gmail */}
+        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#EA4335" d="M6 18V8.4L2 5.6V18c0 1.1.9 2 2 2h2z"/><path fill="#34A853" d="M18 18V8.4l4-2.8V18c0 1.1-.9 2-2 2h-2z"/><path fill="#4285F4" d="M18 4H6L2 6.8 12 14l10-7.2L18 4z"/><path fill="#FBBC04" d="M2 6.8V5.6C2 4.72 2.72 4 3.6 4h.4L2 6.8z"/><path fill="#EA4335" d="M22 5.6v1.2L18 4h.4c.88 0 1.6.72 1.6 1.6v0z"/></svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Gmail</div>
+              {gmailConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {gmailConnection.email}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Not connected</div>}
+            </div>
+          </div>
+          {gmailConnection ? (
+            <button onClick={disconnectGmail} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
+          ) : (
+            <button onClick={connectGmail} disabled={gmailConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: gmailConnecting ? 0.6 : 1 }}>{gmailConnecting ? "Opening…" : "Connect Gmail"}</button>
+          )}
+        </div>
+
+        {/* Outlook */}
+        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginTop: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: "#0078D4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="5" width="13" height="14" rx="1.5" fill="#fff" opacity="0.15"/>
+                <path d="M2 8.5L8.5 13l5.5-4.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="2" y="5" width="13" height="14" rx="1.5" stroke="#fff" strokeWidth="1.4"/>
+                <rect x="13" y="9" width="9" height="10" rx="1.5" fill="#0078D4" stroke="#fff" strokeWidth="1.2"/>
+                <path d="M14 12.5h7M14 15h5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Outlook / Microsoft 365</div>
+              {outlookConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {outlookConnection.email}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send from your Outlook or Microsoft 365 inbox</div>}
+            </div>
+          </div>
+          {outlookConnection ? (
+            <button onClick={disconnectOutlook} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
+          ) : (
+            <button onClick={connectOutlook} disabled={outlookConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: outlookConnecting ? 0.6 : 1 }}>{outlookConnecting ? "Opening…" : "Connect Outlook"}</button>
+          )}
+        </div>
+
+        {/* Resend / Custom domain */}
+        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Custom Domain Email</div>
+                {resendConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {resendConnection.email}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Requires a free <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend account</a> + verified domain</div>}
+              </div>
+            </div>
+            {resendConnection ? (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); setResendForm({ email: resendConnection.email, from_name: resendConnection.metadata?.from_name || "", api_key: "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                <button onClick={disconnectResend} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
+              </div>
+            ) : (
+              <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Connect</button>
+            )}
+          </div>
+          {resendFormOpen && (
+            <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+              {!resendConnection && (
+                <div style={{ background: "rgba(14,116,144,0.08)", border: "1px solid rgba(14,116,144,0.2)", borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.text2, lineHeight: 1.6 }}>
+                  <strong style={{ color: COLORS.purpleLight }}>Setup required:</strong> Create a free account at <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>resend.com</a>, add and verify your domain, then create an API key with <em>Sending access</em> and paste it below.
+                </div>
+              )}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
+                  <input value={resendForm.email} onChange={e => setResendForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
+                  <input value={resendForm.from_name} onChange={e => setResendForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Resend API Key <span style={{ color: COLORS.text3 }}>(optional — leave blank to use NoxReach default)</span></div>
+                  <input type="password" value={resendForm.api_key} onChange={e => setResendForm(f => ({ ...f, api_key: e.target.value }))} placeholder="re_xxxxxxxxxxxx" style={{ ...INPUT.base, fontSize: 12 }} />
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted }}>Your domain must be verified in <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend</a> for sending to work.</div>
+              {resendError && <div style={{ fontSize: 12, color: "#ef4444" }}>{resendError}</div>}
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <button onClick={() => { setResendFormOpen(false); setResendError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
+                <button onClick={connectResend} disabled={resendConnecting || !resendForm.email} style={{ ...BTN.primary, ...BTN.sm, opacity: resendConnecting ? 0.6 : 1 }}>{resendConnecting ? "Saving…" : "Save"}</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* SMTP */}
+        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#1a1a2e", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="m2 7 10 8 10-8"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>SMTP</div>
+                {smtpConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {smtpConnection.email} via {smtpConnection.metadata?.host}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send with any SMTP provider — IONOS, Fastmail, custom mail server</div>}
+              </div>
+            </div>
+            {smtpConnection ? (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={testSmtp} disabled={smtpTesting} style={{ padding: "7px 14px", background: smtpTestResult === "ok" ? "rgba(34,197,94,0.12)" : smtpTestResult === "error" ? "rgba(239,68,68,0.1)" : "transparent", border: `1px solid ${smtpTestResult === "ok" ? "rgba(34,197,94,0.3)" : smtpTestResult === "error" ? "rgba(239,68,68,0.3)" : COLORS.border}`, borderRadius: 8, color: smtpTestResult === "ok" ? COLORS.green : smtpTestResult === "error" ? "#ef4444" : COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: smtpTesting ? 0.6 : 1 }}>{smtpTesting ? "Sending…" : smtpTestResult === "ok" ? "✓ Sent" : smtpTestResult === "error" ? "✗ Failed" : "Test"}</button>
+                <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); setSmtpForm({ host: smtpConnection.metadata?.host || "", port: smtpConnection.metadata?.port || "465", email: smtpConnection.email, password: "", from_name: smtpConnection.metadata?.from_name || "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                <button onClick={disconnectSmtp} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
+              </div>
+            ) : (
+              <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Connect</button>
+            )}
+          </div>
+          {smtpFormOpen && (
+            <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>SMTP Host</div>
+                  <input value={smtpForm.host} onChange={e => setSmtpForm(f => ({ ...f, host: e.target.value }))} placeholder="smtp.ionos.de" style={{ ...INPUT.base, fontSize: 12 }} />
+                </div>
+                <div style={{ minWidth: 80 }}>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Port</div>
+                  <input value={smtpForm.port} onChange={e => setSmtpForm(f => ({ ...f, port: e.target.value }))} placeholder="465" style={{ ...INPUT.base, fontSize: 12 }} />
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
+                  <input value={smtpForm.email} onChange={e => setSmtpForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
+                  <input value={smtpForm.from_name} onChange={e => setSmtpForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Password / App password</div>
+                <input type="password" value={smtpForm.password} onChange={e => setSmtpForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" style={{ ...INPUT.base, fontSize: 12 }} />
+              </div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted }}>Port 465 = SSL · Port 587 = STARTTLS. For IONOS use smtp.ionos.de : 465.</div>
+              {smtpError && <div style={{ fontSize: 12, color: "#ef4444" }}>{smtpError}</div>}
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <button onClick={() => { setSmtpFormOpen(false); setSmtpError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
+                <button onClick={connectSmtp} disabled={smtpConnecting || !smtpForm.email || !smtpForm.host} style={{ ...BTN.primary, ...BTN.sm, opacity: smtpConnecting ? 0.6 : 1 }}>{smtpConnecting ? "Saving…" : "Save"}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Referral */}
       {referralCode && (
         <div style={{ background: COLORS.surface, border: `1px solid rgba(139,92,246,0.25)`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
@@ -4177,195 +4335,6 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
           )}
           {!isDirty && !saved && <span style={{ fontSize: 11, color: COLORS.textMuted }}>No unsaved changes</span>}
           {saved && <span style={{ fontSize: 11, color: COLORS.green }}>Changes applied to all future reminders</span>}
-        </div>
-
-        {/* Email Connections */}
-        <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${COLORS.border}` }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Email Integration</div>
-          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Connect your inbox to send emails directly from NoxReach and auto-detect replies.</div>
-
-          {/* Gmail */}
-          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#EA4335" d="M6 18V8.4L2 5.6V18c0 1.1.9 2 2 2h2z"/><path fill="#34A853" d="M18 18V8.4l4-2.8V18c0 1.1-.9 2-2 2h-2z"/><path fill="#4285F4" d="M18 4H6L2 6.8 12 14l10-7.2L18 4z"/><path fill="#FBBC04" d="M2 6.8V5.6C2 4.72 2.72 4 3.6 4h.4L2 6.8z"/><path fill="#EA4335" d="M22 5.6v1.2L18 4h.4c.88 0 1.6.72 1.6 1.6v0z"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Gmail</div>
-                {gmailConnection
-                  ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {gmailConnection.email}</div>
-                  : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Not connected</div>
-                }
-              </div>
-            </div>
-            {gmailConnection ? (
-              <button onClick={disconnectGmail} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                Disconnect
-              </button>
-            ) : (
-              <button onClick={connectGmail} disabled={gmailConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: gmailConnecting ? 0.6 : 1 }}>
-                {gmailConnecting ? "Opening…" : "Connect Gmail"}
-              </button>
-            )}
-          </div>
-
-          {/* Outlook */}
-          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginTop: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#0078D4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                {/* Microsoft Outlook envelope icon */}
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <rect x="2" y="5" width="13" height="14" rx="1.5" fill="#fff" opacity="0.15"/>
-                  <path d="M2 8.5L8.5 13l5.5-4.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <rect x="2" y="5" width="13" height="14" rx="1.5" stroke="#fff" strokeWidth="1.4"/>
-                  <rect x="13" y="9" width="9" height="10" rx="1.5" fill="#0078D4" stroke="#fff" strokeWidth="1.2"/>
-                  <path d="M14 12.5h7M14 15h5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Outlook / Microsoft 365</div>
-                {outlookConnection
-                  ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {outlookConnection.email}</div>
-                  : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send from your Outlook or Microsoft 365 inbox</div>
-                }
-              </div>
-            </div>
-            {outlookConnection ? (
-              <button onClick={disconnectOutlook} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                Disconnect
-              </button>
-            ) : (
-              <button onClick={connectOutlook} disabled={outlookConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: outlookConnecting ? 0.6 : 1 }}>
-                {outlookConnecting ? "Opening…" : "Connect Outlook"}
-              </button>
-            )}
-          </div>
-
-          {/* Resend / Custom domain */}
-          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Custom Domain Email</div>
-                  {resendConnection
-                    ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {resendConnection.email}</div>
-                    : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Requires a free <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend account</a> + verified domain</div>
-                  }
-                </div>
-              </div>
-              {resendConnection ? (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); setResendForm({ email: resendConnection.email, from_name: resendConnection.metadata?.from_name || "", api_key: "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                    Edit
-                  </button>
-                  <button onClick={disconnectResend} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                    Disconnect
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                  Connect
-                </button>
-              )}
-            </div>
-            {resendFormOpen && (
-              <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-                {!resendConnection && (
-                  <div style={{ background: "rgba(14,116,144,0.08)", border: "1px solid rgba(14,116,144,0.2)", borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.text2, lineHeight: 1.6 }}>
-                    <strong style={{ color: COLORS.purpleLight }}>Setup required:</strong> Create a free account at <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>resend.com</a>, add and verify your domain, then create an API key with <em>Sending access</em> and paste it below.
-                  </div>
-                )}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
-                    <input value={resendForm.email} onChange={e => setResendForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
-                    <input value={resendForm.from_name} onChange={e => setResendForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
-                  </div>
-                  <div style={{ gridColumn: "1 / -1" }}>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Resend API Key <span style={{ color: COLORS.text3 }}>(optional — leave blank to use NoxReach default)</span></div>
-                    <input type="password" value={resendForm.api_key} onChange={e => setResendForm(f => ({ ...f, api_key: e.target.value }))} placeholder="re_xxxxxxxxxxxx" style={{ ...INPUT.base, fontSize: 12 }} />
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: COLORS.textMuted }}>Your domain must be verified in <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend</a> for sending to work.</div>
-                {resendError && <div style={{ fontSize: 12, color: "#ef4444" }}>{resendError}</div>}
-                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button onClick={() => { setResendFormOpen(false); setResendError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
-                  <button onClick={connectResend} disabled={resendConnecting || !resendForm.email} style={{ ...BTN.primary, ...BTN.sm, opacity: resendConnecting ? 0.6 : 1 }}>
-                    {resendConnecting ? "Saving…" : "Save"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* SMTP / Custom SMTP (e.g. smtp.ionos.de) */}
-          <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#1a1a2e", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="m2 7 10 8 10-8"/></svg>
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>SMTP</div>
-                  {smtpConnection
-                    ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {smtpConnection.email} via {smtpConnection.metadata?.host}</div>
-                    : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send with any SMTP provider — IONOS, Fastmail, custom mail server</div>
-                  }
-                </div>
-              </div>
-              {smtpConnection ? (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={testSmtp} disabled={smtpTesting} style={{ padding: "7px 14px", background: smtpTestResult === "ok" ? "rgba(34,197,94,0.12)" : smtpTestResult === "error" ? "rgba(239,68,68,0.1)" : "transparent", border: `1px solid ${smtpTestResult === "ok" ? "rgba(34,197,94,0.3)" : smtpTestResult === "error" ? "rgba(239,68,68,0.3)" : COLORS.border}`, borderRadius: 8, color: smtpTestResult === "ok" ? COLORS.green : smtpTestResult === "error" ? "#ef4444" : COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: smtpTesting ? 0.6 : 1 }}>
-                    {smtpTesting ? "Sending…" : smtpTestResult === "ok" ? "✓ Sent" : smtpTestResult === "error" ? "✗ Failed" : "Test"}
-                  </button>
-                  <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); setSmtpForm({ host: smtpConnection.metadata?.host || "", port: smtpConnection.metadata?.port || "465", email: smtpConnection.email, password: "", from_name: smtpConnection.metadata?.from_name || "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
-                  <button onClick={disconnectSmtp} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
-                </div>
-              ) : (
-                <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Connect</button>
-              )}
-            </div>
-            {smtpFormOpen && (
-              <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>SMTP Host</div>
-                    <input value={smtpForm.host} onChange={e => setSmtpForm(f => ({ ...f, host: e.target.value }))} placeholder="smtp.ionos.de" style={{ ...INPUT.base, fontSize: 12 }} />
-                  </div>
-                  <div style={{ minWidth: 80 }}>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Port</div>
-                    <input value={smtpForm.port} onChange={e => setSmtpForm(f => ({ ...f, port: e.target.value }))} placeholder="465" style={{ ...INPUT.base, fontSize: 12 }} />
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
-                    <input value={smtpForm.email} onChange={e => setSmtpForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
-                    <input value={smtpForm.from_name} onChange={e => setSmtpForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Password / App password</div>
-                  <input type="password" value={smtpForm.password} onChange={e => setSmtpForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" style={{ ...INPUT.base, fontSize: 12 }} />
-                </div>
-                <div style={{ fontSize: 11, color: COLORS.textMuted }}>Port 465 = SSL · Port 587 = STARTTLS. For IONOS use smtp.ionos.de : 465.</div>
-                {smtpError && <div style={{ fontSize: 12, color: "#ef4444" }}>{smtpError}</div>}
-                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button onClick={() => { setSmtpFormOpen(false); setSmtpError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
-                  <button onClick={connectSmtp} disabled={smtpConnecting || !smtpForm.email || !smtpForm.host} style={{ ...BTN.primary, ...BTN.sm, opacity: smtpConnecting ? 0.6 : 1 }}>{smtpConnecting ? "Saving…" : "Save"}</button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Danger Zone */}
