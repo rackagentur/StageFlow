@@ -126,6 +126,24 @@ async function insertReply(params: {
   return res.ok;
 }
 
+// Auto-advance lead to "replied" stage if not already replied/booked
+async function advanceLeadToReplied(leadId: string, userId: string) {
+  // Only advance if current stage is contacted / followup1 / followup2
+  await fetch(
+    `${SUPABASE_URL}/rest/v1/leads?id=eq.${leadId}&user_id=eq.${userId}&stage=in.(contacted,followup1,followup2)`,
+    {
+      method: "PATCH",
+      headers: {
+        apikey: SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({ stage: "replied" }),
+    }
+  );
+}
+
 // ── Gmail API helpers ─────────────────────────────────────────────────────────
 
 async function fetchThread(threadId: string, accessToken: string): Promise<{
@@ -283,7 +301,7 @@ Deno.serve(async (req: Request) => {
       const bodyText     = extractBody(msg.payload);
       const receivedAt   = new Date(parseInt(msg.internalDate)).toISOString();
 
-      await insertReply({
+      const inserted = await insertReply({
         userId,
         leadId:         lead_id,
         fromEmail:      replyFrom || from_email,
@@ -294,6 +312,11 @@ Deno.serve(async (req: Request) => {
         gmailMessageId: msg.id,
         gmailThreadId:  threadId,
       });
+
+      if (inserted) {
+        // Auto-advance the lead to "replied" stage if not already replied/booked
+        await advanceLeadToReplied(lead_id, userId);
+      }
 
       existingIds.add(msg.id); // prevent double-insert within same poll
       newRepliesCount++;
