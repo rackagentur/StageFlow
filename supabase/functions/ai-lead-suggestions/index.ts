@@ -31,17 +31,40 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Limit number of leads used for context to avoid token explosions
-    const safeLeads = (existingLeads || []).slice(0, 12);
-    const pipelineSummary = safeLeads
-      .map((l: { name: string; city?: string; country?: string; tag?: string; tier?: string }) =>
-        `${l.name}${l.city ? ` (${l.city}${l.country ? ", " + l.country : ""})` : ""} — ${l.tag || "??"} ${l.tier || ""}`
+    const allLeads = existingLeads || [];
+
+    // Full name list for hard exclusion (all leads, no cap)
+    const excludeNames = allLeads
+      .map((l: { name: string }) => l.name)
+      .filter(Boolean)
+      .join(", ");
+
+    // Up to 12 leads for style/scene context (keep token budget reasonable)
+    const contextLeads = allLeads.slice(0, 12);
+    const pipelineSummary = contextLeads
+      .map((l: { name: string; tag?: string; tier?: string }) =>
+        `${l.name} — ${l.tag || "??"} ${l.tier || ""}`
       )
       .join("\n");
 
+    // Use notes for location hint on the seed lead (city/country not in DB schema)
+    const seedLocation = currentLead.notes
+      ? currentLead.notes.split("|")[0].trim()
+      : "";
+
     const systemPrompt = `You are a DJ booking strategy expert. Your job is to suggest real, bookable venues and promoters a DJ should target next based on their current pipeline. Return ONLY a valid JSON array with exactly 5 items. No explanation text, no markdown, no code blocks — just the raw JSON array.`;
 
-    const userPrompt = `A DJ who plays ${artistGenre || "Electronic music"} wants similar venues to: ${currentLead.name}${currentLead.city ? ` in ${currentLead.city}` : ""}${currentLead.country ? `, ${currentLead.country}` : ""} (${currentLead.tag || "Electronic"}, ${currentLead.tier || "A2"}).\n\nTheir existing pipeline includes:\n${pipelineSummary || "No existing leads yet"}\n\nSuggest 5 NEW venues or promoters they haven't targeted yet. Be specific with real venue/event names. Focus on similar scene, scale and geography. Slightly expand the geography if local scene is saturated.\n\nReturn this exact JSON format: [ { "name": "Venue or event name", "city": "City", "country": "Country code (e.g. DE, NL, UK)", "tag": "One of: TECHNO, HOUSE, CIRCUIT, FESTIVAL, TECH-HOUSE, MELODIC, OTHER", "tier": "A1, A2, or A3", "instagram": "@handle or empty string", "notes": "One sentence on why this is a good fit" } ]`;
+    const userPrompt = `A DJ who plays ${artistGenre || "Electronic music"} wants suggestions similar to: ${currentLead.name}${seedLocation ? ` (${seedLocation})` : ""} — ${currentLead.tag || "Electronic"}, ${currentLead.tier || "A2"}.
+
+Pipeline style context (scene/scale reference):
+${pipelineSummary || "No existing leads yet"}
+
+STRICT EXCLUSION — do NOT suggest any of these, they are already in the pipeline:
+${excludeNames || "none"}
+
+Suggest 5 completely NEW venues or promoters not in the exclusion list above. Use real venue/event names. Match the scene, scale and geography of the seed lead. Expand geography slightly if needed.
+
+Return this exact JSON format: [ { "name": "Venue or event name", "city": "City", "country": "Country code (e.g. DE, NL, UK)", "tag": "One of: TECHNO, HOUSE, CIRCUIT, FESTIVAL, TECH-HOUSE, MELODIC, OTHER", "tier": "A1, A2, or A3", "instagram": "@handle or empty string", "notes": "One sentence on why this is a good fit" } ]`;
 
     // Fetch with timeout + retries and deterministic params
     const endpoint = "https://api.anthropic.com/v1/messages";
