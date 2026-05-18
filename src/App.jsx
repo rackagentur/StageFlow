@@ -896,8 +896,9 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
 
 
 // === Bulk Actions Bar - Bundle 5.5 ===
-function BulkActionsBar({ count, onMoveTo, onArchive, onClear, isMobile }) {
+function BulkActionsBar({ count, onMoveTo, onArchive, onDelete, onClear, isMobile }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <div style={{
       position: 'fixed', bottom: isMobile ? 56 : 0, left: 0, right: 0,
@@ -906,17 +907,17 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear, isMobile }) {
       zIndex: 10000, boxShadow: '0 -4px 12px rgba(0,0,0,0.3)'
     }}>
       <span style={{ fontWeight: 600, fontSize: 14 }}>{count} selected</span>
-      
+
       <div style={{ position: 'relative' }}>
-        <button 
-          onClick={() => setShowMenu(!showMenu)}
+        <button
+          onClick={() => { setShowMenu(!showMenu); setConfirmDelete(false); }}
           style={{
             padding: '8px 16px', background: COLORS.purple, border: 'none',
             borderRadius: 6, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer'
           }}>
           Move to...
         </button>
-        
+
         {showMenu && (
           <div style={{
             position: 'absolute', bottom: '100%', left: 0, marginBottom: 8,
@@ -938,8 +939,8 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear, isMobile }) {
           </div>
         )}
       </div>
-      
-      <button onClick={onArchive}
+
+      <button onClick={() => { setShowMenu(false); setConfirmDelete(false); onArchive(); }}
         style={{
           padding: '8px 16px', background: 'transparent',
           border: `1px solid ${COLORS.border}`, borderRadius: 6,
@@ -947,10 +948,46 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear, isMobile }) {
         }}>
         Archive
       </button>
-      
+
+      {/* Delete with inline confirmation */}
+      {confirmDelete ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, color: COLORS.red, fontWeight: 600 }}>
+            Delete {count} lead{count !== 1 ? 's' : ''}? This can't be undone.
+          </span>
+          <button
+            onClick={() => { onDelete(); setConfirmDelete(false); }}
+            style={{
+              padding: '7px 14px', background: COLORS.red, border: 'none',
+              borderRadius: 6, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer'
+            }}>
+            Yes, delete
+          </button>
+          <button
+            onClick={() => setConfirmDelete(false)}
+            style={{
+              padding: '7px 12px', background: 'transparent',
+              border: `1px solid ${COLORS.border}`, borderRadius: 6,
+              color: COLORS.text, fontSize: 13, cursor: 'pointer'
+            }}>
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => { setShowMenu(false); setConfirmDelete(true); }}
+          style={{
+            padding: '8px 16px', background: 'transparent',
+            border: `1px solid rgba(239,68,68,0.45)`, borderRadius: 6,
+            color: COLORS.red, fontSize: 13, fontWeight: 600, cursor: 'pointer'
+          }}>
+          Delete
+        </button>
+      )}
+
       <div style={{ flex: 1 }} />
-      
-      <button onClick={onClear}
+
+      <button onClick={() => { setConfirmDelete(false); onClear(); }}
         style={{
           padding: '8px 16px', background: 'transparent', border: 'none',
           color: COLORS.text3, fontSize: 13, cursor: 'pointer'
@@ -8208,6 +8245,15 @@ const loadAdminUsers = async () => {
     setSelectedLeads(new Set());
     setShowBulkBar(false);
   };
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selectedLeads);
+    await supabase.from('leads').delete().in('id', ids);
+    setLeads(prev => prev.filter(l => !ids.includes(l.id)));
+    if (selectedLead && ids.includes(selectedLead.id)) setSelectedLead(null);
+    setSelectedLeads(new Set());
+    setShowBulkBar(false);
+  };
   
   // Per-tag color overrides (user-picked or auto-assigned)
   const [tagColorMap, setTagColorMap] = useState(() => {
@@ -9087,6 +9133,7 @@ const activeLeads = leads.filter(l => !l.archived);
           count={selectedLeads.size}
           onMoveTo={bulkMoveTo}
           onArchive={bulkArchive}
+          onDelete={bulkDelete}
           isMobile={isMobile}
           onClear={() => {
             setSelectedLeads(new Set());
