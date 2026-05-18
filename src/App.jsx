@@ -3,7 +3,7 @@ import { COLORS, STAGES } from './lib/constants.js';
 import { formatShortDate } from './lib/formatters.js';
 import { showToast as showDomToast } from './lib/toast.js';
 import { supabase } from './lib/supabaseClient.js';
-import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload, IconDashboard, IconPipeline, IconFollowUps, IconReplyHub, IconInbound, IconSettings, IconCalendar, IconBookingKit, IconAnalytics, IconCheck, IconLink, IconStar, IconContacts } from './icons/index.jsx';
+import { TAB_ICONS, IconPowerOff, IconMail, IconPhone, IconInstagram, IconWhatsApp, IconOutreach, IconPlus, IconUpload, IconDashboard, IconPipeline, IconFollowUps, IconReplyHub, IconInbound, IconSettings, IconCalendar, IconBookingKit, IconAnalytics, IconCheck, IconLink, IconStar, IconContacts, IconConnectors } from './icons/index.jsx';
 
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
@@ -3789,7 +3789,295 @@ function GenreRow({ tag, color, onRemove, onSetColor }) {
   );
 }
 
-function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, defaultTags, onAddTag, onRemoveTag, TAG_COLORS, onSetTagColor, supabase, user, onDisplayNameChange }) {
+// ── ConnectorsView ────────────────────────────────────────────────────────────
+function ConnectorsView({ supabase, user }) {
+  const [gmailConnection,   setGmailConnection]   = useState(null);
+  const [gmailConnecting,   setGmailConnecting]   = useState(false);
+  const [outlookConnection, setOutlookConnection] = useState(null);
+  const [outlookConnecting, setOutlookConnecting] = useState(false);
+  const [resendConnection,  setResendConnection]  = useState(null);
+  const [resendConnecting,  setResendConnecting]  = useState(false);
+  const [resendForm,        setResendForm]        = useState({ email: "", from_name: "", api_key: "" });
+  const [resendFormOpen,    setResendFormOpen]    = useState(false);
+  const [resendError,       setResendError]       = useState("");
+  const [smtpConnection,    setSmtpConnection]    = useState(null);
+  const [smtpConnecting,    setSmtpConnecting]    = useState(false);
+  const [smtpForm,          setSmtpForm]          = useState({ host: "", port: "465", email: "", password: "", from_name: "" });
+  const [smtpFormOpen,      setSmtpFormOpen]      = useState(false);
+  const [smtpError,         setSmtpError]         = useState("");
+  const [smtpTesting,       setSmtpTesting]       = useState(false);
+  const [smtpTestResult,    setSmtpTestResult]    = useState(null);
+
+  useEffect(() => {
+    if (!user?.id || !supabase) return;
+    supabase.from("email_connections").select("provider, email, updated_at, metadata").eq("user_id", user.id)
+      .then(({ data }) => {
+        if (!data) return;
+        const gmail   = data.find(c => c.provider === "gmail");   if (gmail)   setGmailConnection(gmail);
+        const outlook = data.find(c => c.provider === "outlook"); if (outlook) setOutlookConnection(outlook);
+        const resend  = data.find(c => c.provider === "resend");  if (resend)  setResendConnection(resend);
+        const smtp    = data.find(c => c.provider === "smtp");    if (smtp)    setSmtpConnection(smtp);
+      });
+  }, [user?.id]);
+
+  const connectGmail = async () => {
+    setGmailConnecting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/gmail-oauth?action=url&user_id=${user.id}`,
+        { headers: { Authorization: `Bearer ${session?.access_token}` } });
+      const { url } = await res.json();
+      if (url) window.open(url, "_blank", "width=500,height=650");
+    } catch (e) { console.error("Gmail connect:", e); }
+    setGmailConnecting(false);
+  };
+  const disconnectGmail = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    await fetch(`${supabase.supabaseUrl}/functions/v1/gmail-oauth`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${session?.access_token}` } });
+    setGmailConnection(null);
+  };
+
+  const connectOutlook = async () => {
+    setOutlookConnecting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/outlook-oauth?action=url&user_id=${user.id}`,
+        { headers: { Authorization: `Bearer ${session?.access_token}` } });
+      const { url } = await res.json();
+      if (url) window.open(url, "_blank", "width=500,height=650");
+    } catch (e) { console.error("Outlook connect:", e); }
+    setOutlookConnecting(false);
+  };
+  const disconnectOutlook = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    await fetch(`${supabase.supabaseUrl}/functions/v1/outlook-oauth`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${session?.access_token}` } });
+    setOutlookConnection(null);
+  };
+
+  const connectResend = async () => {
+    setResendError("");
+    if (!resendForm.email || !resendForm.email.includes("@")) { setResendError("Enter a valid email address"); return; }
+    setResendConnecting(true);
+    try {
+      await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "resend");
+      const { error } = await supabase.from("email_connections").insert({
+        user_id: user.id, provider: "resend", email: resendForm.email,
+        access_token: resendForm.api_key.trim() || "resend",
+        metadata: { from_name: resendForm.from_name || null },
+      });
+      if (error) { setResendError(error.message || "Failed to save."); }
+      else { setResendConnection({ email: resendForm.email, metadata: { from_name: resendForm.from_name } }); setResendFormOpen(false); }
+    } catch { setResendError("Failed to save. Try again."); }
+    setResendConnecting(false);
+  };
+  const disconnectResend = async () => {
+    await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "resend");
+    setResendConnection(null); setResendFormOpen(false);
+  };
+
+  const connectSmtp = async () => {
+    setSmtpError("");
+    if (!smtpForm.host.trim())                                    { setSmtpError("Enter SMTP host"); return; }
+    if (!smtpForm.email || !smtpForm.email.includes("@"))         { setSmtpError("Enter a valid from email"); return; }
+    if (!smtpForm.password.trim())                                { setSmtpError("Enter SMTP password"); return; }
+    setSmtpConnecting(true);
+    try {
+      await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "smtp");
+      const { error } = await supabase.from("email_connections").insert({
+        user_id: user.id, provider: "smtp", email: smtpForm.email.trim(),
+        access_token: smtpForm.password.trim(),
+        metadata: { host: smtpForm.host.trim(), port: smtpForm.port || "465", from_name: smtpForm.from_name.trim() || null },
+      });
+      if (error) { setSmtpError(error.message || "Failed to save."); }
+      else {
+        setSmtpConnection({ email: smtpForm.email.trim(), metadata: { host: smtpForm.host.trim(), port: smtpForm.port, from_name: smtpForm.from_name.trim() || null } });
+        setSmtpFormOpen(false); setSmtpForm(f => ({ ...f, password: "" }));
+      }
+    } catch { setSmtpError("Failed to save. Try again."); }
+    setSmtpConnecting(false);
+  };
+  const disconnectSmtp = async () => {
+    await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "smtp");
+    setSmtpConnection(null); setSmtpFormOpen(false);
+  };
+  const testSmtp = async () => {
+    setSmtpTesting(true); setSmtpTestResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/smtp-send`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ to: user.email, subject: "NoxReach — SMTP test",
+          message: `Your SMTP connection is working.\n\nHost: ${smtpConnection?.metadata?.host}:${smtpConnection?.metadata?.port}\nFrom: ${smtpConnection?.email}` }),
+      });
+      setSmtpTestResult(res.ok ? "ok" : "error");
+    } catch { setSmtpTestResult("error"); }
+    setSmtpTesting(false);
+    setTimeout(() => setSmtpTestResult(null), 4000);
+  };
+
+  // ── shared card wrapper ───────────────────────────────────────────────────
+  const Card = ({ children, style }) => (
+    <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10, ...style }}>
+      {children}
+    </div>
+  );
+  const ConnectorRow = ({ logo, name, status, action }) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>{logo}<div>{name}{status}</div></div>
+      {action}
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth: 680 }}>
+      {/* ── Email section ── */}
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 24 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Email</div>
+        <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 16 }}>Connect your inbox to send emails directly from NoxReach and auto-detect replies.</div>
+
+        {/* Gmail */}
+        <Card style={{ marginTop: 0 }}>
+          <ConnectorRow
+            logo={<div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#EA4335" d="M6 18V8.4L2 5.6V18c0 1.1.9 2 2 2h2z"/><path fill="#34A853" d="M18 18V8.4l4-2.8V18c0 1.1-.9 2-2 2h-2z"/><path fill="#4285F4" d="M18 4H6L2 6.8 12 14l10-7.2L18 4z"/><path fill="#FBBC04" d="M2 6.8V5.6C2 4.72 2.72 4 3.6 4h.4L2 6.8z"/><path fill="#EA4335" d="M22 5.6v1.2L18 4h.4c.88 0 1.6.72 1.6 1.6v0z"/></svg></div>}
+            name={<div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Gmail</div>}
+            status={gmailConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {gmailConnection.email}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Not connected</div>}
+            action={gmailConnection
+              ? <button onClick={disconnectGmail} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
+              : <button onClick={connectGmail} disabled={gmailConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: gmailConnecting ? 0.6 : 1 }}>{gmailConnecting ? "Opening…" : "Connect Gmail"}</button>}
+          />
+        </Card>
+
+        {/* Outlook */}
+        <Card>
+          <ConnectorRow
+            logo={<div style={{ width: 36, height: 36, borderRadius: 8, background: "#0078D4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="13" height="14" rx="1.5" fill="#fff" opacity="0.15"/><path d="M2 8.5L8.5 13l5.5-4.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><rect x="2" y="5" width="13" height="14" rx="1.5" stroke="#fff" strokeWidth="1.4"/><rect x="13" y="9" width="9" height="10" rx="1.5" fill="#0078D4" stroke="#fff" strokeWidth="1.2"/><path d="M14 12.5h7M14 15h5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/></svg></div>}
+            name={<div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Outlook / Microsoft 365</div>}
+            status={outlookConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {outlookConnection.email}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send from your Outlook or Microsoft 365 inbox</div>}
+            action={outlookConnection
+              ? <button onClick={disconnectOutlook} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
+              : <button onClick={connectOutlook} disabled={outlookConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: outlookConnecting ? 0.6 : 1 }}>{outlookConnecting ? "Opening…" : "Connect Outlook"}</button>}
+          />
+        </Card>
+
+        {/* Resend / Custom domain */}
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Custom Domain Email</div>
+                {resendConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {resendConnection.email}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Requires a free <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend account</a> + verified domain</div>}
+              </div>
+            </div>
+            {resendConnection
+              ? <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); setResendForm({ email: resendConnection.email, from_name: resendConnection.metadata?.from_name || "", api_key: "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                  <button onClick={disconnectResend} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
+                </div>
+              : <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Connect</button>}
+          </div>
+          {resendFormOpen && (
+            <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+              {!resendConnection && <div style={{ background: "rgba(14,116,144,0.08)", border: "1px solid rgba(14,116,144,0.2)", borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.text2, lineHeight: 1.6 }}><strong style={{ color: COLORS.purpleLight }}>Setup required:</strong> Create a free account at <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>resend.com</a>, add and verify your domain, then create an API key with <em>Sending access</em> and paste it below.</div>}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div><div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div><input value={resendForm.email} onChange={e => setResendForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} /></div>
+                <div><div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div><input value={resendForm.from_name} onChange={e => setResendForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} /></div>
+                <div style={{ gridColumn: "1 / -1" }}><div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Resend API Key <span style={{ color: COLORS.text3 }}>(optional — leave blank to use NoxReach default)</span></div><input type="password" value={resendForm.api_key} onChange={e => setResendForm(f => ({ ...f, api_key: e.target.value }))} placeholder="re_xxxxxxxxxxxx" style={{ ...INPUT.base, fontSize: 12 }} /></div>
+              </div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted }}>Your domain must be verified in <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend</a> for sending to work.</div>
+              {resendError && <div style={{ fontSize: 12, color: "#ef4444" }}>{resendError}</div>}
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <button onClick={() => { setResendFormOpen(false); setResendError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
+                <button onClick={connectResend} disabled={resendConnecting || !resendForm.email} style={{ ...BTN.primary, ...BTN.sm, opacity: resendConnecting ? 0.6 : 1 }}>{resendConnecting ? "Saving…" : "Save"}</button>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* SMTP */}
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#1a1a2e", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="m2 7 10 8 10-8"/></svg></div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>SMTP</div>
+                {smtpConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {smtpConnection.email} via {smtpConnection.metadata?.host}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send with any SMTP provider — IONOS, Fastmail, custom mail server</div>}
+              </div>
+            </div>
+            {smtpConnection
+              ? <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={testSmtp} disabled={smtpTesting} style={{ padding: "7px 14px", background: smtpTestResult === "ok" ? "rgba(34,197,94,0.12)" : smtpTestResult === "error" ? "rgba(239,68,68,0.1)" : "transparent", border: `1px solid ${smtpTestResult === "ok" ? "rgba(34,197,94,0.3)" : smtpTestResult === "error" ? "rgba(239,68,68,0.3)" : COLORS.border}`, borderRadius: 8, color: smtpTestResult === "ok" ? COLORS.green : smtpTestResult === "error" ? "#ef4444" : COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: smtpTesting ? 0.6 : 1 }}>{smtpTesting ? "Sending…" : smtpTestResult === "ok" ? "✓ Sent" : smtpTestResult === "error" ? "✗ Failed" : "Test"}</button>
+                  <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); setSmtpForm({ host: smtpConnection.metadata?.host || "", port: smtpConnection.metadata?.port || "465", email: smtpConnection.email, password: "", from_name: smtpConnection.metadata?.from_name || "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                  <button onClick={disconnectSmtp} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
+                </div>
+              : <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Connect</button>}
+          </div>
+          {smtpFormOpen && (
+            <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
+                <div><div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>SMTP Host</div><input value={smtpForm.host} onChange={e => setSmtpForm(f => ({ ...f, host: e.target.value }))} placeholder="smtp.ionos.de" style={{ ...INPUT.base, fontSize: 12 }} /></div>
+                <div style={{ minWidth: 80 }}><div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Port</div><input value={smtpForm.port} onChange={e => setSmtpForm(f => ({ ...f, port: e.target.value }))} placeholder="465" style={{ ...INPUT.base, fontSize: 12 }} /></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div><div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div><input value={smtpForm.email} onChange={e => setSmtpForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} /></div>
+                <div><div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div><input value={smtpForm.from_name} onChange={e => setSmtpForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} /></div>
+              </div>
+              <div><div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Password / App password</div><input type="password" value={smtpForm.password} onChange={e => setSmtpForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" style={{ ...INPUT.base, fontSize: 12 }} /></div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted }}>Port 465 = SSL · Port 587 = STARTTLS. For IONOS use smtp.ionos.de : 465.</div>
+              {smtpError && <div style={{ fontSize: 12, color: "#ef4444" }}>{smtpError}</div>}
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <button onClick={() => { setSmtpFormOpen(false); setSmtpError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
+                <button onClick={connectSmtp} disabled={smtpConnecting || !smtpForm.email || !smtpForm.host} style={{ ...BTN.primary, ...BTN.sm, opacity: smtpConnecting ? 0.6 : 1 }}>{smtpConnecting ? "Saving…" : "Save"}</button>
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* ── Coming Soon section ── */}
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Social &amp; Multi-channel</div>
+          <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, color: COLORS.purpleLight, letterSpacing: "0.06em", textTransform: "uppercase" }}>Coming Soon</div>
+        </div>
+        <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 16 }}>DMs and profile enrichment directly from NoxReach — no copy-pasting.</div>
+
+        {/* Instagram */}
+        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", opacity: 0.7, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none"/></svg></div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Instagram</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted }}>Auto-enrich leads with follower count, bio + bio category. Send DMs without leaving NoxReach.</div>
+              </div>
+            </div>
+            <div style={{ padding: "6px 14px", background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, borderRadius: 8, color: COLORS.purpleLight, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>Coming Soon</div>
+          </div>
+        </div>
+
+        {/* Composio */}
+        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", opacity: 0.7 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#18181b", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><line x1="8.7" y1="10.7" x2="15.3" y2="7.3"/><line x1="8.7" y1="13.3" x2="15.3" y2="16.7"/></svg></div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Composio — Multi-channel</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send Instagram DMs and LinkedIn messages directly from the lead panel, alongside email.</div>
+              </div>
+            </div>
+            <div style={{ padding: "6px 14px", background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, borderRadius: 8, color: COLORS.purpleLight, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>Coming Soon</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, defaultTags, onAddTag, onRemoveTag, TAG_COLORS, onSetTagColor, supabase, user, onDisplayNameChange, onNavigate }) {
   const [local, setLocal] = useState({ ...settings });
   const [saved,  setSaved]  = useState(false);
   const [username, setUsername] = useState("");
@@ -3805,22 +4093,6 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
   const [referralCopied, setReferralCopied] = useState(false);
   const [bookingLinkCopied, setBookingLinkCopied] = useState(false);
 
-  // Email connections
-  const [gmailConnection, setGmailConnection] = useState(null);
-  const [gmailConnecting, setGmailConnecting] = useState(false);
-  const [outlookConnection, setOutlookConnection] = useState(null);
-  const [outlookConnecting, setOutlookConnecting] = useState(false);
-  const [resendConnection, setResendConnection] = useState(null);
-  const [resendConnecting, setResendConnecting] = useState(false);
-  const [resendForm, setResendForm] = useState({ email: "", from_name: "", api_key: "" });
-  const [resendFormOpen, setResendFormOpen] = useState(false);
-  const [resendError, setResendError] = useState("");
-  const [smtpConnection, setSmtpConnection] = useState(null);
-  const [smtpConnecting, setSmtpConnecting] = useState(false);
-  const [smtpForm, setSmtpForm] = useState({ host: "", port: "465", email: "", password: "", from_name: "" });
-  const [smtpFormOpen, setSmtpFormOpen] = useState(false);
-  const [smtpError, setSmtpError] = useState("");
-
   useEffect(() => {
     if (!user?.id || !supabase) return;
     supabase.from("profiles").select("username, display_name, referral_code, referral_count").eq("id", user.id).single()
@@ -3829,20 +4101,6 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         if (data?.display_name) setDisplayName(data.display_name);
         if (data?.referral_code) setReferralCode(data.referral_code);
         if (data?.referral_count) setReferralCount(data.referral_count);
-      });
-    // Load email connections
-    supabase.from("email_connections").select("provider, email, updated_at").eq("user_id", user.id)
-      .then(({ data }) => {
-        if (data) {
-          const gmail = data.find(c => c.provider === "gmail");
-          if (gmail) setGmailConnection(gmail);
-          const outlook = data.find(c => c.provider === "outlook");
-          if (outlook) setOutlookConnection(outlook);
-          const resend = data.find(c => c.provider === "resend");
-          if (resend) setResendConnection(resend);
-          const smtp = data.find(c => c.provider === "smtp");
-          if (smtp) setSmtpConnection(smtp);
-        }
       });
   }, [user?.id]);
 
@@ -3863,146 +4121,6 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
     setDisplayNameSaved(true);
     setTimeout(() => setDisplayNameSaved(false), 2000);
     if (onDisplayNameChange) onDisplayNameChange(displayName.trim());
-  };
-
-  const connectGmail = async () => {
-    setGmailConnecting(true);
-    try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      const res = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/gmail-oauth?action=url&user_id=${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const { url } = await res.json();
-      if (url) window.open(url, "_blank", "width=500,height=650");
-    } catch (e) {
-      console.error("Gmail connect error:", e);
-    }
-    setGmailConnecting(false);
-  };
-
-  const disconnectGmail = async () => {
-    const session = await supabase.auth.getSession();
-    const token = session.data.session?.access_token;
-    await fetch(`${supabase.supabaseUrl}/functions/v1/gmail-oauth`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setGmailConnection(null);
-  };
-
-  const connectOutlook = async () => {
-    setOutlookConnecting(true);
-    try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      const res = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/outlook-oauth?action=url&user_id=${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const { url } = await res.json();
-      if (url) window.open(url, "_blank", "width=500,height=650");
-    } catch (e) {
-      console.error("Outlook connect error:", e);
-    }
-    setOutlookConnecting(false);
-  };
-
-  const disconnectOutlook = async () => {
-    const session = await supabase.auth.getSession();
-    const token = session.data.session?.access_token;
-    await fetch(`${supabase.supabaseUrl}/functions/v1/outlook-oauth`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setOutlookConnection(null);
-  };
-
-  const connectResend = async () => {
-    setResendError("");
-    if (!resendForm.email || !resendForm.email.includes("@")) { setResendError("Enter a valid email address"); return; }
-    setResendConnecting(true);
-    try {
-      // Delete existing first, then insert fresh
-      await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "resend");
-      const { error } = await supabase.from("email_connections").insert({
-        user_id:      user.id,
-        provider:     "resend",
-        email:        resendForm.email,
-        access_token: resendForm.api_key.trim() || "resend",
-        metadata:     { from_name: resendForm.from_name || null },
-      });
-      if (error) { console.error("Resend save error:", error); setResendError(error.message || "Failed to save."); }
-      else {
-        setResendConnection({ email: resendForm.email, metadata: { from_name: resendForm.from_name } });
-        setResendFormOpen(false);
-      }
-    } catch (e) { console.error("Resend save exception:", e); setResendError("Failed to save. Try again."); }
-    setResendConnecting(false);
-  };
-
-  const disconnectResend = async () => {
-    await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "resend");
-    setResendConnection(null);
-    setResendFormOpen(false);
-  };
-
-  const connectSmtp = async () => {
-    setSmtpError("");
-    if (!smtpForm.host.trim()) { setSmtpError("Enter SMTP host"); return; }
-    if (!smtpForm.email || !smtpForm.email.includes("@")) { setSmtpError("Enter a valid from email"); return; }
-    if (!smtpForm.password.trim()) { setSmtpError("Enter SMTP password"); return; }
-    setSmtpConnecting(true);
-    try {
-      await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "smtp");
-      const { error } = await supabase.from("email_connections").insert({
-        user_id:      user.id,
-        provider:     "smtp",
-        email:        smtpForm.email.trim(),
-        access_token: smtpForm.password.trim(),
-        metadata:     { host: smtpForm.host.trim(), port: smtpForm.port || "465", from_name: smtpForm.from_name.trim() || null },
-      });
-      if (error) { setSmtpError(error.message || "Failed to save."); }
-      else {
-        setSmtpConnection({ email: smtpForm.email.trim(), metadata: { host: smtpForm.host.trim(), port: smtpForm.port, from_name: smtpForm.from_name.trim() || null } });
-        setSmtpFormOpen(false);
-        setSmtpForm(f => ({ ...f, password: "" }));
-      }
-    } catch (e) { setSmtpError("Failed to save. Try again."); }
-    setSmtpConnecting(false);
-  };
-
-  const disconnectSmtp = async () => {
-    await supabase.from("email_connections").delete().eq("user_id", user.id).eq("provider", "smtp");
-    setSmtpConnection(null);
-    setSmtpFormOpen(false);
-  };
-
-  const [smtpTesting, setSmtpTesting] = useState(false);
-  const [smtpTestResult, setSmtpTestResult] = useState(null); // "ok" | "error" | null
-
-  const testSmtp = async () => {
-    setSmtpTesting(true);
-    setSmtpTestResult(null);
-    try {
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      const res = await fetch(`${supabase.supabaseUrl}/functions/v1/smtp-send`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to:      user.email,
-          subject: "NoxReach — SMTP test",
-          message: `Your SMTP connection is working.\n\nHost: ${smtpConnection?.metadata?.host}:${smtpConnection?.metadata?.port}\nFrom: ${smtpConnection?.email}`,
-        }),
-      });
-      setSmtpTestResult(res.ok ? "ok" : "error");
-    } catch {
-      setSmtpTestResult("error");
-    }
-    setSmtpTesting(false);
-    setTimeout(() => setSmtpTestResult(null), 4000);
   };
 
   const set = key => val => setLocal(s => ({ ...s, [key]: val }));
@@ -4097,165 +4215,20 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         </div>
       </div>
 
-      {/* Email Integration */}
-      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Email Integration</div>
-        <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 16 }}>Connect your inbox to send emails directly from NoxReach and auto-detect replies.</div>
-
-        {/* Gmail */}
-        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#EA4335" d="M6 18V8.4L2 5.6V18c0 1.1.9 2 2 2h2z"/><path fill="#34A853" d="M18 18V8.4l4-2.8V18c0 1.1-.9 2-2 2h-2z"/><path fill="#4285F4" d="M18 4H6L2 6.8 12 14l10-7.2L18 4z"/><path fill="#FBBC04" d="M2 6.8V5.6C2 4.72 2.72 4 3.6 4h.4L2 6.8z"/><path fill="#EA4335" d="M22 5.6v1.2L18 4h.4c.88 0 1.6.72 1.6 1.6v0z"/></svg>
-            </div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Gmail</div>
-              {gmailConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {gmailConnection.email}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Not connected</div>}
-            </div>
+      {/* Connectors card — navigates to Connectors tab */}
+      <button onClick={() => onNavigate?.("connectors")} style={{ width: "100%", background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 20, textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: COLORS.purpleBg, border: `1px solid ${COLORS.purple}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <IconConnectors size={18} color={COLORS.purpleLight} />
           </div>
-          {gmailConnection ? (
-            <button onClick={disconnectGmail} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
-          ) : (
-            <button onClick={connectGmail} disabled={gmailConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: gmailConnecting ? 0.6 : 1 }}>{gmailConnecting ? "Opening…" : "Connect Gmail"}</button>
-          )}
-        </div>
-
-        {/* Outlook */}
-        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginTop: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 8, background: "#0078D4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <rect x="2" y="5" width="13" height="14" rx="1.5" fill="#fff" opacity="0.15"/>
-                <path d="M2 8.5L8.5 13l5.5-4.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <rect x="2" y="5" width="13" height="14" rx="1.5" stroke="#fff" strokeWidth="1.4"/>
-                <rect x="13" y="9" width="9" height="10" rx="1.5" fill="#0078D4" stroke="#fff" strokeWidth="1.2"/>
-                <path d="M14 12.5h7M14 15h5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Outlook / Microsoft 365</div>
-              {outlookConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Connected — {outlookConnection.email}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send from your Outlook or Microsoft 365 inbox</div>}
-            </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, marginBottom: 2 }}>Connectors</div>
+            <div style={{ fontSize: 12, color: COLORS.textMuted }}>Email (Gmail, Outlook, SMTP) · Instagram · Composio — manage all integrations</div>
           </div>
-          {outlookConnection ? (
-            <button onClick={disconnectOutlook} style={{ padding: "7px 16px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
-          ) : (
-            <button onClick={connectOutlook} disabled={outlookConnecting} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", opacity: outlookConnecting ? 0.6 : 1 }}>{outlookConnecting ? "Opening…" : "Connect Outlook"}</button>
-          )}
         </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
 
-        {/* Resend / Custom domain */}
-        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>Custom Domain Email</div>
-                {resendConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {resendConnection.email}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Requires a free <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend account</a> + verified domain</div>}
-              </div>
-            </div>
-            {resendConnection ? (
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); setResendForm({ email: resendConnection.email, from_name: resendConnection.metadata?.from_name || "", api_key: "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
-                <button onClick={disconnectResend} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
-              </div>
-            ) : (
-              <button onClick={() => { setResendFormOpen(o => !o); setResendError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Connect</button>
-            )}
-          </div>
-          {resendFormOpen && (
-            <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-              {!resendConnection && (
-                <div style={{ background: "rgba(14,116,144,0.08)", border: "1px solid rgba(14,116,144,0.2)", borderRadius: 8, padding: "10px 12px", fontSize: 12, color: COLORS.text2, lineHeight: 1.6 }}>
-                  <strong style={{ color: COLORS.purpleLight }}>Setup required:</strong> Create a free account at <a href="https://resend.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>resend.com</a>, add and verify your domain, then create an API key with <em>Sending access</em> and paste it below.
-                </div>
-              )}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
-                  <input value={resendForm.email} onChange={e => setResendForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
-                  <input value={resendForm.from_name} onChange={e => setResendForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
-                </div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Resend API Key <span style={{ color: COLORS.text3 }}>(optional — leave blank to use NoxReach default)</span></div>
-                  <input type="password" value={resendForm.api_key} onChange={e => setResendForm(f => ({ ...f, api_key: e.target.value }))} placeholder="re_xxxxxxxxxxxx" style={{ ...INPUT.base, fontSize: 12 }} />
-                </div>
-              </div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted }}>Your domain must be verified in <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.purpleLight }}>Resend</a> for sending to work.</div>
-              {resendError && <div style={{ fontSize: 12, color: "#ef4444" }}>{resendError}</div>}
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button onClick={() => { setResendFormOpen(false); setResendError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
-                <button onClick={connectResend} disabled={resendConnecting || !resendForm.email} style={{ ...BTN.primary, ...BTN.sm, opacity: resendConnecting ? 0.6 : 1 }}>{resendConnecting ? "Saving…" : "Save"}</button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* SMTP */}
-        <div style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "18px 20px", marginTop: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: "#1a1a2e", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="m2 7 10 8 10-8"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>SMTP</div>
-                {smtpConnection ? <div style={{ fontSize: 12, color: COLORS.green }}>✓ Sending from {smtpConnection.email} via {smtpConnection.metadata?.host}</div> : <div style={{ fontSize: 12, color: COLORS.textMuted }}>Send with any SMTP provider — IONOS, Fastmail, custom mail server</div>}
-              </div>
-            </div>
-            {smtpConnection ? (
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={testSmtp} disabled={smtpTesting} style={{ padding: "7px 14px", background: smtpTestResult === "ok" ? "rgba(34,197,94,0.12)" : smtpTestResult === "error" ? "rgba(239,68,68,0.1)" : "transparent", border: `1px solid ${smtpTestResult === "ok" ? "rgba(34,197,94,0.3)" : smtpTestResult === "error" ? "rgba(239,68,68,0.3)" : COLORS.border}`, borderRadius: 8, color: smtpTestResult === "ok" ? COLORS.green : smtpTestResult === "error" ? "#ef4444" : COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: smtpTesting ? 0.6 : 1 }}>{smtpTesting ? "Sending…" : smtpTestResult === "ok" ? "✓ Sent" : smtpTestResult === "error" ? "✗ Failed" : "Test"}</button>
-                <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); setSmtpForm({ host: smtpConnection.metadata?.host || "", port: smtpConnection.metadata?.port || "465", email: smtpConnection.email, password: "", from_name: smtpConnection.metadata?.from_name || "" }); }} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Edit</button>
-                <button onClick={disconnectSmtp} style={{ padding: "7px 14px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Disconnect</button>
-              </div>
-            ) : (
-              <button onClick={() => { setSmtpFormOpen(o => !o); setSmtpError(""); }} style={{ padding: "8px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Connect</button>
-            )}
-          </div>
-          {smtpFormOpen && (
-            <div style={{ marginTop: 16, borderTop: `1px solid ${COLORS.border}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>SMTP Host</div>
-                  <input value={smtpForm.host} onChange={e => setSmtpForm(f => ({ ...f, host: e.target.value }))} placeholder="smtp.ionos.de" style={{ ...INPUT.base, fontSize: 12 }} />
-                </div>
-                <div style={{ minWidth: 80 }}>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Port</div>
-                  <input value={smtpForm.port} onChange={e => setSmtpForm(f => ({ ...f, port: e.target.value }))} placeholder="465" style={{ ...INPUT.base, fontSize: 12 }} />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From email</div>
-                  <input value={smtpForm.email} onChange={e => setSmtpForm(f => ({ ...f, email: e.target.value }))} placeholder="info@soundofgeez.com" style={{ ...INPUT.base, fontSize: 12 }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>From name (optional)</div>
-                  <input value={smtpForm.from_name} onChange={e => setSmtpForm(f => ({ ...f, from_name: e.target.value }))} placeholder="GEEZ" style={{ ...INPUT.base, fontSize: 12 }} />
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Password / App password</div>
-                <input type="password" value={smtpForm.password} onChange={e => setSmtpForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" style={{ ...INPUT.base, fontSize: 12 }} />
-              </div>
-              <div style={{ fontSize: 11, color: COLORS.textMuted }}>Port 465 = SSL · Port 587 = STARTTLS. For IONOS use smtp.ionos.de : 465.</div>
-              {smtpError && <div style={{ fontSize: 12, color: "#ef4444" }}>{smtpError}</div>}
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button onClick={() => { setSmtpFormOpen(false); setSmtpError(""); }} style={{ ...BTN.secondary, ...BTN.sm }}>Cancel</button>
-                <button onClick={connectSmtp} disabled={smtpConnecting || !smtpForm.email || !smtpForm.host} style={{ ...BTN.primary, ...BTN.sm, opacity: smtpConnecting ? 0.6 : 1 }}>{smtpConnecting ? "Saving…" : "Save"}</button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Referral */}
       {referralCode && (
         <div style={{ background: COLORS.surface, border: `1px solid rgba(139,92,246,0.25)`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
@@ -8667,8 +8640,9 @@ const activeLeads = leads.filter(l => !l.archived);
     { id: "templates", label: "Templates",  icon: "📝", group: "main" },
     { id: "outreach",  label: "Outreach",   icon: "✦",  group: "ref" },
     { id: "bookingkit", label: "Booking Kit", icon: "◇",  group: "ref" },
-    { id: "settings",  label: "Settings",   icon: "⚙",  group: "ref" },
-    { id: "inbound",   label: "Inbound",    icon: "⬇",  badge: inboundCount, group: "ref" },
+    { id: "settings",    label: "Settings",    icon: "⚙", group: "ref" },
+    { id: "connectors",  label: "Connectors",  group: "ref" },
+    { id: "inbound",     label: "Inbound",     icon: "⬇", badge: inboundCount, group: "ref" },
     { id: "pricing",   label: "Pricing",    icon: "◈",  group: "ref" },
     ...(isAdmin ? [{ id: "admin", label: "Admin", icon: "👤", group: "ref" }] : []),
   ];
@@ -8836,7 +8810,8 @@ const activeLeads = leads.filter(l => !l.archived);
                 {activeTab === "bookingkit"    && "Your Assets"}
                 {activeTab === "bookingdesk"  && `${repliedCount} message${repliedCount !== 1 ? "s" : ""}${unreadCount > 0 ? ` · ${unreadCount} unread` : ""}`}
                 {activeTab === "calendar"  && `${gigs.filter(g => new Date(g.date) >= new Date()).length} upcoming gigs`}
-                {activeTab === "settings"  && `Follow-up 1: ${settings.followup1Days}d · Follow-up 2: ${settings.followup2Days}d`}
+                {activeTab === "settings"    && `Follow-up 1: ${settings.followup1Days}d · Follow-up 2: ${settings.followup2Days}d`}
+                {activeTab === "connectors" && "Email · Instagram · Composio"}
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
@@ -8886,7 +8861,16 @@ const activeLeads = leads.filter(l => !l.archived);
         {isMobile && <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} dueCount={dueCount} unreadCount={unreadCount} inboundCount={inboundCount} />}
 
         {/* Content */}
-        <div style={{ padding: isMobile ? 16 : 28, flex: 1 }}>
+        <div style={{
+          paddingTop:    isMobile ? 16 : 28,
+          paddingBottom: isMobile ? 16 : 28,
+          paddingLeft:   isMobile ? 16 : 28,
+          paddingRight:  !isMobile && selectedLead && activeTab === "pipeline"
+            ? "calc((100vw - 220px) * 0.65)"
+            : isMobile ? 16 : 28,
+          transition: "padding-right 0.28s cubic-bezier(0.4,0,0.2,1)",
+          flex: 1,
+        }}>
           {activeTab === "dashboard" && (
             <>
               {!onboardingDismissed && (
@@ -8922,10 +8906,8 @@ const activeLeads = leads.filter(l => !l.archived);
                   stacking context that traps position:fixed children inside the element,
                   breaking the full-screen mobile overlay. */}
               <div style={!isMobile ? {
-                transition: "opacity 0.28s ease, transform 0.28s ease",
-                opacity: selectedLead ? 0.45 : 1,
-                transform: selectedLead ? "scale(0.98) translateX(-8px)" : "none",
-                transformOrigin: "top left",
+                transition: "opacity 0.28s ease",
+                opacity: selectedLead ? 0.6 : 1,
                 pointerEvents: selectedLead ? "none" : "auto",
               } : {
                 display: selectedLead ? "none" : "block",
@@ -8972,7 +8954,8 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} isMobile={isMobile} supabase={supabase} userId={user?.id} onUnreadChange={setEmailUnreadCount} gigs={gigs} setGigs={setGigs} />}
-          {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} onDisplayNameChange={name => setProfileDisplayName(name)} />}
+          {activeTab === "settings"    && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} onDisplayNameChange={name => setProfileDisplayName(name)} onNavigate={setActiveTab} />}
+          {activeTab === "connectors"  && <ConnectorsView supabase={supabase} user={user} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
             <div>

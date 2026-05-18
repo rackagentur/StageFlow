@@ -291,6 +291,18 @@ export function IconContacts({ size = defaults.size, color = defaults.color, str
   );
 }
 
+export function IconConnectors({ size = defaults.size, color = defaults.color, strokeWidth = defaults.strokeWidth }) {
+  return (
+    <Icon size={size} color={color} strokeWidth={strokeWidth}>
+      <rect x="7" y="11" width="10" height="7" rx="1.5" />
+      <line x1="9" y1="11" x2="9" y2="5" />
+      <line x1="15" y1="11" x2="15" y2="5" />
+      <line x1="12" y1="18" x2="12" y2="22" />
+      <line x1="9" y1="22" x2="15" y2="22" />
+    </Icon>
+  );
+}
+
 // Map from tab id → icon component (for use in nav)
 export const TAB_ICONS = {
   dashboard:   IconDashboard,
@@ -304,6 +316,7 @@ export const TAB_ICONS = {
   outreach:    IconOutreach,
   bookingkit:  IconBookingKit,
   settings:    IconSettings,
+  connectors:  IconConnectors,
   inbound:     IconInbound,
   pricing:     IconPricing,
   admin:       IconAdmin,
