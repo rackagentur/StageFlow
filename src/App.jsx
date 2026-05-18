@@ -896,8 +896,9 @@ function SearchFilterBar({ search, setSearch, filters, setFilters, resultCount, 
 
 
 // === Bulk Actions Bar - Bundle 5.5 ===
-function BulkActionsBar({ count, onMoveTo, onArchive, onClear, isMobile }) {
+function BulkActionsBar({ count, onMoveTo, onArchive, onDelete, onClear, isMobile }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <div style={{
       position: 'fixed', bottom: isMobile ? 56 : 0, left: 0, right: 0,
@@ -906,17 +907,17 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear, isMobile }) {
       zIndex: 10000, boxShadow: '0 -4px 12px rgba(0,0,0,0.3)'
     }}>
       <span style={{ fontWeight: 600, fontSize: 14 }}>{count} selected</span>
-      
+
       <div style={{ position: 'relative' }}>
-        <button 
-          onClick={() => setShowMenu(!showMenu)}
+        <button
+          onClick={() => { setShowMenu(!showMenu); setConfirmDelete(false); }}
           style={{
             padding: '8px 16px', background: COLORS.purple, border: 'none',
             borderRadius: 6, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer'
           }}>
           Move to...
         </button>
-        
+
         {showMenu && (
           <div style={{
             position: 'absolute', bottom: '100%', left: 0, marginBottom: 8,
@@ -938,8 +939,8 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear, isMobile }) {
           </div>
         )}
       </div>
-      
-      <button onClick={onArchive}
+
+      <button onClick={() => { setShowMenu(false); setConfirmDelete(false); onArchive(); }}
         style={{
           padding: '8px 16px', background: 'transparent',
           border: `1px solid ${COLORS.border}`, borderRadius: 6,
@@ -947,10 +948,46 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onClear, isMobile }) {
         }}>
         Archive
       </button>
-      
+
+      {/* Delete with inline confirmation */}
+      {confirmDelete ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, color: COLORS.red, fontWeight: 600 }}>
+            Delete {count} lead{count !== 1 ? 's' : ''}? This can't be undone.
+          </span>
+          <button
+            onClick={() => { onDelete(); setConfirmDelete(false); }}
+            style={{
+              padding: '7px 14px', background: COLORS.red, border: 'none',
+              borderRadius: 6, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer'
+            }}>
+            Yes, delete
+          </button>
+          <button
+            onClick={() => setConfirmDelete(false)}
+            style={{
+              padding: '7px 12px', background: 'transparent',
+              border: `1px solid ${COLORS.border}`, borderRadius: 6,
+              color: COLORS.text, fontSize: 13, cursor: 'pointer'
+            }}>
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => { setShowMenu(false); setConfirmDelete(true); }}
+          style={{
+            padding: '8px 16px', background: 'transparent',
+            border: `1px solid rgba(239,68,68,0.45)`, borderRadius: 6,
+            color: COLORS.red, fontSize: 13, fontWeight: 600, cursor: 'pointer'
+          }}>
+          Delete
+        </button>
+      )}
+
       <div style={{ flex: 1 }} />
-      
-      <button onClick={onClear}
+
+      <button onClick={() => { setConfirmDelete(false); onClear(); }}
         style={{
           padding: '8px 16px', background: 'transparent', border: 'none',
           color: COLORS.text3, fontSize: 13, cursor: 'pointer'
@@ -7703,44 +7740,133 @@ function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {}, isMobile }) 
 
 
 function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inboundCount }) {
-  const NAV_ITEMS = [
+  const [showMore, setShowMore] = useState(false);
+
+  // Primary tabs always visible in the bar
+  const PRIMARY = [
     { id: 'dashboard',   Icon: IconDashboard,  label: 'Home' },
     { id: 'pipeline',    Icon: IconPipeline,   label: 'Pipeline' },
     { id: 'followups',   Icon: IconFollowUps,  label: 'Follow-ups', badge: dueCount },
     { id: 'bookingdesk', Icon: IconReplyHub,   label: 'Reply', badge: unreadCount },
-    { id: 'inbound',     Icon: IconInbound,    label: 'Inbound', badge: inboundCount },
   ];
+
+  // Secondary tabs shown in the "More" sheet
+  const MORE_ITEMS = [
+    { id: 'inbound',    Icon: IconInbound,    label: 'Inbound',     badge: inboundCount },
+    { id: 'calendar',   Icon: IconCalendar,   label: 'Calendar' },
+    { id: 'contacts',   Icon: IconContacts,   label: 'Contacts' },
+    { id: 'analytics',  Icon: IconAnalytics,  label: 'Analytics' },
+    { id: 'bookingkit', Icon: IconBookingKit, label: 'Booking Kit' },
+    { id: 'outreach',   Icon: IconOutreach,   label: 'Templates' },
+    { id: 'settings',   Icon: IconSettings,   label: 'Settings' },
+  ];
+
+  const moreActive = MORE_ITEMS.some(i => i.id === activeTab);
+
+  const navigate = (id) => {
+    setActiveTab(id);
+    setShowMore(false);
+  };
+
   return (
-    <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
-      background: COLORS.surface, borderTop: `1px solid ${COLORS.border}`,
-      display: 'flex', paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-    }}>
-      {NAV_ITEMS.map(item => {
-        const active = activeTab === item.id;
-        return (
-          <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
-            flex: 1, padding: '10px 4px 8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-            position: 'relative',
+    <>
+      {/* Bottom nav bar */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300,
+        background: COLORS.surface, borderTop: `1px solid ${COLORS.border}`,
+        display: 'flex', paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}>
+        {PRIMARY.map(item => {
+          const active = activeTab === item.id;
+          return (
+            <button key={item.id} onClick={() => navigate(item.id)} style={{
+              flex: 1, padding: '10px 4px 8px',
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+              position: 'relative',
+            }}>
+              {item.badge > 0 && (
+                <div style={{
+                  position: 'absolute', top: 6, right: '50%', marginRight: -18,
+                  background: COLORS.purple, color: '#fff',
+                  borderRadius: 8, padding: '0 4px',
+                  fontSize: 9, fontWeight: 800, lineHeight: '14px',
+                  minWidth: 14, textAlign: 'center',
+                }}>{item.badge}</div>
+              )}
+              <item.Icon size={20} color={active ? COLORS.purple : COLORS.textMuted} />
+              <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? COLORS.purple : COLORS.text3 }}>{item.label}</span>
+              {active && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: COLORS.purple, borderRadius: 2 }} />}
+            </button>
+          );
+        })}
+
+        {/* Hamburger / More button */}
+        <button onClick={() => setShowMore(v => !v)} style={{
+          flex: 1, padding: '10px 4px 8px',
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+          position: 'relative',
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="5"  width="18" height="2" rx="1" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
+            <rect x="3" y="11" width="18" height="2" rx="1" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
+            <rect x="3" y="17" width="18" height="2" rx="1" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
+          </svg>
+          <span style={{ fontSize: 9, fontWeight: (moreActive || showMore) ? 700 : 500, color: (moreActive || showMore) ? COLORS.purple : COLORS.text3 }}>Menu</span>
+          {(moreActive || showMore) && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: COLORS.purple, borderRadius: 2 }} />}
+        </button>
+      </div>
+
+      {/* More sheet — slides up from bottom */}
+      {showMore && (
+        <>
+          {/* Backdrop */}
+          <div onClick={() => setShowMore(false)} style={{
+            position: 'fixed', inset: 0, zIndex: 290,
+            background: 'rgba(0,0,0,0.5)',
+          }} />
+          {/* Sheet */}
+          <div style={{
+            position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 295,
+            background: COLORS.surface,
+            borderTop: `1px solid ${COLORS.border}`,
+            borderRadius: '16px 16px 0 0',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 56px)',
+            padding: '12px 0 calc(env(safe-area-inset-bottom, 0px) + 64px)',
           }}>
-            {item.badge > 0 && (
-              <div style={{
-                position: 'absolute', top: 6, right: '50%', marginRight: -18,
-                background: COLORS.purple, color: '#fff',
-                borderRadius: 8, padding: '0 4px',
-                fontSize: 9, fontWeight: 800, lineHeight: '14px',
-                minWidth: 14, textAlign: 'center',
-              }}>{item.badge}</div>
-            )}
-            <item.Icon size={20} color={active ? COLORS.purple : COLORS.textMuted} />
-            <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? COLORS.purple : COLORS.text3 }}>{item.label}</span>
-            {active && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: COLORS.purple, borderRadius: 2 }} />}
-          </button>
-        );
-      })}
-    </div>
+            {/* Handle */}
+            <div style={{ width: 36, height: 4, background: COLORS.border, borderRadius: 2, margin: '0 auto 16px' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0 }}>
+              {MORE_ITEMS.map(item => {
+                const active = activeTab === item.id;
+                return (
+                  <button key={item.id} onClick={() => navigate(item.id)} style={{
+                    padding: '14px 4px 10px',
+                    background: active ? COLORS.purpleBg : 'transparent',
+                    border: 'none', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    position: 'relative',
+                  }}>
+                    {item.badge > 0 && (
+                      <div style={{
+                        position: 'absolute', top: 10, right: '50%', marginRight: -18,
+                        background: COLORS.purple, color: '#fff',
+                        borderRadius: 8, padding: '0 4px',
+                        fontSize: 9, fontWeight: 800, lineHeight: '14px',
+                        minWidth: 14, textAlign: 'center',
+                      }}>{item.badge}</div>
+                    )}
+                    <item.Icon size={22} color={active ? COLORS.purple : COLORS.textMuted} />
+                    <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, color: active ? COLORS.purple : COLORS.text }}>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
@@ -8219,6 +8345,15 @@ const loadAdminUsers = async () => {
     if (ids.length > 2 && !confirm(`Archive ${ids.length} leads?`)) return;
     await supabase.from('leads').update({ archived: true }).in('id', ids);
     await loadData();
+    setSelectedLeads(new Set());
+    setShowBulkBar(false);
+  };
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selectedLeads);
+    await supabase.from('leads').delete().in('id', ids);
+    setLeads(prev => prev.filter(l => !ids.includes(l.id)));
+    if (selectedLead && ids.includes(selectedLead.id)) setSelectedLead(null);
     setSelectedLeads(new Set());
     setShowBulkBar(false);
   };
@@ -8735,7 +8870,7 @@ const activeLeads = leads.filter(l => !l.archived);
         {isMobile && <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} dueCount={dueCount} unreadCount={unreadCount} inboundCount={inboundCount} />}
 
         {/* Content */}
-        <div style={{ padding: isMobile ? 16 : 28, flex: 1, display: !isMobile && activeTab === "pipeline" && selectedLead ? "grid" : "block", gridTemplateColumns: !isMobile && activeTab === "pipeline" && selectedLead ? "1fr 280px" : undefined, gap: 20 }}>
+        <div style={{ padding: isMobile ? 16 : 28, flex: 1 }}>
           {activeTab === "dashboard" && (
             <>
               {!onboardingDismissed && (
@@ -8766,14 +8901,52 @@ const activeLeads = leads.filter(l => !l.archived);
                   <button onClick={() => requestUpgrade("leads")} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Upgrade to Pro →</button>
                 </div>
               )}
-              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
+              {/* Pipeline — compresses left when desktop panel is open.
+                  IMPORTANT: no transform on mobile — any CSS transform creates a new
+                  stacking context that traps position:fixed children inside the element,
+                  breaking the full-screen mobile overlay. */}
+              <div style={!isMobile ? {
+                transition: "opacity 0.28s ease, transform 0.28s ease",
+                opacity: selectedLead ? 0.45 : 1,
+                transform: selectedLead ? "scale(0.98) translateX(-8px)" : "none",
+                transformOrigin: "top left",
+                pointerEvents: selectedLead ? "none" : "auto",
+              } : {
+                display: selectedLead ? "none" : "block",
+              }}>
+                <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
+              </div>
+
+              {/* Sliding wall panel — mobile: full-screen takeover (sits outside the
+                  pipeline wrapper so it's not trapped by any transform stacking context) */}
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
                   <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
                 </div>
               )}
-              {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />}
+
+              {/* Sliding wall panel — desktop: fixed panel from right, 65% content width */}
+              {!isMobile && (
+                <div style={{
+                  position: "fixed",
+                  top: 0, right: 0, bottom: 0,
+                  width: "calc((100vw - 220px) * 0.65)",
+                  zIndex: 200,
+                  background: COLORS.bg,
+                  borderLeft: `1px solid ${COLORS.border}`,
+                  boxShadow: selectedLead ? "-12px 0 48px rgba(0,0,0,0.55), -1px 0 0 rgba(255,255,255,0.04)" : "none",
+                  transform: selectedLead ? "translateX(0)" : "translateX(100%)",
+                  transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1), box-shadow 0.28s ease",
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                }}>
+                  {selectedLead && (
+                    <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
+                  )}
+                </div>
+              )}
             </>
           )}
           {activeTab === "contacts"  && <ContactsView leads={leads} TAG_COLORS={TAG_COLORS} isMobile={isMobile} customTags={customTags} supabase={supabase} userId={user.id} onUpdateLead={lead => setLeads(p => p.map(l => l.id === lead.id ? lead : l))} onOpenLead={(lead) => { setSelectedLead(lead); setActiveTab("pipeline"); }} />}
@@ -9069,6 +9242,7 @@ const activeLeads = leads.filter(l => !l.archived);
           count={selectedLeads.size}
           onMoveTo={bulkMoveTo}
           onArchive={bulkArchive}
+          onDelete={bulkDelete}
           isMobile={isMobile}
           onClear={() => {
             setSelectedLeads(new Set());
