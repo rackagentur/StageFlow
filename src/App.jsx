@@ -8721,7 +8721,7 @@ const activeLeads = leads.filter(l => !l.archived);
         {isMobile && <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} dueCount={dueCount} unreadCount={unreadCount} inboundCount={inboundCount} />}
 
         {/* Content */}
-        <div style={{ padding: isMobile ? 16 : 28, flex: 1, display: !isMobile && activeTab === "pipeline" && selectedLead ? "grid" : "block", gridTemplateColumns: !isMobile && activeTab === "pipeline" && selectedLead ? "1fr 280px" : undefined, gap: 20 }}>
+        <div style={{ padding: isMobile ? 16 : 28, flex: 1 }}>
           {activeTab === "dashboard" && (
             <>
               {!onboardingDismissed && (
@@ -8752,14 +8752,46 @@ const activeLeads = leads.filter(l => !l.archived);
                   <button onClick={() => requestUpgrade("leads")} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Upgrade to Pro →</button>
                 </div>
               )}
-              <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
+              {/* Pipeline — compresses left when panel is open */}
+              <div style={{
+                transition: "opacity 0.28s ease, transform 0.28s ease",
+                opacity: selectedLead && !isMobile ? 0.45 : 1,
+                transform: selectedLead && !isMobile ? "scale(0.98) translateX(-8px)" : "scale(1) translateX(0)",
+                transformOrigin: "top left",
+                pointerEvents: selectedLead && !isMobile ? "none" : "auto",
+              }}>
+                <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
+              </div>
+
+              {/* Sliding wall panel — mobile: full screen takeover */}
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
                   <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
                 </div>
               )}
-              {selectedLead && !isMobile && <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />}
+
+              {/* Sliding wall panel — desktop: fixed panel from right, 65% content width */}
+              {!isMobile && (
+                <div style={{
+                  position: "fixed",
+                  top: 0, right: 0, bottom: 0,
+                  width: "calc((100vw - 220px) * 0.65)",
+                  zIndex: 200,
+                  background: COLORS.bg,
+                  borderLeft: `1px solid ${COLORS.border}`,
+                  boxShadow: selectedLead ? "-12px 0 48px rgba(0,0,0,0.55), -1px 0 0 rgba(255,255,255,0.04)" : "none",
+                  transform: selectedLead ? "translateX(0)" : "translateX(100%)",
+                  transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1), box-shadow 0.28s ease",
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                }}>
+                  {selectedLead && (
+                    <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
+                  )}
+                </div>
+              )}
             </>
           )}
           {activeTab === "contacts"  && <ContactsView leads={leads} TAG_COLORS={TAG_COLORS} isMobile={isMobile} customTags={customTags} supabase={supabase} userId={user.id} onUpdateLead={lead => setLeads(p => p.map(l => l.id === lead.id ? lead : l))} onOpenLead={(lead) => { setSelectedLead(lead); setActiveTab("pipeline"); }} />}
