@@ -7787,7 +7787,7 @@ function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inbou
           );
         })}
 
-        {/* More button */}
+        {/* Hamburger / More button */}
         <button onClick={() => setShowMore(v => !v)} style={{
           flex: 1, padding: '10px 4px 8px',
           background: 'transparent', border: 'none', cursor: 'pointer',
@@ -7795,11 +7795,11 @@ function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inbou
           position: 'relative',
         }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="5"  cy="12" r="2" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
-            <circle cx="12" cy="12" r="2" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
-            <circle cx="19" cy="12" r="2" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
+            <rect x="3" y="5"  width="18" height="2" rx="1" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
+            <rect x="3" y="11" width="18" height="2" rx="1" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
+            <rect x="3" y="17" width="18" height="2" rx="1" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
           </svg>
-          <span style={{ fontSize: 9, fontWeight: (moreActive || showMore) ? 700 : 500, color: (moreActive || showMore) ? COLORS.purple : COLORS.text3 }}>More</span>
+          <span style={{ fontSize: 9, fontWeight: (moreActive || showMore) ? 700 : 500, color: (moreActive || showMore) ? COLORS.purple : COLORS.text3 }}>Menu</span>
           {(moreActive || showMore) && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: COLORS.purple, borderRadius: 2 }} />}
         </button>
       </div>
