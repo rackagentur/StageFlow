@@ -1139,17 +1139,21 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
               onMove(lead.id, prevStage); 
             }} style={{ flex: 1, padding: "5px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textSecondary, fontSize: 11, cursor: "pointer" }}>← Back</button>
           )}
-          {stageIndex < STAGES.length - 1 && (
-            <button onClick={e => { 
-              e.stopPropagation(); 
-              // Determine next stage based on current stage
+          {lead.stage === 'contacted' && (
+            <button onClick={e => { e.stopPropagation(); onMove(lead.id, 'replied'); }}
+              style={{ flex: 2, padding: "5px", background: "rgba(0,212,255,0.10)", border: "1px solid rgba(0,212,255,0.35)", borderRadius: 6, color: COLORS.cyan, fontSize: 11, cursor: "pointer", fontWeight: 700 }}>
+              ↩ They replied!
+            </button>
+          )}
+          {stageIndex < STAGES.length - 1 && lead.stage !== 'contacted' && (
+            <button onClick={e => {
+              e.stopPropagation();
               let nextStage;
               if (lead.stage === 'target') nextStage = 'contacted';
-              else if (lead.stage === 'contacted') nextStage = 'followup1';
               else if (lead.stage === 'followup1' || lead.stage === 'followup2') nextStage = 'replied';
               else if (lead.stage === 'replied') nextStage = 'booked';
               else nextStage = STAGES[stageIndex + 1]?.id || 'contacted';
-              onMove(lead.id, nextStage); 
+              onMove(lead.id, nextStage);
             }} style={{ flex: 2, padding: "5px", background: stageIndex === STAGES.length - 2 ? "rgba(34,197,94,0.12)" : COLORS.purpleBg, border: `1px solid ${stageIndex === STAGES.length - 2 ? "rgba(34,197,94,0.4)" : COLORS.purpleDim}`, borderRadius: 6, color: stageIndex === STAGES.length - 2 ? COLORS.green : COLORS.purpleLight, fontSize: 11, cursor: "pointer", fontWeight: 700 }}>
               {stageIndex === STAGES.length - 2 ? "✓ Book" : "Advance →"}
             </button>
@@ -1165,7 +1169,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
       )}
       {showInline && (
         <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${COLORS.border}` }} onClick={e => e.stopPropagation()}>
-          <div style={{ fontSize: 9, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>How did you reach out?</div>
+          <div style={{ fontSize: 9, color: COLORS.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>Outreach log — paste reply or add notes</div>
           <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
             {METHODS.map(m => {
               const active = lead.outreachMethod === m.id;
@@ -1174,7 +1178,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
               );
             })}
           </div>
-          <textarea value={contactLog} onChange={e => setContactLog(e.target.value)} onBlur={handleLogBlur} onClick={e => e.stopPropagation()} placeholder="How did it go? Quick note..." rows={2} style={{ width: "100%", background: COLORS.bg, border: `1px solid ${logSaved ? COLORS.green : COLORS.border}`, borderRadius: 6, padding: "6px 8px", color: COLORS.text, fontSize: 11, outline: "none", fontFamily: "inherit", resize: "none", lineHeight: 1.5, transition: "border-color 0.2s" }} />
+          <textarea value={contactLog} onChange={e => setContactLog(e.target.value)} onBlur={handleLogBlur} onClick={e => e.stopPropagation()} placeholder="How did it go? Paste their reply or add a quick note…" rows={3} style={{ width: "100%", background: COLORS.bg, border: `1px solid ${logSaved ? COLORS.green : COLORS.border}`, borderRadius: 6, padding: "6px 8px", color: COLORS.text, fontSize: 11, outline: "none", fontFamily: "inherit", resize: "vertical", lineHeight: 1.5, transition: "border-color 0.2s", minHeight: 54 }} />
           {logSaved && <div style={{ fontSize: 9, color: COLORS.green, marginTop: 3 }}>Saved</div>}
         </div>
       )}
