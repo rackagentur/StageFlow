@@ -537,10 +537,22 @@ const TIER_COLORS = { A1: COLORS.purpleLight, A2: COLORS.purple, A3: COLORS.text
 // localStorage kept only for settings, pro status, tags
 
 // ── Release notes ─────────────────────────────────────────────────────────────
-const APP_VERSION = "1.6.0";
+const APP_VERSION = "1.7.0";
 const STORAGE_KEY_WHATS_NEW = "noxreach_whats_new_seen_v";
 
 const RELEASE_NOTES = [
+  {
+    version: "1.7.0",
+    date: "May 2026",
+    title: "Mobile polish, smart exclusions & bulk delete",
+    items: [
+      { Icon: IconPipeline,   label: "Mobile pipeline fix",     desc: "Lead detail now opens full-screen on mobile without the sliding-wall effect. Pipeline hides cleanly behind the overlay." },
+      { Icon: IconSettings,   label: "Mobile nav hamburger",    desc: "The bottom nav now has a hamburger icon that opens a sheet with all sections — Calendar, Settings, Analytics, and more." },
+      { Icon: IconStar,       label: "AI dedup exclusions",     desc: "AI venue suggestions now hard-exclude every venue already in your pipeline. No more duplicates in recommendations." },
+      { Icon: IconMail,       label: "Gmail error clarity",     desc: "Gmail send errors now tell you exactly when to reconnect — no more cryptic 502 messages." },
+      { Icon: IconPipeline,   label: "Bulk delete leads",       desc: "Select multiple leads and delete them all at once with a single confirmation." },
+    ],
+  },
   {
     version: "1.6.0",
     date: "May 2026",
@@ -1176,13 +1188,13 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
               onMove(lead.id, prevStage); 
             }} style={{ flex: 1, padding: "5px", background: "transparent", border: `1px solid ${COLORS.border}`, borderRadius: 6, color: COLORS.textSecondary, fontSize: 11, cursor: "pointer" }}>← Back</button>
           )}
-          {lead.stage === 'contacted' && (
+          {(lead.stage === 'contacted' || lead.stage === 'followup1' || lead.stage === 'followup2') && (
             <button onClick={e => { e.stopPropagation(); onMove(lead.id, 'replied'); }}
               style={{ flex: 2, padding: "5px", background: "rgba(0,212,255,0.10)", border: "1px solid rgba(0,212,255,0.35)", borderRadius: 6, color: COLORS.cyan, fontSize: 11, cursor: "pointer", fontWeight: 700 }}>
               ↩ They replied!
             </button>
           )}
-          {stageIndex < STAGES.length - 1 && lead.stage !== 'contacted' && (
+          {stageIndex < STAGES.length - 1 && lead.stage !== 'contacted' && lead.stage !== 'followup1' && lead.stage !== 'followup2' && (
             <button onClick={e => {
               e.stopPropagation();
               let nextStage;
@@ -1364,6 +1376,7 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: col.color }} />
                     <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>{col.label}</span>
+                    <span style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "'DM Mono', monospace" }}>· {colLeads.length}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     {colLeads.length > 0 && (
@@ -1389,7 +1402,6 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                         Select All
                       </button>
                     )}
-                    <span style={{ fontSize: 11, color: colLeads.length > 0 ? COLORS.textSecondary : COLORS.textMuted, fontFamily: "'DM Mono', monospace" }}>{colLeads.length}</span>
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 100 }}>
