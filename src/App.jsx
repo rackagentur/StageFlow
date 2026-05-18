@@ -7726,44 +7726,133 @@ function AnalyticsView({ userId, supabase, COLORS, TAG_COLORS = {}, isMobile }) 
 
 
 function MobileBottomNav({ activeTab, setActiveTab, dueCount, unreadCount, inboundCount }) {
-  const NAV_ITEMS = [
+  const [showMore, setShowMore] = useState(false);
+
+  // Primary tabs always visible in the bar
+  const PRIMARY = [
     { id: 'dashboard',   Icon: IconDashboard,  label: 'Home' },
     { id: 'pipeline',    Icon: IconPipeline,   label: 'Pipeline' },
     { id: 'followups',   Icon: IconFollowUps,  label: 'Follow-ups', badge: dueCount },
     { id: 'bookingdesk', Icon: IconReplyHub,   label: 'Reply', badge: unreadCount },
-    { id: 'inbound',     Icon: IconInbound,    label: 'Inbound', badge: inboundCount },
   ];
+
+  // Secondary tabs shown in the "More" sheet
+  const MORE_ITEMS = [
+    { id: 'inbound',    Icon: IconInbound,    label: 'Inbound',     badge: inboundCount },
+    { id: 'calendar',   Icon: IconCalendar,   label: 'Calendar' },
+    { id: 'contacts',   Icon: IconContacts,   label: 'Contacts' },
+    { id: 'analytics',  Icon: IconAnalytics,  label: 'Analytics' },
+    { id: 'bookingkit', Icon: IconBookingKit, label: 'Booking Kit' },
+    { id: 'outreach',   Icon: IconOutreach,   label: 'Templates' },
+    { id: 'settings',   Icon: IconSettings,   label: 'Settings' },
+  ];
+
+  const moreActive = MORE_ITEMS.some(i => i.id === activeTab);
+
+  const navigate = (id) => {
+    setActiveTab(id);
+    setShowMore(false);
+  };
+
   return (
-    <div style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
-      background: COLORS.surface, borderTop: `1px solid ${COLORS.border}`,
-      display: 'flex', paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-    }}>
-      {NAV_ITEMS.map(item => {
-        const active = activeTab === item.id;
-        return (
-          <button key={item.id} onClick={() => setActiveTab(item.id)} style={{
-            flex: 1, padding: '10px 4px 8px',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-            position: 'relative',
+    <>
+      {/* Bottom nav bar */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300,
+        background: COLORS.surface, borderTop: `1px solid ${COLORS.border}`,
+        display: 'flex', paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}>
+        {PRIMARY.map(item => {
+          const active = activeTab === item.id;
+          return (
+            <button key={item.id} onClick={() => navigate(item.id)} style={{
+              flex: 1, padding: '10px 4px 8px',
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+              position: 'relative',
+            }}>
+              {item.badge > 0 && (
+                <div style={{
+                  position: 'absolute', top: 6, right: '50%', marginRight: -18,
+                  background: COLORS.purple, color: '#fff',
+                  borderRadius: 8, padding: '0 4px',
+                  fontSize: 9, fontWeight: 800, lineHeight: '14px',
+                  minWidth: 14, textAlign: 'center',
+                }}>{item.badge}</div>
+              )}
+              <item.Icon size={20} color={active ? COLORS.purple : COLORS.textMuted} />
+              <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? COLORS.purple : COLORS.text3 }}>{item.label}</span>
+              {active && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: COLORS.purple, borderRadius: 2 }} />}
+            </button>
+          );
+        })}
+
+        {/* More button */}
+        <button onClick={() => setShowMore(v => !v)} style={{
+          flex: 1, padding: '10px 4px 8px',
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+          position: 'relative',
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="5"  cy="12" r="2" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
+            <circle cx="12" cy="12" r="2" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
+            <circle cx="19" cy="12" r="2" fill={moreActive || showMore ? COLORS.purple : COLORS.textMuted} />
+          </svg>
+          <span style={{ fontSize: 9, fontWeight: (moreActive || showMore) ? 700 : 500, color: (moreActive || showMore) ? COLORS.purple : COLORS.text3 }}>More</span>
+          {(moreActive || showMore) && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: COLORS.purple, borderRadius: 2 }} />}
+        </button>
+      </div>
+
+      {/* More sheet — slides up from bottom */}
+      {showMore && (
+        <>
+          {/* Backdrop */}
+          <div onClick={() => setShowMore(false)} style={{
+            position: 'fixed', inset: 0, zIndex: 290,
+            background: 'rgba(0,0,0,0.5)',
+          }} />
+          {/* Sheet */}
+          <div style={{
+            position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 295,
+            background: COLORS.surface,
+            borderTop: `1px solid ${COLORS.border}`,
+            borderRadius: '16px 16px 0 0',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 56px)',
+            padding: '12px 0 calc(env(safe-area-inset-bottom, 0px) + 64px)',
           }}>
-            {item.badge > 0 && (
-              <div style={{
-                position: 'absolute', top: 6, right: '50%', marginRight: -18,
-                background: COLORS.purple, color: '#fff',
-                borderRadius: 8, padding: '0 4px',
-                fontSize: 9, fontWeight: 800, lineHeight: '14px',
-                minWidth: 14, textAlign: 'center',
-              }}>{item.badge}</div>
-            )}
-            <item.Icon size={20} color={active ? COLORS.purple : COLORS.textMuted} />
-            <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? COLORS.purple : COLORS.text3 }}>{item.label}</span>
-            {active && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: COLORS.purple, borderRadius: 2 }} />}
-          </button>
-        );
-      })}
-    </div>
+            {/* Handle */}
+            <div style={{ width: 36, height: 4, background: COLORS.border, borderRadius: 2, margin: '0 auto 16px' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0 }}>
+              {MORE_ITEMS.map(item => {
+                const active = activeTab === item.id;
+                return (
+                  <button key={item.id} onClick={() => navigate(item.id)} style={{
+                    padding: '14px 4px 10px',
+                    background: active ? COLORS.purpleBg : 'transparent',
+                    border: 'none', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    position: 'relative',
+                  }}>
+                    {item.badge > 0 && (
+                      <div style={{
+                        position: 'absolute', top: 10, right: '50%', marginRight: -18,
+                        background: COLORS.purple, color: '#fff',
+                        borderRadius: 8, padding: '0 4px',
+                        fontSize: 9, fontWeight: 800, lineHeight: '14px',
+                        minWidth: 14, textAlign: 'center',
+                      }}>{item.badge}</div>
+                    )}
+                    <item.Icon size={22} color={active ? COLORS.purple : COLORS.textMuted} />
+                    <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, color: active ? COLORS.purple : COLORS.text }}>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
