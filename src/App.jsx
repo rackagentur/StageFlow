@@ -8798,18 +8798,24 @@ const activeLeads = leads.filter(l => !l.archived);
                   <button onClick={() => requestUpgrade("leads")} style={{ padding: "9px 18px", background: COLORS.purple, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>Upgrade to Pro →</button>
                 </div>
               )}
-              {/* Pipeline — compresses left when panel is open */}
-              <div style={{
+              {/* Pipeline — compresses left when desktop panel is open.
+                  IMPORTANT: no transform on mobile — any CSS transform creates a new
+                  stacking context that traps position:fixed children inside the element,
+                  breaking the full-screen mobile overlay. */}
+              <div style={!isMobile ? {
                 transition: "opacity 0.28s ease, transform 0.28s ease",
-                opacity: selectedLead && !isMobile ? 0.45 : 1,
-                transform: selectedLead && !isMobile ? "scale(0.98) translateX(-8px)" : "scale(1) translateX(0)",
+                opacity: selectedLead ? 0.45 : 1,
+                transform: selectedLead ? "scale(0.98) translateX(-8px)" : "none",
                 transformOrigin: "top left",
-                pointerEvents: selectedLead && !isMobile ? "none" : "auto",
+                pointerEvents: selectedLead ? "none" : "auto",
+              } : {
+                display: selectedLead ? "none" : "block",
               }}>
                 <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
               </div>
 
-              {/* Sliding wall panel — mobile: full screen takeover */}
+              {/* Sliding wall panel — mobile: full-screen takeover (sits outside the
+                  pipeline wrapper so it's not trapped by any transform stacking context) */}
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
