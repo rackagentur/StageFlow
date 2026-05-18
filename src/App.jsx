@@ -7005,7 +7005,7 @@ function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClo
     setLoading(true); setError("");
     try {
       const { data: existingLeads } = await supabase
-        .from("leads").select("name, city, country, tag, tier").eq("user_id", user.id);
+        .from("leads").select("name, tag, tier").eq("user_id", user.id);
 
       const res = await supabase.functions.invoke("ai-lead-suggestions", {
         body: { currentLead, existingLeads: existingLeads || [], artistGenre },
@@ -7019,6 +7019,8 @@ function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClo
   }
 
   async function handleAdd(s, idx) {
+    const location = [s.city, s.country].filter(Boolean).join(", ");
+    const notes = [location, s.notes].filter(Boolean).join(" | ");
     const { data: newLead, error } = await supabase.from("leads").insert([{
       user_id: user.id,
       name: s.name,
@@ -7026,10 +7028,8 @@ function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClo
       instagram: s.instagram || null,
       tier: s.tier || currentLead.tier,
       tag: s.tag || currentLead.tag,
-      city: s.city || null,
-      country: s.country || null,
       stage: "target",
-      notes: s.notes || null,
+      notes: notes || null,
       archived: false,
     }]).select().single();
     if (!error) {
