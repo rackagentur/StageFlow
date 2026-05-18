@@ -3,10 +3,12 @@
 // Automatically refreshes the access token if expired.
 // Logs the send to email_sends table for reply tracking.
 
-const GOOGLE_CLIENT_ID     = Deno.env.get("GOOGLE_CLIENT_ID")!;
-const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
-const SUPABASE_URL         = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY     = Deno.env.get("SERVICE_ROLE_KEY")!;
+import { fetchWithRetry } from "../_lib/fetchWithRetry.ts";
+
+const GOOGLE_CLIENT_ID     = Deno.env.get("GOOGLE_CLIENT_ID");
+const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
+const SUPABASE_URL         = Deno.env.get("SUPABASE_URL");
+const SERVICE_ROLE_KEY     = Deno.env.get("SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +21,7 @@ async function refreshAccessToken(refreshToken: string): Promise<{
   access_token: string;
   expires_in: number;
 } | null> {
-  const res = await fetch("https://oauth2.googleapis.com/token", {
+  const res = await fetchWithRetry("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -28,7 +30,7 @@ async function refreshAccessToken(refreshToken: string): Promise<{
       client_secret: GOOGLE_CLIENT_SECRET,
       grant_type:    "refresh_token",
     }),
-  });
+  }, 3, 10000);
   if (!res.ok) { console.error("Refresh failed:", await res.text()); return null; }
   return res.json();
 }
@@ -36,9 +38,11 @@ async function refreshAccessToken(refreshToken: string): Promise<{
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
 async function getConnection(userId: string) {
-  const res = await fetch(
+  const res = await fetchWithRetry(
     `${SUPABASE_URL}/rest/v1/email_connections?user_id=eq.${userId}&provider=eq.gmail&select=*&limit=1`,
-    { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
+    { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } },
+    3,
+    5000
   );
   if (!res.ok) return null;
   const rows = await res.json();
@@ -46,7 +50,7 @@ async function getConnection(userId: string) {
 }
 
 async function updateTokens(userId: string, accessToken: string, expiresAt: string) {
-  await fetch(
+  await fetchWithRetry(
     `${SUPABASE_URL}/rest/v1/email_connections?user_id=eq.${userId}&provider=eq.gmail`,
     {
       method: "PATCH",
@@ -56,7 +60,9 @@ async function updateTokens(userId: string, accessToken: string, expiresAt: stri
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ access_token: accessToken, token_expires_at: expiresAt }),
-    }
+    },
+    3,
+    5000
   );
 }
 
@@ -70,7 +76,7 @@ async function logSend(params: {
   threadId?: string;
   messageId?: string;
 }) {
-  await fetch(`${SUPABASE_URL}/rest/v1/email_sends`, {
+  await fetchWithRetry(`${SUPABASE_URL}/rest/v1/email_sends`, {
     method: "POST",
     headers: {
       apikey: SERVICE_ROLE_KEY,
@@ -88,7 +94,7 @@ async function logSend(params: {
       thread_id:  params.threadId ?? null,
       message_id: params.messageId ?? null,
     }),
-  });
+  }, 3, 5000);
 }
 
 // ── RFC 2822 email builder ────────────────────────────────────────────────────
@@ -134,6 +140,15 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  // Runtime env validation
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SUPABASE_URL || !SERVICE_ROLE_KEY) {
+    console.error("Missing required environment variables for gmail-send");
+    return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   // Verify user JWT
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
@@ -141,9 +156,9 @@ Deno.serve(async (req: Request) => {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+  const userRes = await fetchWithRetry(`${SUPABASE_URL}/auth/v1/user`, {
     headers: { apikey: SERVICE_ROLE_KEY, Authorization: authHeader },
-  });
+  }, 3, 5000);
   if (!userRes.ok) {
     return new Response(JSON.stringify({ error: "Invalid token" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -201,7 +216,7 @@ Deno.serve(async (req: Request) => {
   const sendBody: Record<string, unknown> = { raw: base64url(raw) };
   if (gmail_thread_id) sendBody.threadId = gmail_thread_id;
 
-  const sendRes = await fetch(
+  const sendRes = await fetchWithRetry(
     "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
     {
       method: "POST",
@@ -210,7 +225,9 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(sendBody),
-    }
+    },
+    3,
+    10000
   );
 
   if (!sendRes.ok) {

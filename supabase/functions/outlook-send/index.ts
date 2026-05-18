@@ -3,10 +3,12 @@
 // Automatically refreshes the access token if expired.
 // Logs the send to email_sends table for reply tracking.
 
-const MICROSOFT_CLIENT_ID     = Deno.env.get("MICROSOFT_CLIENT_ID")!;
-const MICROSOFT_CLIENT_SECRET = Deno.env.get("MICROSOFT_CLIENT_SECRET")!;
-const SUPABASE_URL            = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY        = Deno.env.get("SERVICE_ROLE_KEY")!;
+import { fetchWithRetry } from "../_lib/fetchWithRetry.ts";
+
+const MICROSOFT_CLIENT_ID     = Deno.env.get("MICROSOFT_CLIENT_ID");
+const MICROSOFT_CLIENT_SECRET = Deno.env.get("MICROSOFT_CLIENT_SECRET");
+const SUPABASE_URL            = Deno.env.get("SUPABASE_URL");
+const SERVICE_ROLE_KEY        = Deno.env.get("SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +21,7 @@ async function refreshAccessToken(refreshToken: string): Promise<{
   access_token: string;
   expires_in: number;
 } | null> {
-  const res = await fetch(
+  const res = await fetchWithRetry(
     "https://login.microsoftonline.com/common/oauth2/v2.0/token",
     {
       method: "POST",
@@ -35,7 +37,9 @@ async function refreshAccessToken(refreshToken: string): Promise<{
           "offline_access",
         ].join(" "),
       }),
-    }
+    },
+    3,
+    10000
   );
   if (!res.ok) { console.error("Refresh failed:", await res.text()); return null; }
   return res.json();
@@ -44,9 +48,11 @@ async function refreshAccessToken(refreshToken: string): Promise<{
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
 async function getConnection(userId: string) {
-  const res = await fetch(
+  const res = await fetchWithRetry(
     `${SUPABASE_URL}/rest/v1/email_connections?user_id=eq.${userId}&provider=eq.outlook&select=*&limit=1`,
-    { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
+    { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } },
+    3,
+    5000
   );
   if (!res.ok) return null;
   const rows = await res.json();
@@ -54,7 +60,7 @@ async function getConnection(userId: string) {
 }
 
 async function updateTokens(userId: string, accessToken: string, expiresAt: string) {
-  await fetch(
+  await fetchWithRetry(
     `${SUPABASE_URL}/rest/v1/email_connections?user_id=eq.${userId}&provider=eq.outlook`,
     {
       method: "PATCH",
@@ -64,7 +70,9 @@ async function updateTokens(userId: string, accessToken: string, expiresAt: stri
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ access_token: accessToken, token_expires_at: expiresAt }),
-    }
+    },
+    3,
+    5000
   );
 }
 
@@ -78,7 +86,7 @@ async function logSend(params: {
   messageId?: string;
   conversationId?: string;
 }) {
-  await fetch(`${SUPABASE_URL}/rest/v1/email_sends`, {
+  await fetchWithRetry(`${SUPABASE_URL}/rest/v1/email_sends`, {
     method: "POST",
     headers: {
       apikey: SERVICE_ROLE_KEY,
@@ -97,7 +105,7 @@ async function logSend(params: {
       thread_id:  params.conversationId ?? null,
       message_id: params.messageId ?? null,
     }),
-  });
+  }, 3, 5000);
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -110,6 +118,15 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  // Runtime env validation
+  if (!MICROSOFT_CLIENT_ID || !MICROSOFT_CLIENT_SECRET || !SUPABASE_URL || !SERVICE_ROLE_KEY) {
+    console.error("Missing required environment variables for outlook-send");
+    return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   // Verify user JWT
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
@@ -117,9 +134,9 @@ Deno.serve(async (req: Request) => {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+  const userRes = await fetchWithRetry(`${SUPABASE_URL}/auth/v1/user`, {
     headers: { apikey: SERVICE_ROLE_KEY, Authorization: authHeader },
-  });
+  }, 3, 5000);
   if (!userRes.ok) {
     return new Response(JSON.stringify({ error: "Invalid token" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -165,7 +182,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // Use draft-then-send to capture conversationId for reply polling
-  const draftRes = await fetch(
+  const draftRes = await fetchWithRetry(
     "https://graph.microsoft.com/v1.0/me/messages",
     {
       method: "POST",
@@ -179,7 +196,9 @@ Deno.serve(async (req: Request) => {
         toRecipients: [{ emailAddress: { address: to } }],
         from: { emailAddress: { address: conn.email } },
       }),
-    }
+    },
+    3,
+    10000
   );
 
   if (!draftRes.ok) {
@@ -196,12 +215,14 @@ Deno.serve(async (req: Request) => {
   const internetMsgId  = draft.internetMessageId as string | undefined;
 
   // Send the draft
-  const sendRes = await fetch(
+  const sendRes = await fetchWithRetry(
     `https://graph.microsoft.com/v1.0/me/messages/${messageId}/send`,
     {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}` },
-    }
+    },
+    3,
+    10000
   );
 
   if (!sendRes.ok) {

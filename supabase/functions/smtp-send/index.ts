@@ -5,9 +5,10 @@
 //   metadata={host, port, from_name}
 
 import { SMTPClient } from "https://deno.land/x/denomailer@1.0.1/mod.ts";
+import { fetchWithRetry } from "../_lib/fetchWithRetry.ts";
 
-const SUPABASE_URL     = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY")!;
+const SUPABASE_URL     = Deno.env.get("SUPABASE_URL");
+const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,9 +16,11 @@ const corsHeaders = {
 };
 
 async function getSmtpConnection(userId: string) {
-  const res = await fetch(
+  const res = await fetchWithRetry(
     `${SUPABASE_URL}/rest/v1/email_connections?user_id=eq.${userId}&provider=eq.smtp&select=*&limit=1`,
-    { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } }
+    { headers: { apikey: SERVICE_ROLE_KEY, Authorization: `Bearer ${SERVICE_ROLE_KEY}` } },
+    3,
+    5000
   );
   if (!res.ok) return null;
   const rows = await res.json();
@@ -32,7 +35,7 @@ async function logSend(params: {
   subject: string;
   bodyText: string;
 }) {
-  await fetch(`${SUPABASE_URL}/rest/v1/email_sends`, {
+  await fetchWithRetry(`${SUPABASE_URL}/rest/v1/email_sends`, {
     method: "POST",
     headers: {
       apikey: SERVICE_ROLE_KEY,
@@ -50,7 +53,7 @@ async function logSend(params: {
       thread_id:  null,
       message_id: null,
     }),
-  });
+  }, 3, 5000);
 }
 
 Deno.serve(async (req: Request) => {
@@ -61,6 +64,15 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  // Runtime env validation
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+    console.error("Missing required environment variables for smtp-send");
+    return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -68,9 +80,9 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+  const userRes = await fetchWithRetry(`${SUPABASE_URL}/auth/v1/user`, {
     headers: { apikey: SERVICE_ROLE_KEY, Authorization: authHeader },
-  });
+  }, 3, 5000);
   if (!userRes.ok) {
     return new Response(JSON.stringify({ error: "Invalid token" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
