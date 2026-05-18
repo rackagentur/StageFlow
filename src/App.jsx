@@ -1484,7 +1484,7 @@ function AssetCopyRow({ label, value }) {
   );
 }
 
-function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0, isAdmin = false, customTags = [] }) {
+function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, onNewLead, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0, isAdmin = false, customTags = [] }) {
   const [editing, setEditing] = useState(false);
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
@@ -2162,7 +2162,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           artistGenre={assets?.genres}
           totalLeads={totalLeads}
           isAdmin={isAdmin}
-          onLeadAdded={(newLead) => { if (onUpdate) onUpdate(newLead); }}
+          onLeadAdded={(newLead) => { if (onNewLead && newLead) onNewLead(newLead); }}
         />
       )}
 
@@ -7019,9 +7019,10 @@ function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClo
   }
 
   async function handleAdd(s, idx) {
-    const { error } = await supabase.from("leads").insert([{
+    const { data: newLead, error } = await supabase.from("leads").insert([{
       user_id: user.id,
       name: s.name,
+      contact: "",
       instagram: s.instagram || null,
       tier: s.tier || currentLead.tier,
       tag: s.tag || currentLead.tag,
@@ -7030,11 +7031,14 @@ function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClo
       stage: "target",
       notes: s.notes || null,
       archived: false,
-    }]);
+    }]).select().single();
     if (!error) {
       setAdded(prev => new Set([...prev, idx]));
       showDomToast(`✓ ${s.name} added to pipeline`);
-      if (onAdd) onAdd();
+      if (onAdd) onAdd(newLead);
+    } else {
+      console.error("Failed to add suggestion:", error);
+      showDomToast(`Couldn't add ${s.name} — ${error.message}`, "error");
     }
   }
 
@@ -8922,7 +8926,7 @@ const activeLeads = leads.filter(l => !l.archived);
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
-                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
+                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
                 </div>
               )}
 
@@ -8943,7 +8947,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   flexDirection: "column",
                 }}>
                   {selectedLead && (
-                    <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
+                    <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
                   )}
                 </div>
               )}
