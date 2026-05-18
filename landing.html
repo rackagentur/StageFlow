@@ -8,6 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NoxReach — Turn DJ Outreach into Confirmed Gigs</title>
   <meta name="description" content="NoxReach helps DJs track every venue, promoter, and agency contact, stay on top of follow-ups, and move leads from first message to booked night." />
+  <!-- Preload the hero screenshot (LCP candidate) -->
+  <link rel="preload" as="image" href="https://noxreach.com/public/pipeline-screenshot-v2.webp" type="image/webp" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- Non-blocking font load — media trick lets page paint before fonts arrive -->
@@ -1219,17 +1221,29 @@
     </div>
     <div style="position:relative;border-radius:14px;overflow:hidden;border:1px solid #1c1c2e;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
 <div id="shot-pipeline" style="width:100%;display:block;">
-  <img src="https://noxreach.com/public/pipeline-screenshot-v2.png" alt="Pipeline view in NoxReach" width="3024" height="1890" style="width:100%;height:auto;display:block;border-radius:0;" loading="lazy" />
+  <picture>
+    <source srcset="https://noxreach.com/public/pipeline-screenshot-v2.webp" type="image/webp" />
+    <img src="https://noxreach.com/public/pipeline-screenshot-v2.png" alt="Pipeline view in NoxReach" width="3024" height="1890" style="width:100%;height:auto;display:block;border-radius:0;" fetchpriority="high" />
+  </picture>
 </div>
 
 <div id="shot-dashboard" style="width:100%;display:none;">
-  <img src="https://noxreach.com/public/dashboard-screenshot.png" alt="Dashboard view in NoxReach" width="3024" height="1890" style="width:100%;height:auto;display:block;border-radius:0;" loading="lazy" />
+  <picture>
+    <source srcset="https://noxreach.com/public/dashboard-screenshot.webp" type="image/webp" />
+    <img src="https://noxreach.com/public/dashboard-screenshot.png" alt="Dashboard view in NoxReach" width="3024" height="1890" style="width:100%;height:auto;display:block;border-radius:0;" loading="lazy" />
+  </picture>
 </div>
 <div id="shot-bookingdesk" style="width:100%;display:none;">
-  <img src="https://noxreach.com/public/reply-hub-open.png" alt="Reply Hub in NoxReach" width="3024" height="1890" style="width:100%;height:auto;display:block;border-radius:0;" loading="lazy" />
+  <picture>
+    <source srcset="https://noxreach.com/public/reply-hub-open.webp" type="image/webp" />
+    <img src="https://noxreach.com/public/reply-hub-open.png" alt="Reply Hub in NoxReach" width="3024" height="1890" style="width:100%;height:auto;display:block;border-radius:0;" loading="lazy" />
+  </picture>
 </div>
 <div id="shot-bookingkit" style="width:100%;display:none;">
-  <img src="https://noxreach.com/public/assets-screenshot.png" alt="Booking Kit in NoxReach" width="3024" height="1890" style="width:100%;height:auto;display:block;border-radius:0;" loading="lazy" />
+  <picture>
+    <source srcset="https://noxreach.com/public/assets-screenshot.webp" type="image/webp" />
+    <img src="https://noxreach.com/public/assets-screenshot.png" alt="Booking Kit in NoxReach" width="3024" height="1890" style="width:100%;height:auto;display:block;border-radius:0;" loading="lazy" />
+  </picture>
 </div>
 <div id="shot-dashboard" style="width:100%;display:none;background:#0f0f18;border-radius:0;padding:0;">
   <div style="background:#0a0a10;padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1c1c2e;">
