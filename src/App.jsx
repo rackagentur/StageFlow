@@ -4913,7 +4913,7 @@ function GigCalendarView({ leads, gigs, setGigs, showToast, isPro, onUpgradeClic
 
 // ─── Reply Hub ─────────────────────────────────────────────────────────────────
 
-function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobile, supabase, userId, onUnreadChange }) {
+function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobile, supabase, userId, onUnreadChange, gigs, setGigs }) {
   const [filter, setFilter]   = useState("all"); // all | unread | booked
   const [selected, setSelected] = useState(null);
   const [replyText, setReplyText] = useState("");
@@ -5231,46 +5231,56 @@ function ReplyHubView({ leads, onMove, showToast, TAG_COLORS, onNavigate, isMobi
                   <span style={{ fontSize: 18, color: COLORS.green }}>→</span>
                 </button>
               )}
-              {selected.stage === "booked" && (
-                <div style={{ padding: "14px 16px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 10, marginBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                    <div style={{ fontSize: 16 }}>✓</div>
-                    <div style={{ fontSize: 13, color: COLORS.green, fontWeight: 700 }}>Booking confirmed — this gig is locked in</div>
+              {selected.stage === "booked" && (() => {
+                const existingGig = gigs?.find(g => g.venue?.toLowerCase() === selected.name?.toLowerCase());
+                const removeFromCalendar = async () => {
+                  if (!existingGig) return;
+                  await supabase.from("gigs").delete().eq("id", existingGig.id);
+                  setGigs?.(prev => prev.filter(g => g.id !== existingGig.id));
+                  showToast("Removed from calendar");
+                };
+                return (
+                  <div style={{ padding: "14px 16px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 10, marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                      <div style={{ fontSize: 16 }}>✓</div>
+                      <div style={{ fontSize: 13, color: COLORS.green, fontWeight: 700 }}>Booking confirmed — this gig is locked in</div>
+                    </div>
+                    {existingGig ? (
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          onClick={() => onNavigate?.("calendar")}
+                          style={{ flex: 1, padding: "10px 14px", background: COLORS.green, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                        >
+                          <span>📅</span>
+                          <span>View in Calendar</span>
+                        </button>
+                        <button
+                          onClick={removeFromCalendar}
+                          style={{ padding: "10px 14px", background: "transparent", border: `1px solid rgba(34,197,94,0.4)`, borderRadius: 8, color: COLORS.green, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                          title="Remove from calendar"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          onNavigate?.("calendar");
+                          setTimeout(() => {
+                            window.dispatchEvent(new CustomEvent("addGigFromBooked", {
+                              detail: { venue: selected.name, tag: selected.tag }
+                            }));
+                          }, 100);
+                        }}
+                        style={{ width: "100%", padding: "10px 14px", background: COLORS.green, border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                      >
+                        <span>📅</span>
+                        <span>Add to Calendar</span>
+                      </button>
+                    )}
                   </div>
-                  <button
-                    onClick={() => {
-                      onNavigate?.("calendar");
-                      // Small delay to let tab switch complete, then trigger add form
-                      setTimeout(() => {
-                        const calendarSection = document.querySelector('[data-calendar-view]');
-                        if (calendarSection) {
-                          window.dispatchEvent(new CustomEvent('addGigFromBooked', { 
-                            detail: { venue: selected.name, tag: selected.tag } 
-                          }));
-                        }
-                      }, 100);
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      background: COLORS.green,
-                      border: "none",
-                      borderRadius: 8,
-                      color: "#fff",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                    }}
-                  >
-                    <span>📅</span>
-                    <span>Add to Calendar</span>
-                  </button>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Reply composer */}
               <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: "hidden" }}>
@@ -8768,7 +8778,7 @@ const activeLeads = leads.filter(l => !l.archived);
           {activeTab === "pricing"     && <PricingView isPro={isPro} onUpgrade={handleUpgrade} />}
           {activeTab === "bookingkit"    && <AssetsView supabase={supabase} userId={user.id} isMobile={isMobile} />}
           {activeTab === "calendar"  && <GigCalendarView leads={leads} gigs={gigs} setGigs={setGigs} showToast={showToast} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} TAG_COLORS={TAG_COLORS} supabase={supabase} userId={user.id} isMobile={isMobile} />}
-          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} isMobile={isMobile} supabase={supabase} userId={user?.id} onUnreadChange={setEmailUnreadCount} />}
+          {activeTab === "bookingdesk" && <ReplyHubView leads={leads} onMove={moveLead} showToast={showToast} TAG_COLORS={TAG_COLORS} onNavigate={setActiveTab} isMobile={isMobile} supabase={supabase} userId={user?.id} onUnreadChange={setEmailUnreadCount} gigs={gigs} setGigs={setGigs} />}
           {activeTab === "settings"  && <SettingsView settings={settings} onSave={saveSettingsHandler} isPro={isPro} onUpgradeClick={requestUpgrade} customTags={customTags} defaultTags={DEFAULT_TAGS} onAddTag={addCustomTag} onRemoveTag={removeCustomTag} TAG_COLORS={TAG_COLORS} onSetTagColor={setTagColor} supabase={supabase} user={user} onDisplayNameChange={name => setProfileDisplayName(name)} />}
               {activeTab === "inbound"   && <InboundView leads={leads} user={user} supabase={supabase} />}
           {activeTab === "admin" && isAdmin && (
