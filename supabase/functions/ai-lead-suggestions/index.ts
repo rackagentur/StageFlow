@@ -22,7 +22,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { currentLead, existingLeads, artistGenre } = await req.json();
+    const { currentLead, existingLeads, artistGenre, preferredCountries } = await req.json();
 
     if (!currentLead?.name) {
       return new Response(JSON.stringify({ error: "Missing lead data" }), {
@@ -54,7 +54,11 @@ Deno.serve(async (req: Request) => {
 
     const systemPrompt = `You are a DJ booking strategy expert. Your job is to suggest real, bookable venues and promoters a DJ should target next based on their current pipeline. Return ONLY a valid JSON array with exactly 5 items. No explanation text, no markdown, no code blocks — just the raw JSON array.`;
 
-    const userPrompt = `A DJ who plays ${artistGenre || "Electronic music"} wants suggestions similar to: ${currentLead.name}${seedLocation ? ` (${seedLocation})` : ""} — ${currentLead.tag || "Electronic"}, ${currentLead.tier || "A2"}.
+    const countryLine = Array.isArray(preferredCountries) && preferredCountries.length > 0
+      ? `\nTarget markets (prioritise these countries): ${preferredCountries.join(", ")}.`
+      : "";
+
+    const userPrompt = `A DJ who plays ${artistGenre || "Electronic music"} wants suggestions similar to: ${currentLead.name}${seedLocation ? ` (${seedLocation})` : ""} — ${currentLead.tag || "Electronic"}, ${currentLead.tier || "A2"}.${countryLine}
 
 Pipeline style context (scene/scale reference):
 ${pipelineSummary || "No existing leads yet"}
@@ -62,7 +66,7 @@ ${pipelineSummary || "No existing leads yet"}
 STRICT EXCLUSION — do NOT suggest any of these, they are already in the pipeline:
 ${excludeNames || "none"}
 
-Suggest 5 completely NEW venues or promoters not in the exclusion list above. Use real venue/event names. Match the scene, scale and geography of the seed lead. Expand geography slightly if needed.
+Suggest 5 completely NEW venues or promoters not in the exclusion list above. Use real venue/event names. Match the scene, scale and geography of the seed lead.${countryLine ? " Strongly prefer the specified target markets." : " Expand geography slightly if needed."}
 
 Return this exact JSON format: [ { "name": "Venue or event name", "city": "City", "country": "Country code (e.g. DE, NL, UK)", "tag": "One of: TECHNO, HOUSE, CIRCUIT, FESTIVAL, TECH-HOUSE, MELODIC, OTHER", "tier": "A1, A2, or A3", "instagram": "@handle or empty string", "notes": "One sentence on why this is a good fit" } ]`;
 

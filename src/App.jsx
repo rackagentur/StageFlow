@@ -670,6 +670,7 @@ const DEFAULT_SETTINGS = {
   followup1Days: 5,
   followup2Days: 14,
   channels: { email: true, instagram: true, whatsapp: false, phone: false },
+  aiPrefs: { countries: [], genres: [] },
 };
 function loadSettings() { try { const r = localStorage.getItem(STORAGE_KEY_SETTINGS); if (r) return { ...DEFAULT_SETTINGS, ...JSON.parse(r) }; } catch {} return DEFAULT_SETTINGS; }
 function saveSettings(s) { try { localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s)); } catch {} }
@@ -1502,7 +1503,7 @@ function AssetCopyRow({ label, value }) {
   );
 }
 
-function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, onNewLead, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0, isAdmin = false, customTags = [], channels }) {
+function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, onNewLead, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0, isAdmin = false, customTags = [], channels, aiPrefs }) {
   const [editing, setEditing] = useState(false);
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
@@ -2210,7 +2211,8 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           supabase={supabase}
           user={{ id: userId }}
           lead={lead}
-          artistGenre={assets?.genres}
+          artistGenre={aiPrefs?.genres?.length ? aiPrefs.genres.join(", ") : assets?.genres}
+          preferredCountries={aiPrefs?.countries}
           totalLeads={totalLeads}
           isAdmin={isAdmin}
           onLeadAdded={(newLead) => { if (onNewLead && newLead) onNewLead(newLead); }}
@@ -4313,6 +4315,78 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
           );
         })}
       </div>
+
+      {/* AI Search Preferences */}
+      {(() => {
+        const aiPrefs = settings.aiPrefs || { countries: [], genres: [] };
+        const countries = aiPrefs.countries || [];
+        const selectedGenres = aiPrefs.genres || [];
+
+        const saveAiPrefs = (updated) => onSave({ ...settings, aiPrefs: { ...aiPrefs, ...updated } });
+
+        const addCountry = (val) => {
+          const clean = val.trim();
+          if (!clean || countries.includes(clean)) return;
+          saveAiPrefs({ countries: [...countries, clean] });
+        };
+        const removeCountry = (c) => saveAiPrefs({ countries: countries.filter(x => x !== c) });
+        const toggleGenre = (g) => {
+          const next = selectedGenres.includes(g) ? selectedGenres.filter(x => x !== g) : [...selectedGenres, g];
+          saveAiPrefs({ genres: next });
+        };
+
+        return (
+          <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>AI Search Preferences</div>
+            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 16 }}>Tell the AI where and what to look for when suggesting new leads for your pipeline.</div>
+
+            {/* Target Markets */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 6 }}>Target Markets</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                {countries.map(c => (
+                  <span key={c} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", background: COLORS.purpleBg, border: `1px solid ${COLORS.purpleDim}`, borderRadius: 20, fontSize: 12, color: COLORS.purpleLight, fontWeight: 600 }}>
+                    {c}
+                    <button onClick={() => removeCountry(c)} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 13, lineHeight: 1, padding: 0, marginLeft: 2 }}>×</button>
+                  </span>
+                ))}
+                <input
+                  placeholder="Add country…"
+                  onKeyDown={e => {
+                    if (e.key === "Enter" || e.key === ",") {
+                      e.preventDefault();
+                      addCountry(e.target.value);
+                      e.target.value = "";
+                    }
+                  }}
+                  onBlur={e => { if (e.target.value.trim()) { addCountry(e.target.value); e.target.value = ""; } }}
+                  style={{ background: "transparent", border: `1px dashed ${COLORS.border}`, borderRadius: 20, padding: "4px 12px", fontSize: 12, color: COLORS.text, outline: "none", width: 140, colorScheme: "dark" }}
+                />
+              </div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted }}>Press Enter after each country. Leave empty to search globally.</div>
+            </div>
+
+            {/* Focus Genres */}
+            {customTags?.length > 0 && (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.text, marginBottom: 6 }}>Focus Genres</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+                  {customTags.map(g => {
+                    const on = selectedGenres.includes(g);
+                    const col = TAG_COLORS?.[g] || COLORS.purple;
+                    return (
+                      <button key={g} onClick={() => toggleGenre(g)} style={{ padding: "4px 12px", borderRadius: 20, border: `1px solid ${on ? col : COLORS.border}`, background: on ? col + "22" : "transparent", color: on ? col : COLORS.textSecondary, fontSize: 12, fontWeight: on ? 700 : 400, cursor: "pointer", transition: "all 0.15s" }}>
+                        {on ? "✓ " : ""}{g}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted }}>Leave all off to let the AI pick based on your pipeline context.</div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {referralCode && (
         <div style={{ background: COLORS.surface, border: `1px solid rgba(139,92,246,0.25)`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
@@ -7064,7 +7138,7 @@ function TemplatePickerModal({ supabase, user, lead, onClose, onSelectTemplate }
 }
 
 // SmartSuggestions Component - AI-powered lead suggestions via Claude
-function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClose, onAdd }) {
+function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, preferredCountries, onClose, onAdd }) {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState("");
@@ -7079,7 +7153,7 @@ function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClo
         .from("leads").select("name, tag, tier").eq("user_id", user.id);
 
       const res = await supabase.functions.invoke("ai-lead-suggestions", {
-        body: { currentLead, existingLeads: existingLeads || [], artistGenre },
+        body: { currentLead, existingLeads: existingLeads || [], artistGenre, preferredCountries },
       });
       if (res.error) throw new Error(res.error.message);
       setSuggestions(res.data?.suggestions || []);
@@ -7197,7 +7271,7 @@ function SmartSuggestionsModal({ supabase, user, currentLead, artistGenre, onClo
 
 // Smart Suggestions Button Component
 // Used in LeadDetail panel to trigger suggestions
-function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded, artistGenre, totalLeads = 0, isAdmin = false }) {
+function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded, artistGenre, preferredCountries, totalLeads = 0, isAdmin = false }) {
   const [showModal, setShowModal] = useState(false);
   const locked = !isAdmin && totalLeads < 50;
 
@@ -7220,6 +7294,7 @@ function SmartSuggestionsButton({ supabase, user, lead, onLeadAdded, artistGenre
           user={user}
           currentLead={lead}
           artistGenre={artistGenre}
+          preferredCountries={preferredCountries}
           onClose={() => setShowModal(false)}
           onAdd={onLeadAdded}
         />
@@ -9007,7 +9082,7 @@ const activeLeads = leads.filter(l => !l.archived);
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
-                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} channels={settings.channels} />
+                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} channels={settings.channels} aiPrefs={settings.aiPrefs} />
                 </div>
               )}
 
@@ -9028,7 +9103,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   flexDirection: "column",
                 }}>
                   {selectedLead && (
-                    <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} channels={settings.channels} />
+                    <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} channels={settings.channels} aiPrefs={settings.aiPrefs} />
                   )}
                 </div>
               )}
