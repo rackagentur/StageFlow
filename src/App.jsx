@@ -666,7 +666,11 @@ function WhatsNewModal({ onClose }) {
 }
 
 const STORAGE_KEY_SETTINGS = "noxreach_settings_v1";
-const DEFAULT_SETTINGS = { followup1Days: 5, followup2Days: 14 };
+const DEFAULT_SETTINGS = {
+  followup1Days: 5,
+  followup2Days: 14,
+  channels: { email: true, instagram: true, whatsapp: false, phone: false },
+};
 function loadSettings() { try { const r = localStorage.getItem(STORAGE_KEY_SETTINGS); if (r) return { ...DEFAULT_SETTINGS, ...JSON.parse(r) }; } catch {} return DEFAULT_SETTINGS; }
 function saveSettings(s) { try { localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(s)); } catch {} }
 
@@ -1010,17 +1014,17 @@ function BulkActionsBar({ count, onMoveTo, onArchive, onDelete, onClear, isMobil
   );
 }
 
-function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, TAG_COLORS, onUpdateLead , isBulkSelected = false, onBulkSelect }) {
+function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, TAG_COLORS, onUpdateLead, isBulkSelected = false, onBulkSelect, channels }) {
   isBulkSelected = Boolean(isBulkSelected);
   const showInline = !lead.archived && ["contacted","followup1","followup2"].includes(lead.stage);
   const [contactLog, setContactLog] = useState(lead.contactLog || "");
   const [logSaved, setLogSaved] = useState(false);
   const METHODS = [
-    { id: "email",     Icon: IconMail,      label: "Email", color: COLORS.purple },
-    { id: "instagram", Icon: IconInstagram, label: "DM",    color: COLORS.purple },
-    { id: "phone",     Icon: IconPhone,     label: "Phone", color: "#22C55E" },
-    { id: "other",     Icon: IconWhatsApp,  label: "Other", color: COLORS.text2 },
-  ];
+    { id: "email",     Icon: IconMail,      label: "Email",    color: COLORS.purple  },
+    { id: "instagram", Icon: IconInstagram, label: "DM",       color: "#E1306C"      },
+    { id: "whatsapp",  Icon: IconWhatsApp,  label: "WhatsApp", color: "#25D366"      },
+    { id: "phone",     Icon: IconPhone,     label: "Phone",    color: "#22C55E"      },
+  ].filter(m => m.id === "email" || (channels?.[m.id] ?? (m.id === "instagram")));
   const handleMethod = (e, methodId) => { e.stopPropagation(); onUpdateLead && onUpdateLead(lead.id, { outreachMethod: methodId }); };
   const handleLogBlur = () => { if (contactLog !== (lead.contactLog || "")) { onUpdateLead && onUpdateLead(lead.id, { contactLog }); setLogSaved(true); setTimeout(() => setLogSaved(false), 1500); } };
   const stageIndex = STAGES.findIndex(s => s.id === lead.stage);
@@ -1237,7 +1241,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
 
-function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, onClearFilters, selectedLeads = new Set(), onSelectAll, onToggleLeadSelection }) {
+function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, onClearFilters, selectedLeads = new Set(), onSelectAll, onToggleLeadSelection, channels }) {
   const [showArchived, setShowArchived] = useState(false);
 
   const isLeadBulkSelected = (leadId) => {
@@ -1354,6 +1358,7 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                       searchQuery={search}
                       TAG_COLORS={TAG_COLORS}
                       onUpdateLead={onUpdateLead}
+                      channels={channels}
                     />
               ))}
             </div>
@@ -1418,6 +1423,7 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
                       searchQuery={search}
                       TAG_COLORS={TAG_COLORS}
                       onUpdateLead={onUpdateLead}
+                      channels={channels}
                     />
                   ))}
                   {colLeads.length === 0 && (
@@ -1496,7 +1502,7 @@ function AssetCopyRow({ label, value }) {
   );
 }
 
-function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, onNewLead, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0, isAdmin = false, customTags = [] }) {
+function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, userId, onUpdate, onNewLead, TAG_COLORS, assets, setShowTemplatePicker, isPro, onUpgradeClick, totalLeads = 0, isAdmin = false, customTags = [], channels }) {
   const [editing, setEditing] = useState(false);
   const [activity, setActivity] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
@@ -1606,6 +1612,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
     name: lead.name || "",
     contact: lead.contact || "",
     instagram: lead.instagram || "",
+    phone: lead.phone || "",
     notes: lead.notes || "",
     follow_up_date: lead.follow_up_date || "",
     tag: lead.tag || "",
@@ -1619,6 +1626,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       name: lead.name || "",
       contact: lead.contact || "",
       instagram: lead.instagram || "",
+      phone: lead.phone || "",
       notes: lead.notes || "",
       follow_up_date: lead.follow_up_date || "",
       tag: lead.tag || "",
@@ -1652,6 +1660,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         name: form.name.trim(),
         contact: form.contact.trim(),
         instagram: form.instagram.trim(),
+        phone: form.phone?.trim() || null,
         notes: form.notes.trim(),
         follow_up_date: form.follow_up_date || null,
         tag: form.tag || lead.tag,
@@ -1750,7 +1759,7 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                 {saving ? "…" : "Save"}
               </button>
               <button
-                onClick={() => { setEditing(false); setForm({ name: lead.name || "", contact: lead.contact || "", instagram: lead.instagram || "", notes: lead.notes || "", follow_up_date: lead.follow_up_date || "" }); }}
+                onClick={() => { setEditing(false); setForm({ name: lead.name || "", contact: lead.contact || "", instagram: lead.instagram || "", phone: lead.phone || "", notes: lead.notes || "", follow_up_date: lead.follow_up_date || "" }); }}
                 style={{ fontSize: 11, padding: "4px 8px", background: "transparent", color: COLORS.textMuted, border: `1px solid ${COLORS.border}`, borderRadius: 6, cursor: "pointer" }}
               >
                 Cancel
@@ -2063,11 +2072,41 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         </div>
       )}
 
-      <div style={labelStyle}>Instagram</div>
-      {editing ? (
-        <input value={form.instagram} onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))} style={inputStyle} placeholder="https://instagram.com/venue" />
-      ) : (
-        <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3, wordBreak: "break-all" }}>{lead.instagram || <span style={{ color: COLORS.textMuted }}>—</span>}</div>
+      {channels?.instagram !== false && (
+        <>
+          <div style={labelStyle}>Instagram</div>
+          {editing ? (
+            <input value={form.instagram} onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))} style={inputStyle} placeholder="https://instagram.com/venue" />
+          ) : (
+            <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3, wordBreak: "break-all" }}>{lead.instagram || <span style={{ color: COLORS.textMuted }}>—</span>}</div>
+          )}
+        </>
+      )}
+
+      {(channels?.whatsapp || channels?.phone) && (
+        <>
+          <div style={labelStyle}>{channels?.phone ? "Phone" : "WhatsApp"}</div>
+          {editing ? (
+            <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} style={inputStyle} placeholder="+1 555 000 0000" />
+          ) : (
+            <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3 }}>
+              {lead.phone ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span>{lead.phone}</span>
+                  {channels?.whatsapp && (
+                    <a
+                      href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent("Hey! I wanted to reach out about a potential booking.")}`}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", background: "rgba(37,211,102,0.12)", border: "1px solid rgba(37,211,102,0.35)", borderRadius: 5, color: "#25D366", fontSize: 11, fontWeight: 700, textDecoration: "none" }}
+                    >
+                      <IconWhatsApp size={12} color="#25D366" /> WhatsApp
+                    </a>
+                  )}
+                </div>
+              ) : <span style={{ color: COLORS.textMuted }}>—</span>}
+            </div>
+          )}
+        </>
       )}
 
       <div style={labelStyle}>Follow-up Date</div>
@@ -4229,6 +4268,52 @@ function SettingsView({ settings, onSave, isPro, onUpgradeClick, customTags, def
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
 
+      {/* Outreach Channels */}
+      <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.borderHover}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Outreach Channels</div>
+        <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 14 }}>Choose which channels you use — only those will appear as buttons and fields on your leads.</div>
+        {[
+          { id: "email",     label: "Email",     desc: "Email compose & tracking",       locked: true  },
+          { id: "instagram", label: "Instagram", desc: "Instagram handle field + DM log", locked: false },
+          { id: "whatsapp",  label: "WhatsApp",  desc: "Phone field + quick-link button", locked: false },
+          { id: "phone",     label: "Phone",     desc: "Phone field (call / SMS)",        locked: false },
+        ].map(ch => {
+          const active = ch.locked ? true : (settings.channels?.[ch.id] ?? false);
+          return (
+            <div key={ch.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${COLORS.border}` }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: ch.locked ? COLORS.textMuted : COLORS.text }}>{ch.label}</div>
+                <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>{ch.desc}</div>
+              </div>
+              <button
+                disabled={ch.locked}
+                onClick={() => {
+                  if (ch.locked) return;
+                  const updated = { ...settings, channels: { ...(settings.channels || {}), [ch.id]: !active } };
+                  onSave(updated);
+                }}
+                style={{
+                  flexShrink: 0,
+                  width: 44, height: 24, borderRadius: 12,
+                  background: active ? COLORS.purple : COLORS.border,
+                  border: "none", cursor: ch.locked ? "default" : "pointer",
+                  position: "relative", transition: "background 0.2s", opacity: ch.locked ? 0.45 : 1,
+                }}
+              >
+                <div style={{
+                  position: "absolute", top: 3,
+                  left: active ? 23 : 3,
+                  width: 18, height: 18, borderRadius: "50%",
+                  background: "#fff",
+                  transition: "left 0.2s",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.35)",
+                }} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
       {referralCode && (
         <div style={{ background: COLORS.surface, border: `1px solid rgba(139,92,246,0.25)`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
@@ -4383,6 +4468,7 @@ function dbToLead(r) {
     name:          r.name || "",
     contact:       r.contact || "",
     instagram:     r.instagram || "",
+    phone:         r.phone || "",
     tier:          r.tier || "A2",
     tag:           r.tag || "Tech-House",
     stage:         r.stage || "target",
@@ -8540,9 +8626,10 @@ const loadAdminUsers = async () => {
     try {
       const dbFields = {};
       if (fields.outreachMethod !== undefined) dbFields.outreach_method = fields.outreachMethod;
-      if (fields.contactLog !== undefined) dbFields.contact_log = fields.contactLog;
-      if (fields.fee !== undefined) dbFields.fee = fields.fee;
-      if (fields.deposit_paid !== undefined) dbFields.deposit_paid = fields.deposit_paid;
+      if (fields.contactLog     !== undefined) dbFields.contact_log     = fields.contactLog;
+      if (fields.fee            !== undefined) dbFields.fee             = fields.fee;
+      if (fields.deposit_paid   !== undefined) dbFields.deposit_paid    = fields.deposit_paid;
+      if (fields.phone          !== undefined) dbFields.phone           = fields.phone || null;
       if (Object.keys(dbFields).length > 0) {
         await supabase.from("leads").update(dbFields).eq("id", leadId).eq("user_id", user.id);
       }
@@ -8912,7 +8999,7 @@ const activeLeads = leads.filter(l => !l.archived);
               } : {
                 display: selectedLead ? "none" : "block",
               }}>
-                <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} />
+                <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} channels={settings.channels} />
               </div>
 
               {/* Sliding wall panel — mobile: full-screen takeover (sits outside the
@@ -8920,7 +9007,7 @@ const activeLeads = leads.filter(l => !l.archived);
               {selectedLead && isMobile && (
                 <div style={{ position: "fixed", inset: 0, zIndex: 500, background: COLORS.bg, overflowY: "auto", padding: 16 }}>
                   <button onClick={() => setSelectedLead(null)} style={{ background: "none", border: "none", color: COLORS.purpleLight, fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "4px 0 12px", display: "flex", alignItems: "center", gap: 4 }}>← Back</button>
-                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
+                  <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} channels={settings.channels} />
                 </div>
               )}
 
@@ -8941,7 +9028,7 @@ const activeLeads = leads.filter(l => !l.archived);
                   flexDirection: "column",
                 }}>
                   {selectedLead && (
-                    <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} />
+                    <LeadDetail lead={selectedLead} onClose={() => setSelectedLead(null)} onMove={moveLead} onArchive={archiveLead} onDelete={deleteLead} onUpdate={u => { setLeads(p => p.map(l => l.id === u.id ? u : l)); setSelectedLead(u); }} onNewLead={r => setLeads(p => [dbToLead(r), ...p])} supabase={supabase} userId={user.id} assets={onboardingAssets} setShowTemplatePicker={setShowTemplatePicker} isPro={isPro} onUpgradeClick={requestUpgrade} totalLeads={leads.filter(l => !l.archived).length} isAdmin={isAdmin} customTags={customTags} channels={settings.channels} />
                   )}
                 </div>
               )}
