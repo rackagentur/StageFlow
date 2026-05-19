@@ -2077,9 +2077,23 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
         <>
           <div style={labelStyle}>Instagram</div>
           {editing ? (
-            <input value={form.instagram} onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))} style={inputStyle} placeholder="https://instagram.com/venue" />
+            <input value={form.instagram} onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))} style={inputStyle} placeholder="https://instagram.com/venue or @handle" />
           ) : (
-            <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3, wordBreak: "break-all" }}>{lead.instagram || <span style={{ color: COLORS.textMuted }}>—</span>}</div>
+            <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3, wordBreak: "break-all", display: "flex", alignItems: "center", gap: 8 }}>
+              {lead.instagram ? (
+                <>
+                  <span>{lead.instagram}</span>
+                  <a
+                    href={lead.instagram.startsWith("http") ? lead.instagram : `https://instagram.com/${lead.instagram.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 8px", background: "rgba(225,48,108,0.10)", border: "1px solid rgba(225,48,108,0.30)", borderRadius: 5, color: "#E1306C", fontSize: 11, fontWeight: 700, textDecoration: "none", flexShrink: 0 }}
+                  >
+                    <IconInstagram size={11} color="#E1306C" /> Open
+                  </a>
+                </>
+              ) : <span style={{ color: COLORS.textMuted }}>—</span>}
+            </div>
           )}
         </>
       )}
