@@ -1172,6 +1172,8 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
       <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
         <Badge color={TAG_COLORS[lead.tag] || COLORS.textSecondary}>{lead.tag}</Badge>
         {lead.is_inbound && <Badge color={COLORS.purpleLight}>⬇ Inbound</Badge>}
+        {!lead.instagram && <Badge color={COLORS.textMuted}>no IG</Badge>}
+        {lead.instagram && lead.ig_enrich_failed && <Badge color={COLORS.amber}>⚠ IG</Badge>}
       </div>
       {lead.notes && (
         <div style={{ fontSize: 11, color: COLORS.textSecondary, lineHeight: 1.4, marginBottom: 10 }}>
@@ -1718,11 +1720,20 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
 
   const triggerIgEnrich = async () => {
     if (!lead.instagram) return;
-    const { data } = await supabase.functions.invoke("instagram-enrich", {
-      body: { handle: lead.instagram, lead_id: lead.id },
-    });
-    if (data && data.ig_followers !== undefined) {
-      onUpdate({ ...lead, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at });
+    try {
+      const { data } = await supabase.functions.invoke("instagram-enrich", {
+        body: { handle: lead.instagram, lead_id: lead.id },
+      });
+      if (data && data.ig_followers !== undefined) {
+        onUpdate({ ...lead, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at, ig_enrich_failed: false });
+        await supabase.from("leads").update({ ig_enrich_failed: false }).eq("id", lead.id);
+      } else {
+        onUpdate({ ...lead, ig_enrich_failed: true });
+        await supabase.from("leads").update({ ig_enrich_failed: true }).eq("id", lead.id);
+      }
+    } catch (e) {
+      onUpdate({ ...lead, ig_enrich_failed: true });
+      await supabase.from("leads").update({ ig_enrich_failed: true }).eq("id", lead.id);
     }
   };
 
@@ -2138,6 +2149,11 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
                     </a>
                     <button onClick={triggerIgEnrich} title="Refresh Instagram data" style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: COLORS.textMuted, fontSize: 11, display: "inline-flex", alignItems: "center" }}>↻</button>
                   </div>
+                  {lead.ig_enrich_failed && (
+                    <div style={{ marginTop: 4, fontSize: 11, color: COLORS.amber, display: "flex", alignItems: "center", gap: 4 }}>
+                      ⚠ Couldn't fetch data — handle may be wrong or account is private. ↻ to retry.
+                    </div>
+                  )}
                   {lead.ig_followers !== undefined && lead.ig_followers !== null && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.text, background: COLORS.card2, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: "2px 7px" }}>
@@ -4640,7 +4656,8 @@ function dbToLead(r) {
     ig_followers:   r.ig_followers ?? null,
     ig_account_type: r.ig_account_type ?? null,
     ig_verified:    r.ig_verified ?? null,
-    ig_enriched_at: r.ig_enriched_at ?? null,
+    ig_enriched_at:   r.ig_enriched_at ?? null,
+    ig_enrich_failed: r.ig_enrich_failed ?? false,
   };
 }
 function leadToDb(lead, userId) {
@@ -8806,10 +8823,18 @@ const loadAdminUsers = async () => {
           body: { handle: lead.instagram, lead_id: lead.id },
         });
         if (data && data.ig_followers !== undefined) {
-          setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at } : l));
-          if (selectedLead?.id === lead.id) setSelectedLead(prev => ({ ...prev, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at }));
+          setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at, ig_enrich_failed: false } : l));
+          if (selectedLead?.id === lead.id) setSelectedLead(prev => ({ ...prev, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at, ig_enrich_failed: false }));
+          await supabase.from("leads").update({ ig_enrich_failed: false }).eq("id", lead.id).eq("user_id", user.id);
+        } else {
+          setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, ig_enrich_failed: true } : l));
+          if (selectedLead?.id === lead.id) setSelectedLead(prev => ({ ...prev, ig_enrich_failed: true }));
+          await supabase.from("leads").update({ ig_enrich_failed: true }).eq("id", lead.id).eq("user_id", user.id);
         }
-      } catch (e) {}
+      } catch (e) {
+        setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, ig_enrich_failed: true } : l));
+        await supabase.from("leads").update({ ig_enrich_failed: true }).eq("id", lead.id).eq("user_id", user.id);
+      }
       setIgEnrichProgress(prev => prev ? { ...prev, done: prev.done + 1 } : null);
     }
     setIgEnrichProgress({ done: toEnrich.length, total: toEnrich.length, finished: true });
