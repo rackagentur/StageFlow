@@ -1675,11 +1675,32 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
       if (!error) {
         onUpdate({ ...lead, ...updates });
         setEditing(false);
+        // Auto-enrich if instagram handle present and changed
+        const newHandle = form.instagram.trim();
+        if (newHandle && newHandle !== lead.instagram) {
+          supabase.functions.invoke("instagram-enrich", {
+            body: { handle: newHandle, lead_id: lead.id },
+          }).then(({ data }) => {
+            if (data && data.ig_followers !== undefined) {
+              onUpdate({ ...lead, ...updates, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at });
+            }
+          }).catch(() => {});
+        }
       }
     } catch (e) {
       console.error("Save failed:", e);
     }
     setSaving(false);
+  };
+
+  const triggerIgEnrich = async () => {
+    if (!lead.instagram) return;
+    const { data } = await supabase.functions.invoke("instagram-enrich", {
+      body: { handle: lead.instagram, lead_id: lead.id },
+    });
+    if (data && data.ig_followers !== undefined) {
+      onUpdate({ ...lead, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at });
+    }
   };
 
    const inputStyle = {
@@ -2079,18 +2100,40 @@ function LeadDetail({ lead, onClose, onMove, onArchive, onDelete, supabase, user
           {editing ? (
             <input value={form.instagram} onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))} style={inputStyle} placeholder="https://instagram.com/venue or @handle" />
           ) : (
-            <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3, wordBreak: "break-all", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontSize: 12, color: COLORS.text, marginTop: 3, wordBreak: "break-all" }}>
               {lead.instagram ? (
                 <>
-                  <span>{lead.instagram}</span>
-                  <a
-                    href={lead.instagram.startsWith("http") ? lead.instagram : `https://instagram.com/${lead.instagram.replace(/^@/, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 8px", background: "rgba(225,48,108,0.10)", border: "1px solid rgba(225,48,108,0.30)", borderRadius: 5, color: "#E1306C", fontSize: 11, fontWeight: 700, textDecoration: "none", flexShrink: 0 }}
-                  >
-                    <IconInstagram size={11} color="#E1306C" /> Open
-                  </a>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span>{lead.instagram}</span>
+                    <a
+                      href={lead.instagram.startsWith("http") ? lead.instagram : `https://instagram.com/${lead.instagram.replace(/^@/, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 8px", background: "rgba(225,48,108,0.10)", border: "1px solid rgba(225,48,108,0.30)", borderRadius: 5, color: "#E1306C", fontSize: 11, fontWeight: 700, textDecoration: "none", flexShrink: 0 }}
+                    >
+                      <IconInstagram size={11} color="#E1306C" /> Open
+                    </a>
+                    <button onClick={triggerIgEnrich} title="Refresh Instagram data" style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: COLORS.textMuted, fontSize: 11, display: "inline-flex", alignItems: "center" }}>↻</button>
+                  </div>
+                  {lead.ig_followers !== undefined && lead.ig_followers !== null && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.text, background: COLORS.card2, border: `1px solid ${COLORS.border}`, borderRadius: 5, padding: "2px 7px" }}>
+                        {lead.ig_followers >= 1000000
+                          ? `${(lead.ig_followers / 1000000).toFixed(1)}M`
+                          : lead.ig_followers >= 1000
+                          ? `${(lead.ig_followers / 1000).toFixed(1)}K`
+                          : lead.ig_followers} followers
+                      </span>
+                      {lead.ig_account_type && (
+                        <span style={{ fontSize: 11, fontWeight: 700, borderRadius: 5, padding: "2px 7px", border: "1px solid", ...(lead.ig_account_type === "business" ? { color: "#60a5fa", borderColor: "rgba(96,165,250,0.35)", background: "rgba(96,165,250,0.10)" } : lead.ig_account_type === "creator" ? { color: COLORS.purpleLight, borderColor: `rgba(139,92,246,0.35)`, background: COLORS.purpleBg } : { color: COLORS.textMuted, borderColor: COLORS.border, background: COLORS.card2 }) }}>
+                          {lead.ig_account_type}
+                        </span>
+                      )}
+                      {lead.ig_verified && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#38bdf8", borderColor: "rgba(56,189,248,0.35)", background: "rgba(56,189,248,0.10)", border: "1px solid", borderRadius: 5, padding: "2px 7px" }}>✓ verified</span>
+                      )}
+                    </div>
+                  )}
                 </>
               ) : <span style={{ color: COLORS.textMuted }}>—</span>}
             </div>
@@ -4571,6 +4614,10 @@ function dbToLead(r) {
     depositPaid:    r.deposit_paid || false,
     isInbound:      r.is_inbound || false,
     updatedAt:      r.updated_at || null,
+    ig_followers:   r.ig_followers ?? null,
+    ig_account_type: r.ig_account_type ?? null,
+    ig_verified:    r.ig_verified ?? null,
+    ig_enriched_at: r.ig_enriched_at ?? null,
   };
 }
 function leadToDb(lead, userId) {
