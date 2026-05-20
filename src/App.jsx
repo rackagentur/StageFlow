@@ -9131,7 +9131,6 @@ const activeLeads = leads.filter(l => !l.archived);
               <div style={!isMobile ? {
                 transition: "opacity 0.28s ease",
                 opacity: selectedLead ? 0.6 : 1,
-                pointerEvents: selectedLead ? "none" : "auto",
               } : {
                 display: selectedLead ? "none" : "block",
               }}>
