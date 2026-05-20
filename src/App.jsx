@@ -1242,7 +1242,7 @@ function LeadCard({ lead, onMove, onSelect, isSelected, onArchive, searchQuery, 
 
 // ─── Pipeline View ────────────────────────────────────────────────────────────
 
-function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, onClearFilters, selectedLeads = new Set(), onSelectAll, onToggleLeadSelection, channels }) {
+function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search, filters, TAG_COLORS, customTags, onUpdateLead, isMobile, onOpenNewLead, onClearFilters, selectedLeads = new Set(), onSelectAll, onToggleLeadSelection, channels, onBulkEnrich, igEnrichProgress }) {
   const [showArchived, setShowArchived] = useState(false);
 
   const isLeadBulkSelected = (leadId) => {
@@ -1283,6 +1283,29 @@ function PipelineView({ leads, onMove, onSelect, selectedLead, onArchive, search
           <div style={{ marginLeft: 4, fontSize: 11, color: COLORS.purple }}>
             {(showArchived ? archivedLeads : activeLeads).length} result{(showArchived ? archivedLeads : activeLeads).length !== 1 ? "s" : ""}
           </div>
+        )}
+        {onBulkEnrich && leads.filter(l => !l.archived && l.instagram).length > 0 && (
+          <button
+            onClick={onBulkEnrich}
+            disabled={!!igEnrichProgress}
+            title="Refresh Instagram data for all leads"
+            style={{
+              marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5,
+              padding: "5px 11px", borderRadius: 7, fontSize: 11, fontWeight: 600, cursor: igEnrichProgress ? "default" : "pointer",
+              background: igEnrichProgress?.finished ? "rgba(34,197,94,0.12)" : "rgba(225,48,108,0.08)",
+              border: `1px solid ${igEnrichProgress?.finished ? "rgba(34,197,94,0.35)" : "rgba(225,48,108,0.25)"}`,
+              color: igEnrichProgress?.finished ? "#4ade80" : "#E1306C",
+              opacity: igEnrichProgress && !igEnrichProgress.finished ? 0.7 : 1,
+              transition: "all 0.2s",
+            }}
+          >
+            <IconInstagram size={11} color={igEnrichProgress?.finished ? "#4ade80" : "#E1306C"} />
+            {igEnrichProgress
+              ? igEnrichProgress.finished
+                ? `✓ Done`
+                : `Enriching ${igEnrichProgress.done}/${igEnrichProgress.total}...`
+              : `Enrich all IG`}
+          </button>
         )}
       </div>
 
@@ -8609,6 +8632,7 @@ const loadAdminUsers = async () => {
     saveTagColors(nextMap);
   }; // null or reason string
   const [selectedLead, setSelectedLead] = useState(null);
+  const [igEnrichProgress, setIgEnrichProgress] = useState(null); // null | { done, total }
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -8770,6 +8794,26 @@ const loadAdminUsers = async () => {
         await supabase.from("leads").update(dbFields).eq("id", leadId).eq("user_id", user.id);
       }
     } catch (err) { console.error("updateLeadField failed:", err); }
+  };
+
+  const bulkEnrichIG = async () => {
+    const toEnrich = leads.filter(l => !l.archived && l.instagram);
+    if (!toEnrich.length || igEnrichProgress) return;
+    setIgEnrichProgress({ done: 0, total: toEnrich.length });
+    for (const lead of toEnrich) {
+      try {
+        const { data } = await supabase.functions.invoke("instagram-enrich", {
+          body: { handle: lead.instagram, lead_id: lead.id },
+        });
+        if (data && data.ig_followers !== undefined) {
+          setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at } : l));
+          if (selectedLead?.id === lead.id) setSelectedLead(prev => ({ ...prev, ig_followers: data.ig_followers, ig_account_type: data.ig_account_type, ig_verified: data.ig_verified, ig_enriched_at: data.ig_enriched_at }));
+        }
+      } catch (e) {}
+      setIgEnrichProgress(prev => prev ? { ...prev, done: prev.done + 1 } : null);
+    }
+    setIgEnrichProgress({ done: toEnrich.length, total: toEnrich.length, finished: true });
+    setTimeout(() => setIgEnrichProgress(null), 2000);
   };
 
   const archiveLead = async (leadId) => {
@@ -9134,7 +9178,7 @@ const activeLeads = leads.filter(l => !l.archived);
               } : {
                 display: selectedLead ? "none" : "block",
               }}>
-                <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} channels={settings.channels} />
+                <PipelineView leads={leads} onMove={moveLead} onSelect={setSelectedLead} selectedLead={selectedLead} onArchive={archiveLead} search={search} filters={filters} TAG_COLORS={TAG_COLORS} customTags={customTags} onUpdateLead={updateLeadField} isMobile={isMobile} onOpenNewLead={() => setShowAddModal(true)} onClearFilters={() => { setSearch(""); setFilters({ tier: null, tag: null, stage: null }); }} selectedLeads={selectedLeads} onSelectAll={selectAllInStage} onToggleLeadSelection={toggleLeadSelection} channels={settings.channels} onBulkEnrich={bulkEnrichIG} igEnrichProgress={igEnrichProgress} />
               </div>
 
               {/* Sliding wall panel — mobile: full-screen takeover (sits outside the
